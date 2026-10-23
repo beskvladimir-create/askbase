@@ -56,6 +56,9 @@ RENAME = {".gitignore.public": ".gitignore"}
 EXCLUDE_NAMES = {
     "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache",
     ".venv", ".DS_Store", "_mobile.html", "uv.lock",
+    # PyInstaller's working directory and output: machine-specific paths, and
+    # a built application does not belong in a source repository anyway.
+    "build", "dist",
 }
 EXCLUDE_SUFFIX = {".pyc", ".jsonl"}
 # icon.icns is binary and belongs in the package, so it is not excluded

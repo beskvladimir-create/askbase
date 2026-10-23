@@ -70,7 +70,7 @@ read-only connection with a row limit and a timeout.
 
 ```bash
 uv venv && uv pip install -e '.[dev]'
-python -m pytest                       # 91 tests, no model needed
+./scripts/test_all.sh                  # 160 tests, no model needed
 
 # Download BIRD dev from https://bird-bench.github.io/ into data/bird/
 # then serve a model, for example with Ollama:

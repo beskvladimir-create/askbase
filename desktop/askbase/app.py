@@ -17,36 +17,20 @@ import traceback
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot
-from PySide6.QtGui import QAction, QGuiApplication, QIcon, QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QCursor, QGuiApplication, QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QDialog, QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView,
-    QLabel, QMainWindow, QPlainTextEdit, QPushButton, QStackedWidget,
+    QLabel, QLineEdit, QMainWindow, QPlainTextEdit, QPushButton, QStackedWidget,
     QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
-from . import offline, theme
+from . import i18n, offline, theme
 from .engine import AskError, Engine
 from .models import ModelClient, installed_models
-from .widgets import BrandMark, DropZone, Ground, ProgressLine, glow
+from .widgets import BrandMark, DropZone, Ground, LangSwitch, ProgressLine, glow
 
-T = {
-    "app": "Askbase",
-    "trust": "данные остаются у вас",
-    # the four keys DropZone reads
-    "drop_title": "Перетащите базу данных сюда",
-    "drop_sub": "файл .sqlite, .sqlite3 или .db",
-    "drop_release": "Отпустите, чтобы открыть",
-    "choose_file": "Выбрать файл",
-}
 ICON = Path(__file__).with_name("icon.svg")
 MAKER = "Besk Tech"
-
-STEPS = {
-    "writing": "Составляю запрос",
-    "checking": "Проверяю запрос",
-    "fixing": "Исправляю запрос",
-    "running": "Выполняю",
-}
 
 
 def label(text: str = "", name: str = "") -> QLabel:
@@ -95,9 +79,10 @@ class Signals(QObject):
 class AskTask(QRunnable):
     """One question, off the interface thread so the window stays alive."""
 
-    def __init__(self, engine: Engine, question: str):
+    def __init__(self, engine: Engine, question: str, unexpected: str):
         super().__init__()
         self.engine, self.question = engine, question
+        self.unexpected = unexpected
         self.signals = Signals()
 
     @Slot()
@@ -107,21 +92,25 @@ class AskTask(QRunnable):
         except AskError as e:
             self.signals.failed.emit(str(e))
         except Exception:                       # never leave the user at a frozen screen
-            self.signals.failed.emit("Непредвиденная ошибка.\n" + traceback.format_exc(limit=2))
+            self.signals.failed.emit(f"{self.unexpected}\n" + traceback.format_exc(limit=2))
         else:
             self.signals.done.emit(answer)
 
 
 class Window(QMainWindow):
-    def __init__(self) -> None:
+    language_changed = Signal(str)
+
+    def __init__(self, lang: str = "ru") -> None:
         super().__init__()
+        self.lang = lang
+        self.t = i18n.TEXTS[lang]
         self.engine: Engine | None = None
         self.answer = None
         self.first_question = True
         self.pool = QThreadPool.globalInstance()
         self.pool.setMaxThreadCount(1)          # one model, one question at a time
 
-        self.setWindowTitle(T["app"])
+        self.setWindowTitle(self.t["app"])
         self.resize(980, 720)
         self.setMinimumSize(820, 620)
         # the navy ground runs under the native title bar, as in pii-roundtrip
@@ -158,12 +147,12 @@ class Window(QMainWindow):
         self._menu()
 
     def _menu(self) -> None:
-        m = self.menuBar().addMenu("Файл")
-        about = QAction("О программе", self)
+        m = self.menuBar().addMenu(self.t["menu_file"])
+        about = QAction(self.t["about"], self)
         about.setMenuRole(QAction.MenuRole.AboutRole)   # lands in the app menu on macOS
         about.triggered.connect(self._about)
         m.addAction(about)
-        open_db = QAction("Открыть базу…", self)
+        open_db = QAction(self.t["open_db"], self)
         open_db.setShortcut(QKeySequence.StandardKey.Open)
         open_db.triggered.connect(self._pick)
         m.addAction(open_db)
@@ -172,7 +161,7 @@ class Window(QMainWindow):
 
     def _about(self) -> None:
         d = QDialog(self)
-        d.setWindowTitle("О программе")
+        d.setWindowTitle(self.t["about"])
         v = QVBoxLayout(d)
         v.setContentsMargins(36, 32, 36, 28)
         v.setSpacing(12)
@@ -183,14 +172,14 @@ class Window(QMainWindow):
         name.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         v.addWidget(name)
         for line in (
-            "Вопрос к своей базе обычными словами.",
-            "Модель и данные остаются на этом компьютере.",
-            f"{MAKER} · besk.tech",
+            self.t["about_1"],
+            self.t["about_2"],
+            self.t["maker"].format(maker=MAKER) + " · besk.tech",
         ):
             lb = label(line, "note")
             lb.setAlignment(Qt.AlignmentFlag.AlignHCenter)
             v.addWidget(lb)
-        close = button("Закрыть", small=True)
+        close = button(self.t["close"], small=True)
         close.clicked.connect(d.accept)
         v.addWidget(close, 0, Qt.AlignmentFlag.AlignHCenter)
         d.exec()
@@ -215,15 +204,19 @@ class Window(QMainWindow):
         self.where.setAlignment(Qt.AlignmentFlag.AlignCenter)
         h.addWidget(self.where, 1)
 
-        self.trust = label(T["trust"], "trust")
+        self.trust = label(self.t["trust"], "trust")
         self.trust.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.trust.setWordWrap(False)   # one line, or it rides up into the window buttons
+        self.langs = LangSwitch(self.lang)
+        self.langs.changed.connect(self.language_changed.emit)
         right = QWidget()
         right.setMinimumWidth(210)
         rh = QHBoxLayout(right)
         rh.setContentsMargins(0, 0, 0, 0)
+        rh.setSpacing(14)
         rh.addStretch(1)
         rh.addWidget(self.trust)
+        rh.addWidget(self.langs)
         h.addWidget(right)
         return bar
 
@@ -234,56 +227,106 @@ class Window(QMainWindow):
         v.setContentsMargins(0, 6, 0, 0)
         v.setSpacing(16)
 
-        self.drop = DropZone(T)
+        self.drop = DropZone(self.t)
         self.drop.file_dropped.connect(self._open)
         self.drop.choose.connect(self._pick)
         v.addWidget(self.drop, 1)
 
+        # Typing or pasting a path is how many people hand over a file, and a
+        # drop zone on its own quietly excludes anyone working from a terminal
+        # or reading a path out of a note.
+        self.path = QLineEdit()
+        self.path.setPlaceholderText(self.t["path_hint"])
+        self.path.setClearButtonEnabled(True)
+        self.path.returnPressed.connect(self._open_typed)
+        go = button(self.t["open"], small=True)
+        go.clicked.connect(self._open_typed)
+        prow = QWidget()
+        ph = QHBoxLayout(prow)
+        ph.setContentsMargins(0, 0, 0, 0)
+        ph.setSpacing(12)
+        ph.addWidget(label(self.t["path_label"], "note"), 0)
+        ph.addWidget(self.path, 1)
+        ph.addWidget(go, 0)
+        v.addWidget(prow)
+
         found = installed_models()
         self.model_box = QComboBox()
-        self.model_box.addItems(found or ["модель не найдена"])
+        self.model_box.addItems(found or [self.t["no_model_short"]])
         self.model_box.setEnabled(bool(found))
         row = QWidget()
         rh = QHBoxLayout(row)
         rh.setContentsMargins(0, 0, 0, 0)
         rh.setSpacing(12)
-        rh.addWidget(label("Модель на этом компьютере", "note"), 0)
+        rh.addWidget(label(self.t["model_label"], "note"), 0)
         rh.addWidget(self.model_box, 1)
         v.addWidget(row)
 
         if not found:
             v.addWidget(label(
-                "Модель не найдена. Askbase работает с моделью, установленной локально: "
-                "ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M",
+                self.t["no_model"],
                 "errbody",
             ))
         v.addWidget(hairline())
-        v.addWidget(label("Подключение только на чтение. Приложению не нужна сеть.", "footer"))
+        foot = QWidget()
+        fh = QHBoxLayout(foot)
+        fh.setContentsMargins(0, 0, 0, 0)
+        fh.addWidget(label(self.t["readonly_note"], "footer"), 1)
+        fh.addWidget(label(self.t["maker"].format(maker=MAKER), "maker"), 0)
+        v.addWidget(foot)
         return w
+
+    def _open_typed(self) -> None:
+        text = self.path.text().strip().strip('"').strip("'")
+        if text.startswith("file://"):
+            from urllib.parse import unquote, urlparse
+            text = unquote(urlparse(text).path)
+        if text:
+            self._open(str(Path(text).expanduser()))
+
+    def adopt(self, old: "Window") -> None:
+        """Take over the open database from the window being replaced."""
+        self.engine = old.engine
+        self.model_box.setCurrentText(old.model_box.currentText())
+        if self.engine is not None:
+            s = self.engine.schema
+            self.where.setText(
+                f"{Path(self.engine.db_path).name}  ·  "
+                + self.t["tables"].format(n=len(s.tables), c=s.n_columns)
+            )
+            self.examples.setText(
+                self.t["examples"] + ";  ".join(
+                    self.t["example_of"].format(table=n) for n in list(s.tables)[:3]
+                )
+            )
+            self.question.setPlainText(old.question.toPlainText())
+            self.pages.setCurrentIndex(1)
 
     def _pick(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Выберите базу данных", str(Path.home()),
-            "Базы SQLite (*.sqlite *.sqlite3 *.db);;Все файлы (*)",
+            self, self.t["choose_db"], str(Path.home()),
+            self.t["db_filter"],
         )
         if path:
             self._open(path)
 
     def _open(self, path: str) -> None:
         if not os.path.isfile(path):
-            self._say(f"Файл не найден: {path}")
+            self._say(self.t["not_a_file"].format(path=path))
             return
         try:
             self.engine = Engine(path, ModelClient(self.model_box.currentText()))
         except Exception as e:
-            self._say(f"Не удалось открыть базу. {e}")
+            self._say(self.t["cannot_open"].format(error=e))
             return
         s = self.engine.schema
         self.where.setText(
-            f"{Path(path).name}  ·  {len(s.tables)} таблиц  ·  {s.n_columns} столбцов  ·  только чтение"
+            f"{Path(path).name}  ·  " + self.t["tables"].format(n=len(s.tables), c=s.n_columns)
         )
         self.examples.setText(
-            "Например: " + ";  ".join(f"сколько записей в {n}" for n in list(s.tables)[:3])
+            self.t["examples"] + ";  ".join(
+                self.t["example_of"].format(table=n) for n in list(s.tables)[:3]
+            )
         )
         self.pages.setCurrentIndex(1)
         self.question.setFocus()
@@ -296,10 +339,10 @@ class Window(QMainWindow):
         v.setContentsMargins(0, 6, 0, 0)
         v.setSpacing(14)
 
-        v.addWidget(label("ВОПРОС", "micro"))
+        v.addWidget(label(self.t["question"], "micro"))
         self.question = QPlainTextEdit()
         self.question.setObjectName("doc")
-        self.question.setPlaceholderText("Сколько новых клиентов пришло из каждого региона в сентябре")
+        self.question.setPlaceholderText(self.t["placeholder"])
         self.question.setFixedHeight(130)
         v.addWidget(card(self.question))
 
@@ -312,9 +355,9 @@ class Window(QMainWindow):
         rh = QHBoxLayout(row)
         rh.setContentsMargins(0, 12, 0, 0)
         rh.setSpacing(12)
-        self.ask_btn = button("Спросить", primary=True)
+        self.ask_btn = button(self.t["ask"], primary=True)
         self.ask_btn.clicked.connect(self._ask)
-        back = button("←  другая база", link=True)
+        back = button(self.t["other_db"], link=True)
         back.clicked.connect(self._go_home)
         rh.addWidget(back)
         rh.addStretch(1)
@@ -325,7 +368,7 @@ class Window(QMainWindow):
     def _ask(self) -> None:
         q = self.question.toPlainText().strip()
         if not q:
-            self._say("Напишите вопрос.")
+            self._say(self.t["write_question"])
             return
         if not self.engine:
             self._go_home()
@@ -333,9 +376,9 @@ class Window(QMainWindow):
         self.ask_btn.setEnabled(False)
         self.progress.start()
         if self.first_question:
-            self._say("Первый вопрос дольше: модель загружается в память")
-        task = AskTask(self.engine, q)
-        task.signals.step.connect(lambda s: self._say(STEPS.get(s, s) + "…"))
+            self._say(self.t["first_slow"])
+        task = AskTask(self.engine, q, self.t["unexpected"])
+        task.signals.step.connect(lambda s: self._say(self.t.get(s, s) + "…"))
         task.signals.done.connect(self._show_answer)
         task.signals.failed.connect(self._show_error)
         self.pool.start(task)
@@ -365,7 +408,7 @@ class Window(QMainWindow):
         self.rowline = label("", "note")
         v.addWidget(self.rowline)
 
-        v.addWidget(label("ЧТО ПОСЧИТАНО", "micro"))
+        v.addWidget(label(self.t["counted"], "micro"))
         self.said = label("", "summary")
         v.addWidget(self.said)
 
@@ -374,18 +417,18 @@ class Window(QMainWindow):
         self.sql_view.setReadOnly(True)
         self.sql_view.setFixedHeight(104)
         self.sql_view.setFont(theme.mono())
-        v.addWidget(card(label("ЗАПРОС SQL", "micro"), self.sql_view, spacing=10))
+        v.addWidget(card(label(self.t["sql"], "micro"), self.sql_view, spacing=10))
 
         v.addWidget(hairline())
         row = QWidget()
         rh = QHBoxLayout(row)
         rh.setContentsMargins(0, 12, 0, 0)
         rh.setSpacing(12)
-        again = button("Новый вопрос", primary=True)
+        again = button(self.t["again"], primary=True)
         again.clicked.connect(self._new_question)
-        copy = button("Копировать SQL", small=True)
+        copy = button(self.t["copy"], small=True)
         copy.clicked.connect(self._copy_sql)
-        save = button("Сохранить CSV", small=True)
+        save = button(self.t["csv"], small=True)
         save.clicked.connect(self._save_csv)
         rh.addWidget(copy)
         rh.addWidget(save)
@@ -409,11 +452,11 @@ class Window(QMainWindow):
                 self.table.setItem(r, c, QTableWidgetItem("" if value is None else str(value)))
         self.table.clearSelection()
         if not a.rows:
-            self.rowline.setText("Запрос выполнен, подходящих строк нет.")
+            self.rowline.setText(self.t["no_rows"])
         else:
             extra = "  ·  ".join(a.notes)
             self.rowline.setText(
-                f"{len(a.rows)} строк  ·  {a.seconds:.1f} с" + (f"  ·  {extra}" if extra else "")
+                self.t["rows"].format(n=len(a.rows), s=a.seconds) + (f"  ·  {extra}" if extra else "")
             )
         self.said.setText(a.explanation)
         self.sql_view.setPlainText(a.sql)
@@ -437,19 +480,19 @@ class Window(QMainWindow):
 
     def _copy_sql(self) -> None:
         QGuiApplication.clipboard().setText(self.sql_view.toPlainText())
-        self._say("Запрос скопирован")
+        self._say(self.t["copied"])
 
     def _save_csv(self) -> None:
         if not self.answer:
             return
-        path, _ = QFileDialog.getSaveFileName(self, "Сохранить", "answer.csv", "CSV (*.csv)")
+        path, _ = QFileDialog.getSaveFileName(self, self.t["save_as"], "answer.csv", "CSV (*.csv)")
         if not path:
             return
         with open(path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(self.answer.columns)
             writer.writerows(self.answer.rows)
-        self._say(f"Сохранено: {path}")
+        self._say(self.t["saved"].format(path=path))
 
     def _say(self, text: str) -> None:
         self.status.setText(text)
@@ -468,7 +511,39 @@ def main() -> int:
     app.setOrganizationName(MAKER)
     theme.apply(app)
     app.setWindowIcon(QIcon(str(ICON.with_suffix(".icns"))))
-    Window().show()
+    windows: list[Window] = []
+
+    def place(w: Window) -> None:
+        # Centre on the screen the cursor is on and come to the front. Without
+        # this the window can open off-screen, for instance at coordinates left
+        # over from a display that is no longer attached, and the application
+        # looks as though it did not start at all.
+        screen = app.screenAt(QCursor.pos()) or app.primaryScreen()
+        area = screen.availableGeometry()
+        box = w.frameGeometry()
+        box.moveCenter(area.center())
+        w.move(max(area.left(), box.left()), max(area.top(), box.top()))
+
+    def open_window(code: str, old: Window | None = None) -> None:
+        i18n.remember(code)
+        w = Window(code)
+        w.language_changed.connect(lambda c, cur=w: open_window(c, cur))
+        if old is not None:
+            # Switching language rebuilds the window; keep where it was and
+            # keep the database open, or the switch would feel like a restart.
+            w.setGeometry(old.geometry())
+            if old.engine is not None:
+                w.adopt(old)
+            old.close()
+            windows.remove(old)
+        else:
+            place(w)
+        windows.append(w)
+        w.show()
+        w.raise_()
+        w.activateWindow()
+
+    open_window(i18n.ui_language())
     return app.exec()
 
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 import sys
 
-from PySide6.QtCore import Property, QEasingCurve, QObject, QPropertyAnimation, QRectF, Qt, Signal
+from PySide6.QtCore import Property, QEasingCurve, QObject, QPointF, QPropertyAnimation, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen, QSyntaxHighlighter, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QPlainTextEdit, QPushButton, QToolTip, QVBoxLayout, QWidget
 
@@ -541,19 +541,23 @@ class BrandMark(QWidget):
         lg.setColorAt(1, aurora(0.55 + 0.45 * h))
         p.setPen(QPen(lg, 1.6))
         p.drawRoundedRect(box, 8, 8)
-        # the redaction bar: full width at rest, sweeps left to right on hover
-        bar_w = 14.0
-        x = box.left() + 7 + (box.width() - 14 - bar_w) * 0.5
-        if h:
-            sweep = (box.width() - 14) * h
-            x = box.left() + 7
-            bar_w = max(bar_w, sweep)
+        # three rows of a result, the top one a question that fills in on
+        # hover: the product in one glyph. Not pii-roundtrip's redaction bar,
+        # which is a different promise entirely.
+        rows = ((9.5, 11.0), (14.5, 15.5), (19.5, 7.0))
+        left = box.left() + 6.0
+        for i, (y, full) in enumerate(rows):
+            fade = (0.95, 0.68, 0.40)[i]
+            p.setPen(QPen(white(fade), 2.4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            # on hover each row grows to its full width, top one first
+            grow = max(0.0, min(1.0, h * 1.6 - i * 0.3))
+            w = full * (0.72 + 0.28 * grow)
+            p.drawLine(QPointF(left, y), QPointF(left + w, y))
+        # the caret on the question row
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor(255, 255, 255))
-        p.drawRoundedRect(QRectF(x, box.center().y() - 2.5, bar_w, 5), 2.5, 2.5)
-        p.setFont(self.font_)
-        p.setPen(QColor(255, 255, 255))
-        p.drawText(QRectF(42, 0, self.width() - 42, self.height()), Qt.AlignmentFlag.AlignVCenter, self.name)
+        p.setBrush(white(0.9))
+        p.drawRoundedRect(QRectF(box.left() + 19.4, 7.6, 1.8, 4.0), 0.9, 0.9)
+        p.end()
 
 
 class HoverGlow(QObject):
