@@ -17,14 +17,14 @@ import traceback
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QAction, QGuiApplication, QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QApplication, QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView,
+    QApplication, QDialog, QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView,
     QLabel, QMainWindow, QPlainTextEdit, QPushButton, QStackedWidget,
     QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
-from . import theme
+from . import offline, theme
 from .engine import AskError, Engine
 from .models import ModelClient, installed_models
 from .widgets import BrandMark, DropZone, Ground, ProgressLine, glow
@@ -38,6 +38,9 @@ T = {
     "drop_release": "Отпустите, чтобы открыть",
     "choose_file": "Выбрать файл",
 }
+ICON = Path(__file__).with_name("icon.svg")
+MAKER = "Besk Tech"
+
 STEPS = {
     "writing": "Составляю запрос",
     "checking": "Проверяю запрос",
@@ -152,6 +155,45 @@ class Window(QMainWindow):
 
         self.setCentralWidget(root)
         self.pages.setCurrentIndex(0)
+        self._menu()
+
+    def _menu(self) -> None:
+        m = self.menuBar().addMenu("Файл")
+        about = QAction("О программе", self)
+        about.setMenuRole(QAction.MenuRole.AboutRole)   # lands in the app menu on macOS
+        about.triggered.connect(self._about)
+        m.addAction(about)
+        open_db = QAction("Открыть базу…", self)
+        open_db.setShortcut(QKeySequence.StandardKey.Open)
+        open_db.triggered.connect(self._pick)
+        m.addAction(open_db)
+        QShortcut(QKeySequence("Ctrl+Return"), self, self._ask)
+        QShortcut(QKeySequence("Meta+Return"), self, self._ask)
+
+    def _about(self) -> None:
+        d = QDialog(self)
+        d.setWindowTitle("О программе")
+        v = QVBoxLayout(d)
+        v.setContentsMargins(36, 32, 36, 28)
+        v.setSpacing(12)
+        pic = QLabel()
+        pic.setPixmap(QIcon(str(ICON)).pixmap(72, 72))
+        v.addWidget(pic, 0, Qt.AlignmentFlag.AlignHCenter)
+        name = label("Askbase", "aboutname")
+        name.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        v.addWidget(name)
+        for line in (
+            "Вопрос к своей базе обычными словами.",
+            "Модель и данные остаются на этом компьютере.",
+            f"{MAKER} · besk.tech",
+        ):
+            lb = label(line, "note")
+            lb.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+            v.addWidget(lb)
+        close = button("Закрыть", small=True)
+        close.clicked.connect(d.accept)
+        v.addWidget(close, 0, Qt.AlignmentFlag.AlignHCenter)
+        d.exec()
 
     # ---------- the bar, under the system buttons ----------
     def _bar(self) -> QWidget:
@@ -415,8 +457,17 @@ class Window(QMainWindow):
 
 
 def main() -> int:
+    # Before anything else: the claim is that nothing leaves this computer, so
+    # the program enforces it rather than relying on nobody adding a call later.
+    offline.enable()
+    if "--selftest" in sys.argv:
+        return offline.selftest()
     app = QApplication(sys.argv)
+    app.setApplicationName("Askbase")
+    app.setApplicationDisplayName("Askbase")
+    app.setOrganizationName(MAKER)
     theme.apply(app)
+    app.setWindowIcon(QIcon(str(ICON.with_suffix(".icns"))))
     Window().show()
     return app.exec()
 

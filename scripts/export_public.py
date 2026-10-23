@@ -58,6 +58,7 @@ EXCLUDE_NAMES = {
     ".venv", ".DS_Store", "_mobile.html", "uv.lock",
 }
 EXCLUDE_SUFFIX = {".pyc", ".jsonl"}
+# icon.icns is binary and belongs in the package, so it is not excluded
 
 
 def keep(path: Path) -> bool:
