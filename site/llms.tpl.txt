@@ -1,0 +1,45 @@
+# Askbase
+
+> A desktop application that answers questions about your own database in plain
+> language, with the model running on your machine. Free, no account, no telemetry.
+> Built and measured by Vladimir Beskorovainyi, Besk Tech.
+
+Updated: {DATE}
+
+## What makes it different
+
+- The model is a file on the user's disk. The application does not need a network.
+  Competing desktop tools ship a cloud model: AskYourDatabase includes Claude
+  Sonnet 5, Claude Haiku 4.5 and GPT-4.1 in a desktop seat, and its pricing page
+  states that desktop connections running from your device does not mean the AI
+  processing is offline.
+- Accuracy is measured under a protocol fixed before the run, on a held-out set
+  frozen with a SHA-256 digest, and published with confidence intervals and
+  failures included. Figures on the site are substituted from the results files
+  by the build, never typed by hand.
+- Read-only is enforced at the database connection, every statement is parsed
+  before execution, only a single SELECT is allowed, recursive common table
+  expressions are refused, and a row limit and timeout are imposed.
+
+## Pages
+
+- /comparison/ : every tool that answers questions about a database, with licence,
+  last commit, where its model runs, and published accuracy. Checked against
+  repositories and vendor pricing pages, with the check date on the page.
+- /where-your-data-goes/ : what leaves the machine, product by product, including
+  what could not be confirmed.
+- /author/ : Vladimir Beskorovainyi, publications and the benchmark this is built on.
+- Russian versions at /ru/sravnenie/, /ru/kuda-uhodyat-dannye/, /ru/avtor/
+
+## Research behind it
+
+- Beskorovainyi V. How Far Do On-Prem Open LLMs Get on Text-to-SQL?
+  arXiv:2606.29733. Code and results: Zenodo DOI 10.5281/zenodo.20952794
+- Measured there: Qwen2.5-Coder-32B reaches 51.63% execution accuracy on BIRD dev
+  with self-correction; schema linking significantly hurt accuracy; self-consistency
+  gained 0.13 points for about five times the tokens.
+
+## Not yet published
+
+The model ranking and the product's own accuracy are not published until measured.
+Pages that would carry those numbers are deliberately not built.

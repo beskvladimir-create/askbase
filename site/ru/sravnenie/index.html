@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Askbase: сравнение</title>
+<meta name="description" content="Что умеют существующие инструменты text-to-SQL, под какой лицензией и где работает модель.">
+<link rel="canonical" href="https://askbase.besk.tech/ru/sravnenie/">
+<link rel="alternate" hreflang="ru" href="https://askbase.besk.tech/ru/sravnenie/">
+<link rel="alternate" hreflang="en" href="https://askbase.besk.tech/comparison/">
+<link rel="alternate" hreflang="x-default" href="https://askbase.besk.tech/comparison/">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Askbase">
+<meta property="og:title" content="Askbase: сравнение">
+<meta property="og:description" content="Что умеют существующие инструменты text-to-SQL, под какой лицензией и где работает модель.">
+<meta property="og:url" content="https://askbase.besk.tech/ru/sravnenie/">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://askbase.besk.tech/assets/og-ru.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Askbase: сравнение", "description": "Что умеют существующие инструменты text-to-SQL, под какой лицензией и где работает модель.", "inLanguage": "ru", "url": "https://askbase.besk.tech/ru/sravnenie/", "isPartOf": {"@type": "WebSite", "name": "Askbase", "url": "https://askbase.besk.tech/"}}</script>
+</head>
+<body>
+<nav class="nav" aria-label="Основная навигация">
+  <a class="brand" href="/ru/" aria-label="Askbase, на главную">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
+    Askbase</a>
+  <ul>
+    <li><a href="/ru/reyting-modeley/">Рейтинг</a></li>
+    <li><a href="/ru/sravnenie/">Сравнение</a></li>
+    <li><a href="/ru/kuda-uhodyat-dannye/">Ваши данные</a></li>
+    <li><a href="/ru/dostup-tolko-chtenie/">Только чтение</a></li>
+    <li><a href="/ru/avtor/">Автор</a></li>
+  </ul>
+  <div class="lang" role="group" aria-label="Язык">
+    <a href="/comparison/" hreflang="en" lang="en">EN</a>
+    <span aria-hidden="true">/</span>
+    <a href="/ru/sravnenie/" aria-current="true" hreflang="ru" lang="ru">RU</a>
+  </div>
+</nav>
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Навигационная цепочка"><a href="/ru/">Askbase</a> / Сравнение</nav>
+    <div class="eyebrow">Сравнение &middot; проверено 21 октября 2026</div>
+    <h1>Куда каждый из этих инструментов отправляет вашу схему</h1>
+    <div class="byline"><span>Владимир Бескоровайный, архитектор корпоративного ИИ и CTO, автор бестселлера Amazon &laquo;Enterprise AI: The KATA Way&raquo;, основатель Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span></div>
+    <div class="prose">
+      <p class="lead">Девять инструментов обычно советуют, когда нужно спросить базу данных обычными словами. Я проверил каждый по его собственному репозиторию, файлу лицензии и странице цен, а не по обзорам. Вот что из этого вышло.</p>
+
+      <div class="stats">
+        <div><b>2</b><span>проекта больше не развиваются: Vanna архивирован 2 февраля 2026 года при 23 811 звёздах, Dataherald без коммитов с 24 июля 2024 года</span></div>
+        <div><b>1</b><span>сменил лицензию и перестал быть открытым: Chat2DB с версии 5.3.0 запрещает предоставлять продукт кому-либо вне вашей организации без письменного разрешения</span></div>
+        <div><b>0</b><span>из восьми публикуют точность выполнения на открытом бенчмарке по заявленному протоколу</span></div>
+      </div>
+
+      <h2>Что есть каждый инструмент, по документам</h2>
+      <p>Лицензии и даты коммитов взяты из GitHub API 21 октября 2026 года. Цены со страницы самого поставщика в тот же день. Точность указана только там, где проект публикует цифру на открытом бенчмарке по заявленному протоколу.</p>
+
+      <div class="table-wrap"><table>
+        <thead>
+          <tr>
+            <th>Инструмент</th>
+            <th>Лицензия</th>
+            <th>Последний коммит</th>
+            <th>Где работает модель</th>
+            <th>Опубликованная точность</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Askbase</strong></td>
+            <td>закрытый, бесплатный</td>
+            <td>в разработке</td>
+            <td><strong>на машине пользователя</strong></td>
+            <td>пока не опубликована</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.askyourdatabase.com/pricing">AskYourDatabase</a></td>
+            <td>коммерческая, 49 долларов за место в месяц</td>
+            <td>закрытый код</td>
+            <td>в облаке, Claude Sonnet 5, Claude Haiku 4.5, GPT-4.1</td>
+            <td>не нашёл</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/RamiAwar/dataline">DataLine</a></td>
+            <td>GPL-3.0</td>
+            <td>11 февраля 2026</td>
+            <td>ваша модель, данные от неё по умолчанию скрыты</td>
+            <td>не нашёл</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/OtterMind/Chat2DB">Chat2DB</a></td>
+            <td>с версии 5.3.0 не открытая</td>
+            <td>активен</td>
+            <td>модель, которую вы настроите</td>
+            <td>не нашёл</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/Canner/WrenAI">WrenAI</a></td>
+            <td>Apache-2.0 на ядре</td>
+            <td>активен</td>
+            <td>модель, которую вы настроите</td>
+            <td>не нашёл</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/eosphoros-ai/DB-GPT">DB-GPT</a></td>
+            <td>MIT</td>
+            <td>активен</td>
+            <td>модель, которую вы настроите</td>
+            <td>не нашёл</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/vanna-ai/vanna">Vanna</a></td>
+            <td>MIT</td>
+            <td>2 февраля 2026, архивирован</td>
+            <td>ваша модель</td>
+            <td>не нашёл</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/Dataherald/dataherald">Dataherald</a></td>
+            <td>Apache-2.0</td>
+            <td>24 июля 2024</td>
+            <td>ваша модель</td>
+            <td>не нашёл</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/defog-ai/sqlcoder">SQLCoder</a></td>
+            <td>Apache-2.0, веса CC-BY-SA-4.0</td>
+            <td>23 мая 2024</td>
+            <td>модель, которую вы разворачиваете сами</td>
+            <td>не нашёл</td>
+          </tr>
+        </tbody>
+      </table></div>
+
+      <h2>Различие, вокруг которого построена таблица</h2>
+      <p>Настольное приложение и локальная модель это не одно и то же. От этой разницы зависит, можно ли инструментом пользоваться в организации с закрытым контуром.</p>
+      <p>AskYourDatabase ближе всех к Askbase по форме. Ставится на компьютер, подключается к PostgreSQL, MySQL, SQL Server, MongoDB и BigQuery, отдаёт таблицу, график и объяснение. В место Desktop Ultimate включено неограниченное пользование Claude Sonnet 5, Claude Haiku 4.5 и GPT-4.1, то есть модель это облачный сервис. Поставщик пишет это прямо на своей странице цен: подключения настольной версии идут с вашего устройства, и это не означает, что обработка ИИ происходит без сети. Локальная модель есть в корпоративном тарифе, цена по запросу, размещение и сопровождение сверху.</p>
+      <p>DataLine идёт к приватности с другой стороны. Он держит всё на устройстве и по умолчанию скрывает данные от языковой модели, к которой обращается. Схема и вопрос при этом машину всё равно покидают, а в README сказано, что скрытие можно отключить. Лицензия GPL-3.0, то есть копилефт, и в README сейчас висит просьба о сопровождающих.</p>
+      <p><em class="p">Спросить и отправить вопрос это разные действия.</em> В этом всё различие, и ради него в таблице стоит правый столбец.</p>
+
+      <h2>Два лицензионных факта, которые стоит знать до того, как строить на чём-то своё</h2>
+      <p>Chat2DB повсюду называют открытым. Для версии 5.3.0 и новее это уже неверно. Его лицензия это изменённая Apache 2.0 с дополнительными условиями: разрешено личное пользование, размещение у себя для образования и некоммерческих организаций и внутреннее использование внутри своей организации, а предоставление продукта или сервиса внешней стороне, управляемая поставка для неё, распространение ей бинарников, встраивание в свой продукт и поставка под чужой торговой маркой требуют письменного разрешения. Выпуски до 5.3.0 остаются под обычной Apache 2.0.</p>
+      <p>WrenAI лицензирован по путям внутри репозитория. Ядро, SDK, навыки и примеры под Apache-2.0, документация под CC BY 4.0. Там же заранее положен текст AGPL-3.0 для модулей, которых пока нет, и сказано, что таблица лицензий будет обновлена, когда они появятся. Названия и логотипы это товарные знаки, и ни одна из этих лицензий их не покрывает.</p>
+
+      <h2>Столбец, который пуст у всех</h2>
+      <p>Я не нашёл ни у одного из восьми инструментов опубликованной точности выполнения на открытом бенчмарке, измеренной по заявленному протоколу. Некоторые публикуют демонстрации. Некоторые построены на моделях, авторы которых публикуют цифры бенчмарков, но это другое утверждение: цифра модели не является цифрой обёртки вокруг неё.</p>
+      <p>У Askbase этот столбец тоже пуст и останется пустым, пока не будет замера. Протокол зафиксирован заранее, вопросы заморожены с хешем SHA-256 до того, как по ним пройдёт любой инструмент, а числа на этом сайте подставляются сборкой из файлов результатов, а не впечатываются в страницу руками. Пока прогона нет, в ячейке стоит <em>пока не опубликована</em>.</p>
+
+      <div class="callout">
+        <p><strong>Почему замороженный набор, а не только открытый бенчмарк.</strong> Работа Jin, Choi, Zhu и Kang на CIDR 2026 нашла ошибки разметки в 52,8% задач BIRD Mini-Dev и в 66,1% задач Spider 2.0-Snow с открытыми эталонными запросами. Их исправление сдвинуло ведущие системы на величину до 19 пунктов и до трёх мест в рейтинге. Поэтому абсолютная оценка на открытом бенчмарке не является обещанием точности на чьих-либо данных, включая наши.</p>
+      </div>
+
+      <h2>Как проверить эту страницу</h2>
+      <p>Любую лицензию и дату коммита выше можно прочитать из GitHub API за несколько секунд, а любую цену на странице цен поставщика. Цены меняются, поэтому страница несёт дату проверки, и дата обновляется вместе со страницей. Если увидите цифру, которая сдвинулась, или инструмент, которому здесь место, напишите мне, и я поправлю.</p>
+    </div>
+
+    <div class="related">
+      <p class="micro">Ещё по теме</p>
+      <div class="links">
+        <a href="/ru/kuda-uhodyat-dannye/">Куда уходят данные</a>
+        <a href="/ru/avtor/">Об авторе</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p class="micro">Askbase &middot; Besk Tech</p>
+      <p>Модель работает на вашем компьютере. Приложению не нужна сеть, телеметрии нет.</p>
+    </div>
+    <div class="links">
+      <a href="/ru/sravnenie/">Сравнение</a>
+      <a href="/ru/kuda-uhodyat-dannye/">Куда уходят данные</a>
+      <a href="/ru/dostup-tolko-chtenie/">Доступ только на чтение</a>
+      <a href="/ru/avtor/">Автор</a>
+      <a href="https://besk.tech">besk.tech</a>
+    </div>
+  </div>
+</footer>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

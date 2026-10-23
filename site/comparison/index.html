@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Askbase: how it compares</title>
+<meta name="description" content="What the existing text-to-SQL tools do, under which licence, and where the model runs.">
+<link rel="canonical" href="https://askbase.besk.tech/comparison/">
+<link rel="alternate" hreflang="en" href="https://askbase.besk.tech/comparison/">
+<link rel="alternate" hreflang="ru" href="https://askbase.besk.tech/ru/sravnenie/">
+<link rel="alternate" hreflang="x-default" href="https://askbase.besk.tech/comparison/">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Askbase">
+<meta property="og:title" content="Askbase: how it compares">
+<meta property="og:description" content="What the existing text-to-SQL tools do, under which licence, and where the model runs.">
+<meta property="og:url" content="https://askbase.besk.tech/comparison/">
+<meta property="og:locale" content="en_GB">
+<meta property="og:image" content="https://askbase.besk.tech/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Askbase: how it compares", "description": "What the existing text-to-SQL tools do, under which licence, and where the model runs.", "inLanguage": "en", "url": "https://askbase.besk.tech/comparison/", "isPartOf": {"@type": "WebSite", "name": "Askbase", "url": "https://askbase.besk.tech/"}}</script>
+</head>
+<body>
+<nav class="nav" aria-label="Main navigation">
+  <a class="brand" href="/" aria-label="Askbase, home">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
+    Askbase</a>
+  <ul>
+    <li><a href="/model-ranking/">Ranking</a></li>
+    <li><a href="/comparison/">Comparison</a></li>
+    <li><a href="/where-your-data-goes/">Your data</a></li>
+    <li><a href="/read-only-access/">Read-only</a></li>
+    <li><a href="/author/">Author</a></li>
+  </ul>
+  <div class="lang" role="group" aria-label="Language">
+    <a href="/comparison/" aria-current="true" hreflang="en" lang="en">EN</a>
+    <span aria-hidden="true">/</span>
+    <a href="/ru/sravnenie/" hreflang="ru" lang="ru">RU</a>
+  </div>
+</nav>
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Askbase</a> / Comparison</nav>
+    <div class="eyebrow">Comparison &middot; checked 21 October 2026</div>
+    <h1>Where each of these tools sends your schema</h1>
+    <div class="byline"><span>Vladimir Beskorovainyi, Enterprise AI Architect &amp; CTO, author of the Amazon bestseller &ldquo;Enterprise AI: The KATA Way&rdquo;, founder of Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span></div>
+    <div class="prose">
+      <p class="lead">Nine tools are commonly recommended for asking a database questions in plain language. I checked each one against its own repository, licence file and pricing page rather than against a review. Here is what that turned up.</p>
+
+      <div class="stats">
+        <div><b>2</b><span>projects are no longer maintained: Vanna was archived on 2 February 2026 with 23,811 stars, Dataherald has had no commit since 24 July 2024</span></div>
+        <div><b>1</b><span>has changed away from an open licence: Chat2DB from version 5.3.0 forbids providing the software to anyone outside your own organisation without written authorisation</span></div>
+        <div><b>0</b><span>of the eight publish an execution accuracy on a public benchmark measured under a stated protocol</span></div>
+      </div>
+
+      <h2>What each tool is, on the record</h2>
+      <p>Licences and commit dates come from the GitHub API on 21 October 2026. Prices come from the vendor&rsquo;s own pricing page on the same day. Accuracy is listed only where the project publishes a figure on a public benchmark under a stated protocol.</p>
+
+      <div class="table-wrap"><table>
+        <thead>
+          <tr>
+            <th>Tool</th>
+            <th>Licence</th>
+            <th>Last commit</th>
+            <th>Where the model runs</th>
+            <th>Published accuracy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Askbase</strong></td>
+            <td>closed, free to use</td>
+            <td>in development</td>
+            <td><strong>on the user&rsquo;s machine</strong></td>
+            <td>not yet published</td>
+          </tr>
+          <tr>
+            <td><a href="https://www.askyourdatabase.com/pricing">AskYourDatabase</a></td>
+            <td>commercial, 49 USD per seat per month</td>
+            <td>closed source</td>
+            <td>in the cloud, Claude Sonnet 5, Claude Haiku 4.5, GPT-4.1</td>
+            <td>none found</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/RamiAwar/dataline">DataLine</a></td>
+            <td>GPL-3.0</td>
+            <td>11 February 2026</td>
+            <td>a model you supply, with data hidden from it by default</td>
+            <td>none found</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/OtterMind/Chat2DB">Chat2DB</a></td>
+            <td>not open source from 5.3.0</td>
+            <td>active</td>
+            <td>a model you configure</td>
+            <td>none found</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/Canner/WrenAI">WrenAI</a></td>
+            <td>Apache-2.0 on the core</td>
+            <td>active</td>
+            <td>a model you configure</td>
+            <td>none found</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/eosphoros-ai/DB-GPT">DB-GPT</a></td>
+            <td>MIT</td>
+            <td>active</td>
+            <td>a model you configure</td>
+            <td>none found</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/vanna-ai/vanna">Vanna</a></td>
+            <td>MIT</td>
+            <td>2 February 2026, archived</td>
+            <td>a model you supply</td>
+            <td>none found</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/Dataherald/dataherald">Dataherald</a></td>
+            <td>Apache-2.0</td>
+            <td>24 July 2024</td>
+            <td>a model you supply</td>
+            <td>none found</td>
+          </tr>
+          <tr>
+            <td><a href="https://github.com/defog-ai/sqlcoder">SQLCoder</a></td>
+            <td>Apache-2.0, weights CC-BY-SA-4.0</td>
+            <td>23 May 2024</td>
+            <td>a model you host</td>
+            <td>none found</td>
+          </tr>
+        </tbody>
+      </table></div>
+
+      <h2>The distinction the table is built around</h2>
+      <p>A desktop application is not the same thing as a local model, and the difference decides whether a regulated organisation may use the tool at all.</p>
+      <p>AskYourDatabase is the closest product to Askbase in form. It installs on the desktop, connects to PostgreSQL, MySQL, SQL Server, MongoDB and BigQuery, and returns a table, a chart and an explanation. Its Desktop Ultimate seat includes unlimited use of Claude Sonnet 5, Claude Haiku 4.5 and GPT-4.1, which means the model is a cloud service. The vendor states the position plainly on its own pricing page: desktop connections run from your device, and that does not mean the AI processing is offline. A local model is available in the enterprise tier, priced on request, with hosting and maintenance on top.</p>
+      <p>DataLine reaches privacy from the other direction. It stores everything on the device and, by default, hides the data from the language model it calls. The schema and the question still leave the machine, and the README notes that the hiding can be switched off. It is also licensed GPL-3.0, which is a copyleft licence, and its README currently asks for maintainers.</p>
+      <p><em class="p">Asking a question is not the same as sending the question.</em> That is the whole of the distinction, and it is the reason the right-hand column of the table exists.</p>
+
+      <h2>Two licence facts worth knowing before you build on something</h2>
+      <p>Chat2DB is widely described as open source. For version 5.3.0 and later this is no longer accurate. Its licence is a modified Apache 2.0 with additional conditions: personal use, academic and non-profit self-hosting, and internal use within your own organisation are permitted, while providing an external product or service, managed delivery for an outside party, distributing binaries to an outside party, embedding it in a product, and white-label or OEM delivery each require written authorisation. Releases before 5.3.0 remain under plain Apache 2.0.</p>
+      <p>WrenAI is multi-licensed by path. The core, SDK, skills and examples are Apache-2.0 and the documentation is CC BY 4.0. The repository also ships the text of AGPL-3.0 in advance, for modules that do not exist yet, and states that the licence table will be updated when they appear. The names and logos are trademarks and are not covered by any of those licences.</p>
+
+      <h2>The column that is empty for everyone</h2>
+      <p>I could not find a published execution accuracy on a public benchmark, measured under a stated protocol, for any of the eight tools above. Several publish demonstrations. Several are built on models whose authors publish benchmark figures, which is a different claim: a figure for a model is not a figure for the tool wrapped around it.</p>
+      <p>Askbase does not fill that column either, and will not until the measurement exists. The protocol is fixed in advance, the questions are frozen with a SHA-256 digest before any tool runs on them, and the figures on this site are substituted from the results files by the build, not typed into the page. Until there is a run, the cell reads <em>not yet published</em>.</p>
+
+      <div class="callout">
+        <p><strong>Why a frozen set, rather than a public benchmark alone.</strong> A CIDR 2026 study by Jin, Choi, Zhu and Kang found annotation errors in 52.8% of BIRD Mini-Dev problems and 66.1% of the Spider 2.0-Snow problems with open gold queries. Correcting them moved leading systems by up to 19 points and by as much as three places in the ranking. An absolute score on a public benchmark is therefore not a promise about anyone&rsquo;s data, including ours.</p>
+      </div>
+
+      <h2>How to check this page</h2>
+      <p>Every licence and commit date above can be read from the GitHub API in a few seconds, and every price from the vendor&rsquo;s pricing page. Prices change, so this page carries the date it was checked, and the date is updated when the page is. If you find a figure that has moved, or a tool that belongs here and is missing, write to me and I will correct it.</p>
+    </div>
+
+    <div class="related">
+      <p class="micro">Related</p>
+      <div class="links">
+        <a href="/where-your-data-goes/">Where your data goes</a>
+        <a href="/author/">About the author</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p class="micro">Askbase &middot; Besk Tech</p>
+      <p>The model runs on your machine. The application does not need a network, and there is no telemetry.</p>
+    </div>
+    <div class="links">
+      <a href="/comparison/">Comparison</a>
+      <a href="/where-your-data-goes/">Where your data goes</a>
+      <a href="/read-only-access/">Read-only access</a>
+      <a href="/author/">Author</a>
+      <a href="https://besk.tech">besk.tech</a>
+    </div>
+  </div>
+</footer>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

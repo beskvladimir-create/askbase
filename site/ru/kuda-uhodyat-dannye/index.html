@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Askbase: куда уходят данные</title>
+<meta name="description" content="Какие продукты обрабатывают вашу схему и вопросы вне вашей машины, а какие нет.">
+<link rel="canonical" href="https://askbase.besk.tech/ru/kuda-uhodyat-dannye/">
+<link rel="alternate" hreflang="ru" href="https://askbase.besk.tech/ru/kuda-uhodyat-dannye/">
+<link rel="alternate" hreflang="en" href="https://askbase.besk.tech/where-your-data-goes/">
+<link rel="alternate" hreflang="x-default" href="https://askbase.besk.tech/where-your-data-goes/">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Askbase">
+<meta property="og:title" content="Askbase: куда уходят данные">
+<meta property="og:description" content="Какие продукты обрабатывают вашу схему и вопросы вне вашей машины, а какие нет.">
+<meta property="og:url" content="https://askbase.besk.tech/ru/kuda-uhodyat-dannye/">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://askbase.besk.tech/assets/og-ru.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Askbase: куда уходят данные", "description": "Какие продукты обрабатывают вашу схему и вопросы вне вашей машины, а какие нет.", "inLanguage": "ru", "url": "https://askbase.besk.tech/ru/kuda-uhodyat-dannye/", "isPartOf": {"@type": "WebSite", "name": "Askbase", "url": "https://askbase.besk.tech/"}}</script>
+</head>
+<body>
+<nav class="nav" aria-label="Основная навигация">
+  <a class="brand" href="/ru/" aria-label="Askbase, на главную">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
+    Askbase</a>
+  <ul>
+    <li><a href="/ru/reyting-modeley/">Рейтинг</a></li>
+    <li><a href="/ru/sravnenie/">Сравнение</a></li>
+    <li><a href="/ru/kuda-uhodyat-dannye/">Ваши данные</a></li>
+    <li><a href="/ru/dostup-tolko-chtenie/">Только чтение</a></li>
+    <li><a href="/ru/avtor/">Автор</a></li>
+  </ul>
+  <div class="lang" role="group" aria-label="Язык">
+    <a href="/where-your-data-goes/" hreflang="en" lang="en">EN</a>
+    <span aria-hidden="true">/</span>
+    <a href="/ru/kuda-uhodyat-dannye/" aria-current="true" hreflang="ru" lang="ru">RU</a>
+  </div>
+</nav>
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Навигационная цепочка"><a href="/ru/">Askbase</a> / Куда уходят данные</nav>
+    <div class="eyebrow">Приватность &middot; проверено 21 октября 2026</div>
+    <h1>Куда уходит ваша схема и ваши вопросы, по каждому продукту</h1>
+    <div class="byline"><span>Владимир Бескоровайный, архитектор корпоративного ИИ и CTO, автор бестселлера Amazon &laquo;Enterprise AI: The KATA Way&raquo;, основатель Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span></div>
+    <div class="prose">
+      <p class="lead">Любой инструмент, который превращает вопрос в SQL, должен прочитать вашу схему, и почти всем для этого надо куда-то её отправить. Для организации, которой нельзя выносить данные, это первый вопрос по важности и обычно последний по порядку, который задают. Ниже то, что делает каждый продукт, и то, что я подтвердить не смог.</p>
+
+      <h2>Что покидает машину и когда</h2>
+      <p>Ехать могут три вещи: схема, вопрос и строки, которые вернулись. Продукт может быть аккуратен с одной и небрежен с другой, поэтому их стоит различать.</p>
+
+      <div class="zones">
+        <div>
+          <p class="micro">Askbase</p>
+          <p class="none">Ничего</p>
+          <ul>
+            <li>модель это файл на вашем диске</li>
+            <li>подключение к базе идёт напрямую</li>
+            <li>приложению не нужна сеть</li>
+            <li>нет учётной записи, активации и телеметрии</li>
+          </ul>
+        </div>
+        <div>
+          <p class="micro">Помощники облачных хранилищ</p>
+          <p class="none">Схема и вопрос</p>
+          <ul>
+            <li>Snowflake Cortex Analyst и Databricks Genie работают внутри вашего же облачного аккаунта</li>
+            <li>данные остаются у этого поставщика, но это всё равно облако, а не ваше железо</li>
+            <li>ни тот, ни другой не запустить на ноутбуке без сети</li>
+          </ul>
+        </div>
+        <div>
+          <p class="micro">Настольные с облачной моделью</p>
+          <p class="none">Схема и вопрос</p>
+          <ul>
+            <li>AskYourDatabase включает в место Claude Sonnet 5, Claude Haiku 4.5 и GPT-4.1</li>
+            <li>на его странице цен сказано, что подключения идут с вашего устройства и что это не означает офлайн для обработки ИИ</li>
+            <li>DataLine держит данные на устройстве и по умолчанию скрывает их от модели, но это отключаемо, а схема и вопрос уезжают всё равно</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Системы бизнес-аналитики</h2>
+      <p>Для организации, которой нельзя выносить данные, они не альтернатива, и причина не в их качестве. Их нельзя поставить и запустить без их сервиса.</p>
+      <ul>
+        <li><strong>Power BI Copilot</strong> не имеет отдельной лицензии. Нужна платная мощность Fabric уровня F2 и выше или Premium P1 и выше, и он расходует единицы мощности по мере работы.</li>
+        <li><strong>Tableau Agent</strong> требует Cloud+ или Tableau+. Бета для панелей расходует кредиты Data 360.</li>
+        <li><strong>ThoughtSpot Spotter</strong> доступен на тарифе Pro за 50 долларов на пользователя в месяц, и на пользовательских тарифах стоит лимит 25 запросов на пользователя в месяц.</li>
+      </ul>
+
+      <h2>Что я не смог подтвердить</h2>
+      <p>Говорю это прямо, а не обхожу. По Power BI Copilot, Tableau Agent и ThoughtSpot Spotter я не установил из найденных источников, где именно обрабатываются запрос на естественном языке и данные и в каком регионе. Это сервисы, то есть что-то из контура явно уходит, но подробности находятся в документации самих поставщиков о размещении данных и обработке в моделях, и я их не проверял. Если для вашего решения эта разница важна, читайте их документацию, а не эту страницу.</p>
+      <p>Я также не проверял поведение AskYourDatabase и DataLine инструментально. Утверждения выше взяты со страницы цен поставщика и из README проекта. Это сильнейшее доступное свидетельство без снятия сетевого трафика и слабее замера.</p>
+
+      <h2>Почему локальная модель стала разумной только недавно</h2>
+      <p>Ещё недавно честный ответ на вопрос, пойдёт ли это на ноутбуке, звучал так: пойдёт, но плохо. Изменилось то, что специализированные модели стали хороши в размере, который влезает в память. Arctic-Text2SQL-R1-7B от Snowflake сообщает 68,9% точности выполнения на BIRD dev при семи миллиардах параметров и лицензии Apache-2.0. Для сравнения, мой собственный замер универсальной Qwen2.5-Coder-32B с самоисправлением на том же срезе дал 51,63%, это опубликовано в <a href="https://arxiv.org/abs/2606.29733">arXiv:2606.29733</a>.</p>
+      <p><em class="p">Полезной перестала быть большая модель.</em> Специализированная модель в четыре с половиной раза меньше это причина, по которой такой продукт может существовать без облака, и причина, по которой у всех продуктов годом старше облако есть.</p>
+
+      <h2>Чего стоит приватность, без прикрас</h2>
+      <p>Держать всё на машине не бесплатно по последствиям, и я лучше назову их сам, чем дам их обнаружить.</p>
+      <ul>
+        <li><strong>Модель медленнее облачной</strong>, потому что работает на вашем железе, а не на ускорителе в центре обработки данных. Цифры будут опубликованы вместе с рейтингом, с указанием железа.</li>
+        <li><strong>Модель меньше облачной</strong>, и на самых трудных вопросах это видно. Поэтому точность измеряется и публикуется, а не утверждается.</li>
+        <li><strong>Телеметрии нет, поэтому я ничего не узнаю о том, как продуктом пользуются.</strong> Это цена обещания, и её нельзя выкупить обратно анонимной статистикой, не нарушив само обещание. Обратная связь приходит тогда, когда вы решите её отправить.</li>
+        <li><strong>Роль только для чтения остаётся на вас.</strong> Приложение выполняет только SELECT, разбирает каждый запрос до исполнения и добавляет ограничение на число строк, но роль с правом записи это риск, который приложение за вас убрать не может.</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>Про указания в промпте как меру защиты.</strong> Это не мера защиты. Pedro с соавторами показали на ICSE 2025, что внедрённая инструкция получает полный доступ на чтение и запись через неизменённый каркас агента, а попытки защититься ручной правкой промптов оказались крайне хрупкими. Askbase обеспечивает право только на чтение на уровне подключения, разбирает выражение до исполнения, отклоняет всё, кроме одного SELECT, запрещает рекурсивные обобщённые табличные выражения и ставит ограничение на строки и таймаут. Ни одна из этих мер не зависит от формулировок.</p>
+      </div>
+    </div>
+
+    <div class="related">
+      <p class="micro">Ещё по теме</p>
+      <div class="links">
+        <a href="/ru/sravnenie/">Сравнение</a>
+        <a href="/ru/avtor/">Об авторе</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p class="micro">Askbase &middot; Besk Tech</p>
+      <p>Модель работает на вашем компьютере. Приложению не нужна сеть, телеметрии нет.</p>
+    </div>
+    <div class="links">
+      <a href="/ru/sravnenie/">Сравнение</a>
+      <a href="/ru/kuda-uhodyat-dannye/">Куда уходят данные</a>
+      <a href="/ru/dostup-tolko-chtenie/">Доступ только на чтение</a>
+      <a href="/ru/avtor/">Автор</a>
+      <a href="https://besk.tech">besk.tech</a>
+    </div>
+  </div>
+</footer>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

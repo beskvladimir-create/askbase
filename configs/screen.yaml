@@ -1,0 +1,56 @@
+# Скрининговый прогон на этом Mac (Apple M4, 24 ГБ) через Ollama.
+#
+# Протокол скрининга, зафиксирован до прогона:
+#   набор      BIRD dev, случайная выборка 500 из 1534, зерно 0 (--sample 500)
+#   одна и та же выборка для всех моделей и всех ветвей
+#   декодирование жадное, один вызов, без примеров в контексте
+#   max_tokens 1024, таймаут исполнения SQL 30 с
+#   concurrency 3 для точности; задержка меряется отдельно при concurrency 1
+#
+# Квантизация это отдельная ось. Сборки GGUF сделаны mradermacher, не авторами
+# моделей, поэтому для финалиста сравниваем Q4_K_M против Q8_0 отдельно.
+# Веса моделей под Apache-2.0, сверено по карточкам на Hugging Face 20.10.2026.
+
+# BIRD dev: see README. Override with --data-root or edit this path.
+data_root: data/bird
+out_dir: results
+concurrency: 3
+
+models:
+  # Специализированные модели, главные кандидаты.
+  # Заявленная авторами точность на BIRD dev: Arctic-7B 68.9, XiYan-7B 62.13, XiYan-14B 65.32.
+  arctic-7b-q4:
+    model: hf.co/mradermacher/Arctic-Text2SQL-R1-7B-GGUF:Q4_K_M
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  arctic-7b-q8:
+    model: hf.co/mradermacher/Arctic-Text2SQL-R1-7B-GGUF:Q8_0
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  xiyan-7b-q4:
+    model: hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  xiyan-14b-q4:
+    model: hf.co/mradermacher/XiYanSQL-QwenCoder-14B-2504-GGUF:Q4_K_M
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+
+  # Универсальные модели как база для сравнения.
+  # Qwen2.5-Coder нужен, чтобы связать цифры с arXiv:2606.29733, где те же модели
+  # измерены на fp16 через vLLM. Разница между этим обслуживанием и тем и есть
+  # поправка, которую нельзя забывать при переносе чисел.
+  qwen25-coder-7b:
+    model: qwen2.5-coder:7b
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  qwen25-coder-14b:
+    model: qwen2.5-coder:14b
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024

@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""CLI: run one model through the full ablation (base -> +link -> +correct -> +consistency).
+
+Example:
+    python scripts/run_bench.py --config configs/run.yaml --model qwen25-coder-32b
+    python scripts/run_bench.py --config configs/run.yaml --model qwen25-coder-32b --limit 50
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+
+import yaml
+
+from nl2sql_app.bench.model_client import ModelClient
+from nl2sql_app.bench.runner import run
+
+ABLATION = [
+    ("base", dict(schema_link=False, self_correct=False, self_consistency=False)),
+    ("correct", dict(schema_link=False, self_correct=True, self_consistency=False)),
+    ("consistency", dict(schema_link=False, self_correct=True, self_consistency=True)),
+    ("link", dict(schema_link=True, self_correct=False, self_consistency=False)),
+    ("link_correct", dict(schema_link=True, self_correct=True, self_consistency=False)),
+    ("link_correct_consistency", dict(schema_link=True, self_correct=True, self_consistency=True)),
+    # retrieval-based (embedding) schema linker, for the lexical-vs-embedding comparison
+    ("link_emb", dict(schema_link_emb=True, self_correct=False, self_consistency=False)),
+    ("link_emb_correct", dict(schema_link_emb=True, self_correct=True, self_consistency=False)),
+]
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--config", required=True)
+    ap.add_argument("--model", required=True, help="key in config 'models'")
+    ap.add_argument("--limit", type=int, default=None,
+                    help="first N in file order; smoke tests only, collapses onto few dbs")
+    ap.add_argument("--sample", type=int, default=None,
+                    help="deterministic random subset of N examples; use this for screening")
+    ap.add_argument("--sample-seed", type=int, default=0)
+    ap.add_argument("--stages", nargs="*", default=None,
+                    help="subset of ablation stage names; default all")
+    ap.add_argument("--concurrency", type=int, default=None,
+                    help="examples processed in parallel; overrides config")
+    ap.add_argument("--emb-top-k", type=int, default=5,
+                    help="top-k tables for the embedding schema linker (link_emb stages)")
+    args = ap.parse_args()
+
+    with open(args.config) as f:
+        cfg = yaml.safe_load(f)
+    m = cfg["models"][args.model]
+    data_root = cfg["data_root"]
+    out_dir = cfg.get("out_dir", "results")
+    concurrency = args.concurrency or m.get("concurrency") or cfg.get("concurrency", 32)
+
+    client = ModelClient(
+        model=m["model"],
+        base_url=m.get("base_url", "http://localhost:8000/v1"),
+        api_key=m.get("api_key", "EMPTY"),
+        max_tokens=m.get("max_tokens", 1024),
+    )
+
+    stages = [s for s in ABLATION if args.stages is None or s[0] in args.stages]
+    for name, flags in stages:
+        out = os.path.join(out_dir, f"{args.model}.{name}.jsonl")
+        run_flags = dict(flags)
+        if run_flags.get("schema_link_emb"):
+            run_flags["emb_top_k"] = args.emb_top_k
+        summary = run(data_root, client, out, limit=args.limit,
+                      sample=args.sample, sample_seed=args.sample_seed,
+                      concurrency=concurrency, **run_flags)
+        print(json.dumps(summary, indent=2))
+
+
+if __name__ == "__main__":
+    main()

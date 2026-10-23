@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Askbase: спросите свою базу обычными словами</title>
+<meta name="description" content="Настольное приложение, которое отвечает на вопросы к вашей базе данных. Модель работает на вашем компьютере, вопрос и данные его не покидают.">
+<link rel="canonical" href="https://askbase.besk.tech/ru/">
+<link rel="alternate" hreflang="ru" href="https://askbase.besk.tech/ru/">
+<link rel="alternate" hreflang="en" href="https://askbase.besk.tech//">
+<link rel="alternate" hreflang="x-default" href="https://askbase.besk.tech//">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Askbase">
+<meta property="og:title" content="Askbase: спросите свою базу обычными словами">
+<meta property="og:description" content="Настольное приложение, которое отвечает на вопросы к вашей базе данных. Модель работает на вашем компьютере, вопрос и данные его не покидают.">
+<meta property="og:url" content="https://askbase.besk.tech/ru/">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://askbase.besk.tech/assets/og-ru.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Askbase: спросите свою базу обычными словами", "description": "Настольное приложение, которое отвечает на вопросы к вашей базе данных. Модель работает на вашем компьютере, вопрос и данные его не покидают.", "inLanguage": "ru", "url": "https://askbase.besk.tech/ru/", "isPartOf": {"@type": "WebSite", "name": "Askbase", "url": "https://askbase.besk.tech/"}}</script>
+</head>
+<body>
+<nav class="nav" aria-label="Основная навигация">
+  <a class="brand" href="/ru/" aria-label="Askbase, на главную">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
+    Askbase</a>
+  <ul>
+    <li><a href="/ru/reyting-modeley/">Рейтинг</a></li>
+    <li><a href="/ru/sravnenie/">Сравнение</a></li>
+    <li><a href="/ru/kuda-uhodyat-dannye/">Ваши данные</a></li>
+    <li><a href="/ru/dostup-tolko-chtenie/">Только чтение</a></li>
+    <li><a href="/ru/avtor/">Автор</a></li>
+  </ul>
+  <div class="lang" role="group" aria-label="Язык">
+    <a href="//" hreflang="en" lang="en">EN</a>
+    <span aria-hidden="true">/</span>
+    <a href="/ru/" aria-current="true" hreflang="ru" lang="ru">RU</a>
+  </div>
+</nav>
+<section class="open">
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="eyebrow rise">Askbase для macOS</div>
+    <p class="mark rise d1">Askbase</p>
+    <div class="sub">
+      <div>
+        <h1 class="rise d2">Спросите свою базу данных словами. Получите таблицу и запрос, которым она посчитана.</h1>
+        <p class="lead rise d2">Модель лежит файлом на вашем диске, поэтому вопрос и данные не покидают компьютер. Бесплатно, учётную запись создавать не нужно.</p>
+        <div class="cta rise d3">
+          <a class="btn primary" href="#how">Посмотреть, как это работает</a>
+          <a class="btn" href="/ru/kuda-uhodyat-dannye/">Куда уходят данные</a>
+        </div>
+        <div class="facts rise d3"><p><strong>Сеть не нужна.</strong> Приложение работает с выключенным Wi-Fi.</p></div>
+      </div>
+      <div class="tilt rise d3"><figure class="ask" tabindex="0" aria-label="Как Askbase отвечает на вопрос">
+  <div class="chrome"><span class="dot"></span>Askbase<span class="db"><span class="pre">база </span><b>analytics</b> &middot; только чтение</span></div>
+  <div class="rail"><button type="button" data-step="0" aria-current="step"><span class="t"></span><span class="s">1. Вопрос</span></button><button type="button" data-step="1"><span class="t"></span><span class="s">2. Запрос</span></button><button type="button" data-step="2"><span class="t"></span><span class="s">3. Ответ</span></button></div>
+  <div class="panes">
+    <div class="pane" data-on>
+      <p class="plabel">Вопрос</p>
+      <p class="q"><span class="text" data-q="Сколько новых клиентов пришло из каждого региона в сентябре?">Сколько новых клиентов пришло из каждого региона в сентябре?</span><span class="caret"></span></p>
+    </div>
+    <div class="pane">
+      <p class="plabel">Запрос</p>
+      <pre class="sql"><span class="ln"><span class="kw">SELECT</span> r.name, <span class="kw">COUNT</span>(*) <span class="kw">AS</span> n</span><span class="ln"><span class="kw">FROM</span> clients c</span><span class="ln"><span class="kw">JOIN</span> regions r <span class="kw">ON</span> r.id = c.region_id</span><span class="ln"><span class="kw">WHERE</span> c.dt_reg &gt;= '2026-09-01'</span><span class="ln">  <span class="kw">AND</span> c.dt_reg &lt;  '2026-10-01'</span><span class="ln"><span class="kw">GROUP BY</span> r.name <span class="lim">LIMIT 1000</span></span></pre>
+    </div>
+    <div class="pane">
+      <p class="plabel">Ответ</p>
+      <table><thead><tr><th>Регион</th><th class="num">Клиентов</th></tr></thead>
+      <tbody><tr><td>Manchester</td><td class="num">412</td></tr><tr><td>Leeds</td><td class="num">188</td></tr><tr><td>Bristol</td><td class="num">94</td></tr><tr><td>Cardiff</td><td class="num">71</td></tr></tbody></table>
+      <p class="said"><b>Что посчитано.</b> Клиенты с датой регистрации в сентябре 2026 года, с группировкой по региону. Клиенты без региона в ответ не попали.</p>
+    </div>
+  </div>
+  <figcaption class="bar"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" stroke="currentColor" stroke-width="1.5"/></svg><span>Модель и данные остаются на этом компьютере</span>
+    <button class="pause" type="button" aria-pressed="false" data-play="ПУСК" data-stop="ПАУЗА">ПАУЗА</button>
+  </figcaption>
+</figure></div>
+    </div>
+    <div class="cue"><i></i>Смотрите, как он отвечает</div>
+  </div>
+</section>
+
+<section class="line" id="how">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Три шага</div>
+      <h2>Подключили базу, спросили словами, прочитали ответ</h2>
+      <p class="lead">Ничего не надо описывать, настраивать и выучивать. Первый ответ занимает около минуты с момента открытия приложения.</p>
+    </div>
+    <ol class="flow reveal d1">
+      <li>
+        <div class="viz"><div class="drop"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5L13.5 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 3v5.5H19" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span><b>sales_2026.sqlite</b><br>34 таблицы, 412 столбцов</span></div><span class="tag">только чтение &middot; проверено</span></div>
+        <div class="body"><span class="n">01</span><h3>Подключить</h3><p>Перетащите файл SQLite или укажите хост для PostgreSQL. Пароль уходит в Связку ключей macOS, а не в файл настроек.</p></div>
+      </li>
+      <li>
+        <div class="viz"><div class="field">Десять самых крупных клиентов за год<i></i></div><span class="tag">названия таблиц не нужны</span></div>
+        <div class="body"><span class="n">02</span><h3>Спросить</h3><p>Напишите вопрос так, как сказали бы его коллеге. Русский и английский работают оба, названия таблиц сообщать не нужно.</p></div>
+      </li>
+      <li>
+        <div class="viz"><table class="mini"><tr><td>Москва</td><td>412</td></tr><tr><td>Петербург</td><td>188</td></tr><tr><td>Новосибирск</td><td>94</td></tr></table><span class="tag">SQL виден &middot; CSV</span></div>
+        <div class="body"><span class="n">03</span><h3>Прочитать</h3><p>Вы получаете таблицу, запрос, которым она посчитана, и фразу о том, что учтено и что осталось за ответом.</p></div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="line">
+  <div class="wrap">
+    <div class="head reveal">
+        <div class="eyebrow">Чем отличается</div>
+        <h2>Четыре одинаковых вопроса, два разных ответа</h2>
+      </div>
+      <div class="contrast reveal d1">
+      <div class="row hd"><div></div><div>Обычный настольный инструмент</div><div class="me">Askbase</div></div>
+      <div class="row"><div class="q">Где работает модель</div><div class="them" data-l="Обычный инструмент">В облаке. Один поставщик на своей же странице цен пишет, что работа с вашего устройства не означает офлайн для обработки.</div><div class="us" data-l="Askbase"><b>На вашем диске.</b> Приложение работает с выключенным Wi-Fi.</div></div>
+      <div class="row"><div class="q">Что защищает базу</div><div class="them" data-l="Обычный инструмент">Роль только для чтения и указания в промпте. Опубликованные работы показывают, что формулировка не является защитой.</div><div class="us" data-l="Askbase"><b>Роль только для чтения и разбор запроса.</b> Один SELECT, без рекурсивных CTE, лимит строк и таймаут.</div></div>
+      <div class="row"><div class="q">Можно ли проверить ответ</div><div class="them" data-l="Обычный инструмент">Таблица, обычно и SQL.</div><div class="us" data-l="Askbase"><b>Таблица, SQL и допущения</b> простой фразой, включая то, кто не попал в ответ.</div></div>
+      <div class="row"><div class="q">Какая у него точность</div><div class="them" data-l="Обычный инструмент">Ни у одного из восьми проверенных инструментов она не опубликована на открытом бенчмарке.</div><div class="us" data-l="Askbase"><b>Измеряется и публикуется</b> по протоколу, зафиксированному до прогона. Пока прогона нет, числа нет.</div></div>
+      </div>
+      <div class="links"><a class="btn small" href="/ru/sravnenie/">Сравнение всех инструментов</a><a class="btn small" href="/ru/avtor/">Почему замеру можно верить</a></div>
+  </div>
+</section>
+
+<section class="line">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Состояние</div>
+      <h2>В разработке, и эта страница об этом говорит</h2>
+      <p class="lead">Askbase делается открыто. Бенчмарк, отложенный набор вопросов и протокол будут опубликованы, само приложение пока в работе. Скачивания ещё нет, и оно появится на этой странице, когда будет.</p>
+      <p><em class="p">Цифра без протокола это реклама.</em></p>
+      <div class="links">
+        <a class="btn small" href="https://arxiv.org/abs/2606.29733">Бенчмарк, из которого это выросло</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p class="micro">Askbase &middot; Besk Tech</p>
+      <p>Модель работает на вашем компьютере. Приложению не нужна сеть, телеметрии нет.</p>
+    </div>
+    <div class="links">
+      <a href="/ru/sravnenie/">Сравнение</a>
+      <a href="/ru/kuda-uhodyat-dannye/">Куда уходят данные</a>
+      <a href="/ru/dostup-tolko-chtenie/">Доступ только на чтение</a>
+      <a href="/ru/avtor/">Автор</a>
+      <a href="https://besk.tech">besk.tech</a>
+    </div>
+  </div>
+</footer>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

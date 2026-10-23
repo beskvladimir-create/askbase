@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Askbase: read-only access</title>
+<meta name="description" content="What Askbase runs against your database, and the SQL to create a role that cannot do anything else.">
+<link rel="canonical" href="https://askbase.besk.tech/read-only-access/">
+<link rel="alternate" hreflang="en" href="https://askbase.besk.tech/read-only-access/">
+<link rel="alternate" hreflang="ru" href="https://askbase.besk.tech/ru/dostup-tolko-chtenie/">
+<link rel="alternate" hreflang="x-default" href="https://askbase.besk.tech/read-only-access/">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Askbase">
+<meta property="og:title" content="Askbase: read-only access">
+<meta property="og:description" content="What Askbase runs against your database, and the SQL to create a role that cannot do anything else.">
+<meta property="og:url" content="https://askbase.besk.tech/read-only-access/">
+<meta property="og:locale" content="en_GB">
+<meta property="og:image" content="https://askbase.besk.tech/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Askbase: read-only access", "description": "What Askbase runs against your database, and the SQL to create a role that cannot do anything else.", "inLanguage": "en", "url": "https://askbase.besk.tech/read-only-access/", "isPartOf": {"@type": "WebSite", "name": "Askbase", "url": "https://askbase.besk.tech/"}}</script>
+</head>
+<body>
+<nav class="nav" aria-label="Main navigation">
+  <a class="brand" href="/" aria-label="Askbase, home">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
+    Askbase</a>
+  <ul>
+    <li><a href="/model-ranking/">Ranking</a></li>
+    <li><a href="/comparison/">Comparison</a></li>
+    <li><a href="/where-your-data-goes/">Your data</a></li>
+    <li><a href="/read-only-access/">Read-only</a></li>
+    <li><a href="/author/">Author</a></li>
+  </ul>
+  <div class="lang" role="group" aria-label="Language">
+    <a href="/read-only-access/" aria-current="true" hreflang="en" lang="en">EN</a>
+    <span aria-hidden="true">/</span>
+    <a href="/ru/dostup-tolko-chtenie/" hreflang="ru" lang="ru">RU</a>
+  </div>
+</nav>
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Askbase</a> / Read-only access</nav>
+    <div class="eyebrow">For the database administrator</div>
+    <h1>What Askbase runs against your database, and how to make sure it cannot run anything else</h1>
+    <div class="prose">
+      <p class="lead">This page is written for whoever decides whether this software is allowed near a production database. It is not a sales page. The short version: create a role that can only read, give that role to Askbase, and treat everything the application does as a second line rather than the first.</p>
+
+      <div class="stats">
+        <div><b>1</b><span>statement per request, and it must be a SELECT. A second statement after a semicolon is rejected.</span></div>
+        <div><b>0</b><span>network connections. The model is a file on disk and the application runs with the Wi-Fi switched off.</span></div>
+        <div><b>0</b><span>rows of your data in the log. The log holds the query text, the time and the row count.</span></div>
+      </div>
+
+      <h2>What the application executes</h2>
+      <p>Every generated statement is parsed before execution and runs only if it passes a whitelist. Anything not on the list is refused, shown to the user with the reason, and never sent to the database.</p>
+      <ul>
+        <li>Exactly one statement. A semicolon followed by a second statement is refused.</li>
+        <li><code>SELECT</code> only, a leading <code>WITH</code> is allowed.</li>
+        <li>No <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code>, <code>CREATE</code>, <code>ALTER</code>, <code>TRUNCATE</code>, <code>GRANT</code>.</li>
+        <li>No transaction control, no <code>PRAGMA</code>, no administrative commands.</li>
+        <li>No recursive <code>WITH</code>.</li>
+        <li>Tables and qualified columns are checked against the schema snapshot taken at connection time.</li>
+        <li>If the statement has no <code>LIMIT</code>, the application adds one.</li>
+      </ul>
+      <p>On top of that, each query carries a timeout and a cap on the number of rows returned.</p>
+
+      <h2>Why the application's own rules are not enough</h2>
+      <p>Because one layer is one layer. Pedro and co-authors showed at ICSE 2025 that on an unmodified agent framework an instruction injected through text obtains full read and write access, and that attempts to defend by rewording the prompt proved exceedingly fragile.</p>
+      <p>Separately, a read-only role does not prevent denial of service. In a vulnerability report against Langchain-Chatchat, a heavy recursive <code>WITH</code> exhausted resources while read-only mode was enabled. That is why recursive expressions are refused by the parser here, not by permissions.</p>
+      <div class="callout">
+        <p>Permissions in the database and parsing in the application solve different problems. Use both. If a vendor tells you the model has been instructed not to misbehave, that is not a control.</p>
+      </div>
+
+      <h2>PostgreSQL</h2>
+      <p>Substitute your own names for <code>analytics</code>, <code>askbase_ro</code> and the password.</p>
+      <pre class="sql"><code>CREATE ROLE askbase_ro LOGIN PASSWORD 'set_your_own_password';
+
+GRANT CONNECT ON DATABASE analytics TO askbase_ro;
+REVOKE CREATE ON SCHEMA public FROM askbase_ro;
+GRANT USAGE ON SCHEMA public TO askbase_ro;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO askbase_ro;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO askbase_ro;</code></pre>
+      <p>Bound the resources on the role, so that a heavy query cannot affect anyone else.</p>
+      <pre class="sql"><code>ALTER ROLE askbase_ro SET statement_timeout = '30s';
+ALTER ROLE askbase_ro SET idle_in_transaction_session_timeout = '60s';
+ALTER ROLE askbase_ro SET default_transaction_read_only = on;</code></pre>
+      <p>If some columns must not be read at all, do not grant the table. Create a view with the permitted columns and grant that instead.</p>
+      <pre class="sql"><code>CREATE VIEW clients_safe AS
+  SELECT id, region_id, dt_reg FROM clients;   -- no names, no phone numbers
+GRANT SELECT ON clients_safe TO askbase_ro;
+REVOKE SELECT ON clients FROM askbase_ro;</code></pre>
+      <p>This also improves the answers. The schema snapshot will contain only what is permitted, so the model will not write queries against columns it cannot read.</p>
+
+      <h2>MySQL</h2>
+      <pre class="sql"><code>CREATE USER 'askbase_ro'@'localhost' IDENTIFIED BY 'set_your_own_password';
+GRANT SELECT ON analytics.* TO 'askbase_ro'@'localhost';
+FLUSH PRIVILEGES;
+
+ALTER USER 'askbase_ro'@'localhost'
+  WITH MAX_QUERIES_PER_HOUR 2000 MAX_USER_CONNECTIONS 4;</code></pre>
+      <p>MySQL has no per-role statement timeout, so the timeout is enforced by the application. As with PostgreSQL, hide individual columns behind views rather than granting the underlying tables.</p>
+
+      <h2>SQLite</h2>
+      <p>SQLite has no users; permissions are the file's. Work from a copy rather than the live file, and take the copy in a way that cannot catch the database mid-write.</p>
+      <pre class="sql"><code>sqlite3 /path/to/analytics.sqlite ".backup '/path/to/analytics-ro.sqlite'"
+chmod 444 /path/to/analytics-ro.sqlite</code></pre>
+
+      <h2>Four checks before you allow it</h2>
+      <ol>
+        <li>Connect with the new role. The connection screen reports the privileges it found. A warning about write access means the role is not what you intended.</li>
+        <li>Switch off the Wi-Fi and ask a question. The answer should still arrive.</li>
+        <li>Open the query log and confirm it holds statements and row counts, not data.</li>
+        <li>From that role, try to create a table. It must fail on permissions.</li>
+      </ol>
+
+      <h2>What we cannot do for you</h2>
+      <p>A read-only role does not limit which data a person may see. If someone must not see salaries, that restriction belongs in the permissions or in a view, not in the application. Askbase will honestly show everything the role can reach.</p>
+    </div>
+
+    <div class="related">
+      <p class="micro">Related</p>
+      <div class="links">
+        <a href="/where-your-data-goes/">Where your data goes</a>
+        <a href="/comparison/">How it compares</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p class="micro">Askbase &middot; Besk Tech</p>
+      <p>The model runs on your machine. The application does not need a network, and there is no telemetry.</p>
+    </div>
+    <div class="links">
+      <a href="/comparison/">Comparison</a>
+      <a href="/where-your-data-goes/">Where your data goes</a>
+      <a href="/read-only-access/">Read-only access</a>
+      <a href="/author/">Author</a>
+      <a href="https://besk.tech">besk.tech</a>
+    </div>
+  </div>
+</footer>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Askbase: ask your database in plain words</title>
+<meta name="description" content="A desktop application that answers questions about your own database. The model runs on your machine, so the question and the data never leave it.">
+<link rel="canonical" href="https://askbase.besk.tech/">
+<link rel="alternate" hreflang="en" href="https://askbase.besk.tech/">
+<link rel="alternate" hreflang="ru" href="https://askbase.besk.tech/ru/">
+<link rel="alternate" hreflang="x-default" href="https://askbase.besk.tech//">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Askbase">
+<meta property="og:title" content="Askbase: ask your database in plain words">
+<meta property="og:description" content="A desktop application that answers questions about your own database. The model runs on your machine, so the question and the data never leave it.">
+<meta property="og:url" content="https://askbase.besk.tech/">
+<meta property="og:locale" content="en_GB">
+<meta property="og:image" content="https://askbase.besk.tech/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Askbase: ask your database in plain words", "description": "A desktop application that answers questions about your own database. The model runs on your machine, so the question and the data never leave it.", "inLanguage": "en", "url": "https://askbase.besk.tech/", "isPartOf": {"@type": "WebSite", "name": "Askbase", "url": "https://askbase.besk.tech/"}}</script>
+</head>
+<body>
+<nav class="nav" aria-label="Main navigation">
+  <a class="brand" href="/" aria-label="Askbase, home">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
+    Askbase</a>
+  <ul>
+    <li><a href="/model-ranking/">Ranking</a></li>
+    <li><a href="/comparison/">Comparison</a></li>
+    <li><a href="/where-your-data-goes/">Your data</a></li>
+    <li><a href="/read-only-access/">Read-only</a></li>
+    <li><a href="/author/">Author</a></li>
+  </ul>
+  <div class="lang" role="group" aria-label="Language">
+    <a href="//" aria-current="true" hreflang="en" lang="en">EN</a>
+    <span aria-hidden="true">/</span>
+    <a href="/ru/" hreflang="ru" lang="ru">RU</a>
+  </div>
+</nav>
+<section class="open">
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="eyebrow rise">Askbase for macOS</div>
+    <p class="mark rise d1">Askbase</p>
+    <div class="sub">
+      <div>
+        <h1 class="rise d2">Ask your database a question. Get the table and the query behind it.</h1>
+        <p class="lead rise d2">The model is a file on your disk, so the question and the data never leave the computer. Free, and there is no account to create.</p>
+        <div class="cta rise d3">
+          <a class="btn primary" href="#how">See how it works</a>
+          <a class="btn" href="/where-your-data-goes/">Where your data goes</a>
+        </div>
+        <div class="facts rise d3"><p><strong>No network needed.</strong> The application works with the Wi-Fi switched off.</p></div>
+      </div>
+      <div class="tilt rise d3"><figure class="ask" tabindex="0" aria-label="How Askbase answers a question">
+  <div class="chrome"><span class="dot"></span>Askbase<span class="db"><span class="pre">connected to </span><b>analytics</b> &middot; read-only</span></div>
+  <div class="rail"><button type="button" data-step="0" aria-current="step"><span class="t"></span><span class="s">1. Question</span></button><button type="button" data-step="1"><span class="t"></span><span class="s">2. Query</span></button><button type="button" data-step="2"><span class="t"></span><span class="s">3. Answer</span></button></div>
+  <div class="panes">
+    <div class="pane" data-on>
+      <p class="plabel">Question</p>
+      <p class="q"><span class="text" data-q="How many new customers came from each region in September?">How many new customers came from each region in September?</span><span class="caret"></span></p>
+    </div>
+    <div class="pane">
+      <p class="plabel">Query</p>
+      <pre class="sql"><span class="ln"><span class="kw">SELECT</span> r.name, <span class="kw">COUNT</span>(*) <span class="kw">AS</span> n</span><span class="ln"><span class="kw">FROM</span> clients c</span><span class="ln"><span class="kw">JOIN</span> regions r <span class="kw">ON</span> r.id = c.region_id</span><span class="ln"><span class="kw">WHERE</span> c.dt_reg &gt;= '2026-09-01'</span><span class="ln">  <span class="kw">AND</span> c.dt_reg &lt;  '2026-10-01'</span><span class="ln"><span class="kw">GROUP BY</span> r.name <span class="lim">LIMIT 1000</span></span></pre>
+    </div>
+    <div class="pane">
+      <p class="plabel">Answer</p>
+      <table><thead><tr><th>Region</th><th class="num">Customers</th></tr></thead>
+      <tbody><tr><td>Manchester</td><td class="num">412</td></tr><tr><td>Leeds</td><td class="num">188</td></tr><tr><td>Bristol</td><td class="num">94</td></tr><tr><td>Cardiff</td><td class="num">71</td></tr></tbody></table>
+      <p class="said"><b>What it counted.</b> Customers whose registration date falls in September 2026, grouped by region. Customers with no region are not in the answer.</p>
+    </div>
+  </div>
+  <figcaption class="bar"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" stroke="currentColor" stroke-width="1.5"/></svg><span>Model and data stay on this computer</span>
+    <button class="pause" type="button" aria-pressed="false" data-play="PLAY" data-stop="PAUSE">PAUSE</button>
+  </figcaption>
+</figure></div>
+    </div>
+    <div class="cue"><i></i>Watch it answer</div>
+  </div>
+</section>
+
+<section class="line" id="how">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Three steps</div>
+      <h2>Connect a database, ask in words, read the answer</h2>
+      <p class="lead">There is nothing to model, nothing to configure and no query language to learn. The first answer takes about a minute from opening the application.</p>
+    </div>
+    <ol class="flow reveal d1">
+      <li>
+        <div class="viz"><div class="drop"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5L13.5 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 3v5.5H19" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span><b>sales_2026.sqlite</b><br>34 tables, 412 columns</span></div><span class="tag">read-only &middot; checked</span></div>
+        <div class="body"><span class="n">01</span><h3>Connect</h3><p>Drop in an SQLite file, or enter the host for PostgreSQL. The password goes into the macOS Keychain, never into a settings file.</p></div>
+      </li>
+      <li>
+        <div class="viz"><div class="field">Top ten customers by revenue this year<i></i></div><span class="tag">no table names needed</span></div>
+        <div class="body"><span class="n">02</span><h3>Ask</h3><p>Type the question the way you would say it to a colleague. Russian and English both work, and the application does not need the table names.</p></div>
+      </li>
+      <li>
+        <div class="viz"><table class="mini"><tr><td>Manchester</td><td>412</td></tr><tr><td>Leeds</td><td>188</td></tr><tr><td>Bristol</td><td>94</td></tr></table><span class="tag">SQL shown &middot; CSV</span></div>
+        <div class="body"><span class="n">03</span><h3>Read</h3><p>You get the table, the query that produced it, and a sentence saying what was counted and what was left out.</p></div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="line">
+  <div class="wrap">
+    <div class="head reveal">
+        <div class="eyebrow">What makes it different</div>
+        <h2>The same four questions, two different answers</h2>
+      </div>
+      <div class="contrast reveal d1">
+      <div class="row hd"><div></div><div>Typical desktop tool</div><div class="me">Askbase</div></div>
+      <div class="row"><div class="q">Where the model runs</div><div class="them" data-l="Typical tool">In the cloud. One vendor states on its own pricing page that running from your device does not mean the processing is offline.</div><div class="us" data-l="Askbase"><b>On your disk.</b> The application works with the Wi-Fi switched off.</div></div>
+      <div class="row"><div class="q">What protects your database</div><div class="them" data-l="Typical tool">A read-only role, and instructions in the prompt. Published research shows prompt wording is not a safety measure.</div><div class="us" data-l="Askbase"><b>A read-only role, plus a parser.</b> One SELECT only, no recursive CTEs, a row limit and a timeout.</div></div>
+      <div class="row"><div class="q">Whether you can check the answer</div><div class="them" data-l="Typical tool">A table, and usually the SQL.</div><div class="us" data-l="Askbase"><b>The table, the SQL, and the assumptions</b> in a plain sentence, including who was left out.</div></div>
+      <div class="row"><div class="q">What the accuracy is</div><div class="them" data-l="Typical tool">Not published on any public benchmark, for any of the eight tools I checked.</div><div class="us" data-l="Askbase"><b>Measured and published</b> under a protocol fixed before the run. No number until the run exists.</div></div>
+      </div>
+      <div class="links"><a class="btn small" href="/comparison/">See every tool compared</a><a class="btn small" href="/author/">Why trust the measurement</a></div>
+  </div>
+</section>
+
+<section class="line">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Status</div>
+      <h2>In development, and this page says so</h2>
+      <p class="lead">Askbase is being built in the open. The benchmark, the held-out question set and the protocol will be published; the application itself is in progress. There is no download yet, and this page will carry one when there is.</p>
+      <p><em class="p">A number without a protocol is an advertisement.</em></p>
+      <div class="links">
+        <a class="btn small" href="https://arxiv.org/abs/2606.29733">Read the benchmark it grew from</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p class="micro">Askbase &middot; Besk Tech</p>
+      <p>The model runs on your machine. The application does not need a network, and there is no telemetry.</p>
+    </div>
+    <div class="links">
+      <a href="/comparison/">Comparison</a>
+      <a href="/where-your-data-goes/">Where your data goes</a>
+      <a href="/read-only-access/">Read-only access</a>
+      <a href="/author/">Author</a>
+      <a href="https://besk.tech">besk.tech</a>
+    </div>
+  </div>
+</footer>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

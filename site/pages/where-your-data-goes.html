@@ -1,0 +1,83 @@
+<!--meta {"path": "/where-your-data-goes/", "type": "article", "published": "2026-10-21", "checked": "2026-10-21"}-->
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Askbase</a> / Where your data goes</nav>
+    <div class="eyebrow">Privacy &middot; checked 21 October 2026</div>
+    <h1>Where your schema and your questions go, product by product</h1>
+    <!--byline-->
+    <div class="prose">
+      <p class="lead">Every tool that turns a question into SQL has to read your schema, and most of them have to send it somewhere to do that. For an organisation that may not move its data, this is the first question to settle and usually the last one that gets asked. Here is what each product does, and what I could not confirm.</p>
+
+      <h2>What leaves the machine, and when</h2>
+      <p>Three things can travel: the schema, the question, and the rows that come back. A product can be careful with one and careless with another, so they are worth separating.</p>
+
+      <div class="zones">
+        <div>
+          <p class="micro">Askbase</p>
+          <p class="none">None</p>
+          <ul>
+            <li>the model is a file on your disk</li>
+            <li>the database connection is direct</li>
+            <li>the application does not need a network</li>
+            <li>no account, no activation, no telemetry</li>
+          </ul>
+        </div>
+        <div>
+          <p class="micro">Cloud warehouse assistants</p>
+          <p class="none">Schema and question</p>
+          <ul>
+            <li>Snowflake Cortex Analyst and Databricks Genie run inside your own cloud account</li>
+            <li>your data stays with that vendor, and it is still in a cloud, not on your hardware</li>
+            <li>neither can run on a laptop without a network</li>
+          </ul>
+        </div>
+        <div>
+          <p class="micro">Desktop tools with a cloud model</p>
+          <p class="none">Schema and question</p>
+          <ul>
+            <li>AskYourDatabase includes Claude Sonnet 5, Claude Haiku 4.5 and GPT-4.1 in a desktop seat</li>
+            <li>its pricing page states that desktop connections run from your device and that this does not mean the AI processing is offline</li>
+            <li>DataLine keeps data on the device and hides it from the model by default, which can be switched off; the schema and question still travel</li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>The business intelligence suites</h2>
+      <p>These are not alternatives for an organisation that cannot move data, for a reason that has nothing to do with their quality. They cannot be installed and run without their service.</p>
+      <ul>
+        <li><strong>Power BI Copilot</strong> has no separate licence. It requires paid Fabric capacity at F2 or above, or Premium P1 or above, and consumes capacity units as it is used.</li>
+        <li><strong>Tableau Agent</strong> requires Cloud+ or Tableau+. The dashboards beta consumes Data 360 credits.</li>
+        <li><strong>ThoughtSpot Spotter</strong> is available on the Pro plan at 50 USD per user per month, and per-user plans cap it at 25 queries per user per month.</li>
+      </ul>
+
+      <h2>What I could not confirm</h2>
+      <p>I am stating this rather than writing around it. For Power BI Copilot, Tableau Agent and ThoughtSpot Spotter, I could not establish from the sources I found where the natural-language request and the data are actually processed, or in which region. Those products are delivered as services, so something clearly leaves the tenant, but the specifics belong in each vendor&rsquo;s own data residency and AI processing documentation, and I have not verified them. If that distinction matters to your decision, read their documentation rather than this page.</p>
+      <p>I also have not independently tested the privacy behaviour of AskYourDatabase or DataLine. The statements above are taken from the vendor&rsquo;s pricing page and the project&rsquo;s README respectively, which is the strongest evidence available without instrumenting the network, and weaker than a measurement.</p>
+
+      <h2>Why a local model only became reasonable recently</h2>
+      <p>Until recently the honest answer to &ldquo;can this run on a laptop&rdquo; was that it could, badly. That changed because specialised models got good at a size that fits in memory. Snowflake&rsquo;s Arctic-Text2SQL-R1-7B reports 68.9% execution accuracy on BIRD dev at seven billion parameters, under Apache-2.0. For comparison, my own measurement of a general-purpose Qwen2.5-Coder-32B with self-correction on the same split was 51.63%, published in <a href="https://arxiv.org/abs/2606.29733">arXiv:2606.29733</a>.</p>
+      <p><em class="p">The useful model stopped being the large one.</em> A specialised model four and a half times smaller is the reason a product like this can exist without a cloud behind it, and the reason every product built a year ago has a cloud behind it.</p>
+
+      <h2>What privacy costs here, stated plainly</h2>
+      <p>Keeping everything on the machine is not free of consequences, and I would rather name them than let them be discovered.</p>
+      <ul>
+        <li><strong>The model is slower than a cloud model</strong>, because it runs on your hardware rather than on an accelerator in a data centre. The figures will be published with the ranking, measured on named hardware.</li>
+        <li><strong>The model is smaller than a cloud model</strong>, and on the hardest questions that shows. This is why accuracy is measured and published rather than asserted.</li>
+        <li><strong>There is no telemetry, so I learn nothing about usage.</strong> That is the cost of the promise, and it cannot be bought back with anonymous statistics without breaking the promise. Feedback happens when you choose to send it.</li>
+        <li><strong>A read-only database role is still your responsibility.</strong> The application runs only SELECT, parses every query before executing it, and adds a row limit, but a role with write permissions is a risk the application cannot remove for you.</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>On prompt instructions as a safety measure.</strong> They are not one. Pedro and co-authors showed at ICSE 2025 that an injected instruction can obtain full read and write access through an unmodified agent framework, and that hardening the prompt by hand was exceedingly fragile. Askbase enforces read-only at the connection, parses the statement before execution, rejects anything other than a single SELECT, refuses recursive common table expressions, and imposes a row limit and a timeout. None of that depends on wording.</p>
+      </div>
+    </div>
+
+    <div class="related">
+      <p class="micro">Related</p>
+      <div class="links">
+        <a href="/comparison/">How it compares</a>
+        <a href="/author/">About the author</a>
+      </div>
+    </div>
+  </div>
+</article>

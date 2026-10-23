@@ -1,0 +1,116 @@
+<!--meta {"path": "/ru/reyting-modeley/", "type": "article", "published": "2026-10-21"}-->
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Навигационная цепочка"><a href="/ru/">Askbase</a> / Рейтинг моделей</nav>
+    <div class="eyebrow">Открытый рейтинг &middot; протокол зафиксирован 21 октября 2026</div>
+    <h1>Какие открытые модели действительно хороши в SQL, измеренные одинаково</h1>
+    <!--byline-->
+    <div class="prose">
+      <p class="lead">Опубликованные цифры моделей text-to-SQL нельзя сравнивать между собой. Каждая получена авторами модели, при их промпте и их способе подачи схемы, и разница от этого больше, чем разница между самими моделями. На этой странице они измеряются одним способом, а протокол публикуется до прогона, а не после.</p>
+
+      <div class="stats">
+        <div><b>5</b><span>пунктов разницы на одной модели и одном наборе, только от того, как схема записана в промпт</span></div>
+        <div><b>52,8%</b><span>задач BIRD Mini-Dev содержат ошибки разметки, из-за этого и существует свой замороженный набор</span></div>
+        <div><b>0</b><span>из опубликованных ниже цифр получены в одинаковых условиях, ради этого и делается замер</span></div>
+      </div>
+
+      <h2>Что заявляют сегодня</h2>
+      <p>Это цифры, которые публикуют сами авторы, и рейтинг, который из них получается. Два правых столбца читайте раньше среднего. Седьмая и восьмая строки это те же модели, измеренные иначе: XiYanSQL-32B теряет пять пунктов, когда схема подаётся как DDL, а не как M-Schema, а Qwen2.5-Coder-32B это универсальная модель под моим собственным протоколом. Лидером пользоваться нельзя вовсе, потому что его веса так и не выложили.</p>
+      <table class="rank">
+        <thead><tr><th>#</th><th>Модель</th><th style="text-align:right">Заявлено на BIRD dev</th><th>Веса</th><th>Источник</th></tr></thead>
+        <tbody>
+          <tr class="out"><td class="pos">1</td><td class="name">Arctic-Text2SQL-R1-32B<small>32B · Snowflake</small></td><td class="score">70.47</td><td><span class="flag no">не выложены</span></td><td class="note"><a href="https://arxiv.org/abs/2505.20315">статья</a></td></tr>
+          <tr><td class="pos">2</td><td class="name">Arctic-Text2SQL-R1-7B<small>7B · Apache-2.0 · Snowflake</small></td><td class="score">68.9</td><td><span class="flag">можно скачать</span></td><td class="note"><a href="https://huggingface.co/Snowflake/Arctic-Text2SQL-R1-7B">карточка модели</a></td></tr>
+          <tr><td class="pos">3</td><td class="name">XiYanSQL-QwenCoder-32B<small>32B · Apache-2.0 · XGenerationLab</small></td><td class="score">67.14</td><td><span class="flag">можно скачать</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">карточка модели</a></td></tr>
+          <tr><td class="pos">4</td><td class="name">XiYanSQL-QwenCoder-14B<small>14B · Apache-2.0 · XGenerationLab</small></td><td class="score">65.32</td><td><span class="flag">можно скачать</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">карточка модели</a></td></tr>
+          <tr><td class="pos">5</td><td class="name">OmniSQL-32B<small>32B · Apache-2.0 · RUC</small></td><td class="score">64.5</td><td><span class="flag">можно скачать</span></td><td class="note"><a href="https://huggingface.co/Snowflake/Arctic-Text2SQL-R1-7B">карточка модели</a></td></tr>
+          <tr><td class="pos">6</td><td class="name">XiYanSQL-QwenCoder-7B<small>7B · Apache-2.0 · XGenerationLab</small></td><td class="score">62.13</td><td><span class="flag">можно скачать</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">карточка модели</a></td></tr>
+          <tr><td class="pos">7</td><td class="name">XiYanSQL-QwenCoder-32B<small>32B, the same model, schema written as DDL</small></td><td class="score">62.26</td><td><span class="flag">можно скачать</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">карточка модели</a></td></tr>
+          <tr><td class="pos">8</td><td class="name">Qwen2.5-Coder-32B<small>32B · Apache-2.0 · general purpose, with self-correction</small></td><td class="score">51.63</td><td><span class="flag">можно скачать</span></td><td class="note"><a href="https://arxiv.org/abs/2606.29733">мой замер</a></td></tr>
+        </tbody>
+      </table>
+      <p class="note">Цифры самих авторов, каждая в своих условиях. Это не сравнение на равных.</p>
+      <ul class="bars">
+        <li class="bar-row"><span class="name">Arctic-Text2SQL-R1-32B</span><span class="track"><span class="fill" data-w="70.47"></span></span><span class="pct">70.47</span></li>
+        <li class="bar-row me"><span class="name">Arctic-Text2SQL-R1-7B</span><span class="track"><span class="fill" data-w="68.9"></span></span><span class="pct">68.9</span></li>
+        <li class="bar-row"><span class="name">XiYanSQL-QwenCoder-32B</span><span class="track"><span class="fill" data-w="67.14"></span></span><span class="pct">67.14</span></li>
+        <li class="bar-row"><span class="name">XiYanSQL-QwenCoder-14B</span><span class="track"><span class="fill" data-w="65.32"></span></span><span class="pct">65.32</span></li>
+        <li class="bar-row"><span class="name">OmniSQL-32B</span><span class="track"><span class="fill" data-w="64.5"></span></span><span class="pct">64.5</span></li>
+        <li class="bar-row"><span class="name">XiYanSQL-QwenCoder-7B</span><span class="track"><span class="fill" data-w="62.13"></span></span><span class="pct">62.13</span></li>
+      </ul>
+
+      <h2>Чего эта таблица не говорит</h2>
+      <p>В ней ничто не сопоставимо. Каждое число получено авторами при их промпте, их формате схемы и их декодировании, на бенчмарке, разметка которого ошибочна в половине случаев. Разброс в пять пунктов от одного только формата схемы больше, чем разрыв между большинством этих строк. Ровно ради этого и делается замер ниже.</p>
+
+      <h2>Результаты</h2>
+      <div data-when="pending">
+        <div class="callout">
+          <p><strong>Прогона ещё не было.</strong> Эта таблица заполняется сборкой из файлов результатов, и сборка отказывается публиковать цифру, под которой нет файла. Пока прогона нет, здесь пусто, и это сделано намеренно, а не по недосмотру.</p>
+          <p>Участники первой волны: Arctic-Text2SQL-R1-7B, XiYanSQL-QwenCoder на 7B, 14B и 32B, OmniSQL-32B, Qwen2.5-Coder на 7B, 14B и 32B как база, связывающая эти числа с arXiv:2606.29733, и Qwen3-Coder-30B-A3B. Arctic-Text2SQL-R1-32B исключена: её веса не опубликованы, поэтому заявленную цифру нельзя ни воспроизвести, ни развернуть.</p>
+        </div>
+      </div>
+      <div data-when="results">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Модель</th><th class="num">BIRD dev</th><th class="num">Наш, английский</th><th class="num">Наш, русский</th><th class="num">Задержка p95</th></tr></thead>
+          <tbody>
+            <tr><td>Arctic-Text2SQL-R1-7B</td><td class="num">{=arctic-7b-q4|base|ex_accuracy}</td><td class="num">{=arctic-7b-q4|holdout-en|ex_accuracy}</td><td class="num">{=arctic-7b-q4|holdout-ru|ex_accuracy}</td><td class="num">{=arctic-7b-q4|base|s_per_query}</td></tr>
+            <tr><td>XiYanSQL-QwenCoder-7B</td><td class="num">{=xiyan-7b-q4|base|ex_accuracy}</td><td class="num">{=xiyan-7b-q4|holdout-en|ex_accuracy}</td><td class="num">{=xiyan-7b-q4|holdout-ru|ex_accuracy}</td><td class="num">{=xiyan-7b-q4|base|s_per_query}</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <h2>Протокол, зафиксированный до прогона</h2>
+      <p>Всё перечисленное записано до того, как измерена хоть одна модель, и лежит в репозитории вместе с коммитом, который это зафиксировал. Если что-то из этого меняется, прогон повторяется, а не правится.</p>
+      <ul>
+        <li>Одни и те же вопросы для всех участников, в одном порядке, из детерминированной выборки.</li>
+        <li>Один промпт, жадное декодирование, один вызов, без примеров в контексте, если только измеряется не это.</li>
+        <li>Один бюджет контекста и один таймаут исполнения для всех.</li>
+        <li>Наш движок проходит через тот же интерфейс, что и остальные, без привилегий.</li>
+        <li>Попредметные предсказания публикуются для каждого прогона, включая неверные.</li>
+        <li>Интервалы бутстрепом по вопросам, 2000 повторов, зерно 0. Вердикт, который меняется при зёрнах от 0 до 5, записывается как неопределённый.</li>
+      </ul>
+
+      <h2>Что измеряется и на чём</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Набор</th><th>Что это</th><th class="num">Размер</th><th>Что решает</th></tr></thead>
+        <tbody>
+          <tr><td>BIRD dev</td><td>публичный английский стандарт</td><td class="num">1534</td><td>сопоставимость с опубликованными работами</td></tr>
+          <tr><td>BIRD dev, чистый срез</td><td>тот же набор после контроля качества авторами</td><td class="num">1534</td><td>сколько в нашем же результате шума разметки</td></tr>
+          <tr><td>RedSQL</td><td>публичный русский, предметный</td><td class="num">409</td><td>внешняя точка отсчёта на втором языке</td></tr>
+          <tr><td><strong>Наш отложенный набор</strong></td><td>заморожен с хешем SHA-256 до того, как его увидит любой инструмент</td><td class="num">600</td><td>вердикт и разрыв между языками</td></tr>
+        </tbody>
+      </table></div>
+      <p>Отложенный набор это одни схемы и один эталонный запрос на задачу, к которым написаны четыре формулировки вопроса: две английских и две русских. Именно это делает разрыв между языками измеримым на одной и той же цели, чего не даёт ни один опубликованный набор. Русские формулировки написаны от смысла, а не переведены с английского, иначе замер выродился бы в проверку качества перевода.</p>
+
+      <div class="callout">
+        <p><strong>Зачем свой набор, если есть публичные.</strong> Работа Jin, Choi, Zhu и Kang на CIDR 2026 нашла ошибки разметки в 52,8% задач BIRD Mini-Dev и в 66,1% задач Spider 2.0-Snow с открытыми эталонными запросами. Их исправление сдвинуло ведущие системы на величину до 19 пунктов и до трёх мест. Оценка на публичном бенчмарке это сравнение с другими статьями, а не обещание точности на чьих-либо данных.</p>
+      </div>
+
+      <h2>Пороги и правило вердикта</h2>
+      <p>Они тоже зафиксированы до прогона, чтобы результат нельзя было перетолковать, когда он уже известен.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Порог</th><th>Значение</th></tr></thead>
+        <tbody>
+          <tr><td>Обвязка не вредит</td><td>наш движок на отложенном наборе не ниже лучшей доступной одиночной модели под тем же протоколом</td></tr>
+          <tr><td>Английский, публичный набор</td><td>не ниже 65% на BIRD dev</td></tr>
+          <tr><td>Английский, свой набор</td><td>не ниже лучшей закрытой модели под тем же протоколом на том же наборе</td></tr>
+          <tr><td>Второй язык работает</td><td>русский отстаёт от английского не больше чем на 10 пунктов</td></tr>
+          <tr><td>Безопасность</td><td>100% попыток выйти за пределы SELECT заблокированы, 0 запросов исполнено без лимита строк и таймаута</td></tr>
+        </tbody>
+      </table></div>
+      <p>Правило вердикта одно для всех. Выполнено, если весь 95% интервал лежит по нужную сторону порога. Не выполнено, если весь интервал по другую. Иначе неопределённо, и так и записывается, а не округляется до ответа.</p>
+
+      <h2>Чего эта страница делать не будет</h2>
+      <p>Она не поставит цифру из чужой карточки модели рядом с нашими замерами так, будто это одно и то же. Такие числа идут в тексте со ссылкой на источник и никогда в эту таблицу. Она не выкинет модель из-за неудобного результата: публикуется тот список участников, который выше.</p>
+      <p>Каждый провал разбирается руками до вердикта, не меньше двадцати случайных на прогон, и делится на ошибку модели и ложное срабатывание оценщика. Доля вторых публикуется рядом с точностью. Эта проверка есть потому, что оценщик ошибается ровно так же, как ошибается разметка бенчмарка.</p>
+    </div>
+
+    <div class="related">
+      <p class="micro">Ещё по теме</p>
+      <div class="links">
+        <a href="/ru/sravnenie/">Сравнение инструментов</a>
+        <a href="/ru/avtor/">Бенчмарк, из которого это выросло</a>
+      </div>
+    </div>
+  </div>
+</article>

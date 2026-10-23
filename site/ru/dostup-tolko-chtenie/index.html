@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Askbase: доступ только на чтение</title>
+<meta name="description" content="Что Askbase выполняет в вашей базе и готовый SQL для роли, которая больше ничего не умеет.">
+<link rel="canonical" href="https://askbase.besk.tech/ru/dostup-tolko-chtenie/">
+<link rel="alternate" hreflang="ru" href="https://askbase.besk.tech/ru/dostup-tolko-chtenie/">
+<link rel="alternate" hreflang="en" href="https://askbase.besk.tech/read-only-access/">
+<link rel="alternate" hreflang="x-default" href="https://askbase.besk.tech/read-only-access/">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Askbase">
+<meta property="og:title" content="Askbase: доступ только на чтение">
+<meta property="og:description" content="Что Askbase выполняет в вашей базе и готовый SQL для роли, которая больше ничего не умеет.">
+<meta property="og:url" content="https://askbase.besk.tech/ru/dostup-tolko-chtenie/">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:image" content="https://askbase.besk.tech/assets/og-ru.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Askbase: доступ только на чтение", "description": "Что Askbase выполняет в вашей базе и готовый SQL для роли, которая больше ничего не умеет.", "inLanguage": "ru", "url": "https://askbase.besk.tech/ru/dostup-tolko-chtenie/", "isPartOf": {"@type": "WebSite", "name": "Askbase", "url": "https://askbase.besk.tech/"}}</script>
+</head>
+<body>
+<nav class="nav" aria-label="Основная навигация">
+  <a class="brand" href="/ru/" aria-label="Askbase, на главную">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
+    Askbase</a>
+  <ul>
+    <li><a href="/ru/reyting-modeley/">Рейтинг</a></li>
+    <li><a href="/ru/sravnenie/">Сравнение</a></li>
+    <li><a href="/ru/kuda-uhodyat-dannye/">Ваши данные</a></li>
+    <li><a href="/ru/dostup-tolko-chtenie/">Только чтение</a></li>
+    <li><a href="/ru/avtor/">Автор</a></li>
+  </ul>
+  <div class="lang" role="group" aria-label="Язык">
+    <a href="/read-only-access/" hreflang="en" lang="en">EN</a>
+    <span aria-hidden="true">/</span>
+    <a href="/ru/dostup-tolko-chtenie/" aria-current="true" hreflang="ru" lang="ru">RU</a>
+  </div>
+</nav>
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Навигационная цепочка"><a href="/ru/">Askbase</a> / Доступ только на чтение</nav>
+    <div class="eyebrow">Для администратора базы данных</div>
+    <h1>Что Askbase выполняет в вашей базе и как сделать так, чтобы он не смог выполнить ничего другого</h1>
+    <div class="prose">
+      <p class="lead">Эта страница написана для того, кто решает, пускать ли программу к боевой базе. Это не страница про продажу. Коротко: создайте роль, которая умеет только читать, отдайте её Askbase, и считайте всё, что делает приложение, вторым рубежом, а не первым.</p>
+
+      <div class="stats">
+        <div><b>1</b><span>выражение на запрос, и это SELECT. Второе выражение после точки с запятой отклоняется.</span></div>
+        <div><b>0</b><span>сетевых соединений. Модель лежит файлом на диске, приложение работает с выключенным Wi-Fi.</span></div>
+        <div><b>0</b><span>строк ваших данных в журнале. В журнале текст запроса, время и число строк.</span></div>
+      </div>
+
+      <h2>Что приложение выполняет</h2>
+      <p>Каждое сгенерированное выражение разбирается до исполнения и выполняется только если прошло белый список. Всё, чего в списке нет, отклоняется, показывается пользователю с причиной и в базу не отправляется.</p>
+      <ul>
+        <li>Ровно одно выражение. Точка с запятой со вторым выражением отклоняется.</li>
+        <li>Только <code>SELECT</code>, допускается ведущий <code>WITH</code>.</li>
+        <li>Никаких <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>DROP</code>, <code>CREATE</code>, <code>ALTER</code>, <code>TRUNCATE</code>, <code>GRANT</code>.</li>
+        <li>Никакого управления транзакциями, <code>PRAGMA</code> и служебных команд.</li>
+        <li>Никаких рекурсивных <code>WITH</code>.</li>
+        <li>Таблицы и столбцы с указанием таблицы сверяются со слепком схемы, снятым при подключении.</li>
+        <li>Если в выражении нет <code>LIMIT</code>, приложение его добавляет.</li>
+      </ul>
+      <p>Сверх этого на каждый запрос стоит таймаут и ограничение на число возвращаемых строк.</p>
+
+      <h2>Почему правил приложения недостаточно</h2>
+      <p>Потому что один рубеж это один рубеж. Pedro с соавторами показали на ICSE 2025, что на неизменённом каркасе агента внедрённая через текст инструкция получает полный доступ на чтение и запись, а попытки защититься правкой формулировок оказались крайне хрупкими.</p>
+      <p>Отдельно: роль только для чтения не спасает от отказа в обслуживании. В отчёте об уязвимости Langchain-Chatchat тяжёлый рекурсивный <code>WITH</code> исчерпывал ресурсы при включённом режиме только для чтения. Поэтому рекурсивные выражения здесь запрещены разбором, а не правами.</p>
+      <div class="callout">
+        <p>Права в базе и разбор запроса в приложении решают разные задачи. Нужны оба. Если поставщик говорит, что модели велено не делать ничего плохого, это не средство защиты.</p>
+      </div>
+
+      <h2>PostgreSQL</h2>
+      <p>Подставьте свои имена вместо <code>analytics</code>, <code>askbase_ro</code> и пароля.</p>
+      <pre class="sql"><code>CREATE ROLE askbase_ro LOGIN PASSWORD 'задайте_свой_пароль';
+
+GRANT CONNECT ON DATABASE analytics TO askbase_ro;
+REVOKE CREATE ON SCHEMA public FROM askbase_ro;
+GRANT USAGE ON SCHEMA public TO askbase_ro;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO askbase_ro;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO askbase_ro;</code></pre>
+      <p>Ограничьте ресурсы на уровне роли, чтобы тяжёлый запрос не задел остальных.</p>
+      <pre class="sql"><code>ALTER ROLE askbase_ro SET statement_timeout = '30s';
+ALTER ROLE askbase_ro SET idle_in_transaction_session_timeout = '60s';
+ALTER ROLE askbase_ro SET default_transaction_read_only = on;</code></pre>
+      <p>Если часть столбцов читать нельзя вовсе, не выдавайте права на таблицу. Сделайте представление с разрешёнными столбцами и дайте права на него.</p>
+      <pre class="sql"><code>CREATE VIEW clients_safe AS
+  SELECT id, region_id, dt_reg FROM clients;   -- без имён и телефонов
+GRANT SELECT ON clients_safe TO askbase_ro;
+REVOKE SELECT ON clients FROM askbase_ro;</code></pre>
+      <p>Это заодно улучшает ответы. В слепок схемы попадёт только разрешённое, и модель не станет строить запросы к столбцам, которые читать нельзя.</p>
+
+      <h2>MySQL</h2>
+      <pre class="sql"><code>CREATE USER 'askbase_ro'@'localhost' IDENTIFIED BY 'задайте_свой_пароль';
+GRANT SELECT ON analytics.* TO 'askbase_ro'@'localhost';
+FLUSH PRIVILEGES;
+
+ALTER USER 'askbase_ro'@'localhost'
+  WITH MAX_QUERIES_PER_HOUR 2000 MAX_USER_CONNECTIONS 4;</code></pre>
+      <p>Таймаута на уровне роли в MySQL нет, поэтому время ограничивает приложение. Как и в PostgreSQL, отдельные столбцы скрывайте представлениями, а не выдачей прав на исходные таблицы.</p>
+
+      <h2>SQLite</h2>
+      <p>Пользователей в SQLite нет, права задаются файлом. Работайте с копией, а не с боевым файлом, и снимайте копию так, чтобы не поймать базу в середине записи.</p>
+      <pre class="sql"><code>sqlite3 /путь/к/analytics.sqlite ".backup '/путь/к/analytics-ro.sqlite'"
+chmod 444 /путь/к/analytics-ro.sqlite</code></pre>
+
+      <h2>Четыре проверки перед тем, как пускать</h2>
+      <ol>
+        <li>Подключитесь созданной ролью. Экран подключения показывает найденные права. Предупреждение о праве на запись означает, что роль получилась не та.</li>
+        <li>Выключите Wi-Fi и задайте вопрос. Ответ должен прийти.</li>
+        <li>Откройте журнал запросов и убедитесь, что там выражения и число строк, а не данные.</li>
+        <li>Попробуйте от этой роли создать таблицу. Должна быть ошибка прав.</li>
+      </ol>
+
+      <h2>Чего мы не можем сделать за вас</h2>
+      <p>Роль только для чтения не ограничивает, какие именно данные человек видит. Если кому-то нельзя видеть зарплаты, запрет должен быть в правах или в представлении, а не в приложении. Askbase честно покажет всё, до чего роль дотягивается.</p>
+    </div>
+
+    <div class="related">
+      <p class="micro">Ещё по теме</p>
+      <div class="links">
+        <a href="/ru/kuda-uhodyat-dannye/">Куда уходят данные</a>
+        <a href="/ru/sravnenie/">Сравнение</a>
+      </div>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p class="micro">Askbase &middot; Besk Tech</p>
+      <p>Модель работает на вашем компьютере. Приложению не нужна сеть, телеметрии нет.</p>
+    </div>
+    <div class="links">
+      <a href="/ru/sravnenie/">Сравнение</a>
+      <a href="/ru/kuda-uhodyat-dannye/">Куда уходят данные</a>
+      <a href="/ru/dostup-tolko-chtenie/">Доступ только на чтение</a>
+      <a href="/ru/avtor/">Автор</a>
+      <a href="https://besk.tech">besk.tech</a>
+    </div>
+  </div>
+</footer>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

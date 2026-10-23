@@ -1,0 +1,116 @@
+<!--meta {"path": "/model-ranking/", "type": "article", "published": "2026-10-21"}-->
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Askbase</a> / Model ranking</nav>
+    <div class="eyebrow">Open ranking &middot; protocol fixed 21 October 2026</div>
+    <h1>Which open models are actually good at SQL, measured the same way</h1>
+    <!--byline-->
+    <div class="prose">
+      <p class="lead">Published figures for text-to-SQL models cannot be compared with each other. Each comes from its authors, under their own prompt and their own way of showing the schema, and the difference that makes is larger than the difference between the models. This page measures them all one way, and publishes the protocol before the run rather than after.</p>
+
+      <div class="stats">
+        <div><b>5</b><span>points of difference on one model and one dataset, purely from how the schema is written into the prompt</span></div>
+        <div><b>52.8%</b><span>of BIRD Mini-Dev problems carry annotation errors, which is why a frozen set of our own exists</span></div>
+        <div><b>0</b><span>of the published figures below were produced under the same conditions as each other, which is what the measurement is for</span></div>
+      </div>
+
+      <h2>What everyone claims today</h2>
+      <p>These are the figures the authors publish, and the ranking they produce. Read the two columns on the right before the one in the middle. Rows seven and eight are the same models measured differently: XiYanSQL-32B drops five points when the schema is written as DDL instead of M-Schema, and Qwen2.5-Coder-32B is a general model under my own protocol. The leader cannot be used at all, because its weights were never published.</p>
+      <table class="rank">
+        <thead><tr><th>#</th><th>Model</th><th style="text-align:right">Claimed on BIRD dev</th><th>Weights</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr class="out"><td class="pos">1</td><td class="name">Arctic-Text2SQL-R1-32B<small>32B · Snowflake</small></td><td class="score">70.47</td><td><span class="flag no">not published</span></td><td class="note"><a href="https://arxiv.org/abs/2505.20315">paper</a></td></tr>
+          <tr><td class="pos">2</td><td class="name">Arctic-Text2SQL-R1-7B<small>7B · Apache-2.0 · Snowflake</small></td><td class="score">68.9</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/Snowflake/Arctic-Text2SQL-R1-7B">model card</a></td></tr>
+          <tr><td class="pos">3</td><td class="name">XiYanSQL-QwenCoder-32B<small>32B · Apache-2.0 · XGenerationLab</small></td><td class="score">67.14</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">model card</a></td></tr>
+          <tr><td class="pos">4</td><td class="name">XiYanSQL-QwenCoder-14B<small>14B · Apache-2.0 · XGenerationLab</small></td><td class="score">65.32</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">model card</a></td></tr>
+          <tr><td class="pos">5</td><td class="name">OmniSQL-32B<small>32B · Apache-2.0 · RUC</small></td><td class="score">64.5</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/Snowflake/Arctic-Text2SQL-R1-7B">model card</a></td></tr>
+          <tr><td class="pos">6</td><td class="name">XiYanSQL-QwenCoder-7B<small>7B · Apache-2.0 · XGenerationLab</small></td><td class="score">62.13</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">model card</a></td></tr>
+          <tr><td class="pos">7</td><td class="name">XiYanSQL-QwenCoder-32B<small>32B, the same model, schema written as DDL</small></td><td class="score">62.26</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">model card</a></td></tr>
+          <tr><td class="pos">8</td><td class="name">Qwen2.5-Coder-32B<small>32B · Apache-2.0 · general purpose, with self-correction</small></td><td class="score">51.63</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://arxiv.org/abs/2606.29733">my measurement</a></td></tr>
+        </tbody>
+      </table>
+      <p class="note">Authors' own figures, each under its own conditions. Not a like-for-like comparison.</p>
+      <ul class="bars">
+        <li class="bar-row"><span class="name">Arctic-Text2SQL-R1-32B</span><span class="track"><span class="fill" data-w="70.47"></span></span><span class="pct">70.47</span></li>
+        <li class="bar-row me"><span class="name">Arctic-Text2SQL-R1-7B</span><span class="track"><span class="fill" data-w="68.9"></span></span><span class="pct">68.9</span></li>
+        <li class="bar-row"><span class="name">XiYanSQL-QwenCoder-32B</span><span class="track"><span class="fill" data-w="67.14"></span></span><span class="pct">67.14</span></li>
+        <li class="bar-row"><span class="name">XiYanSQL-QwenCoder-14B</span><span class="track"><span class="fill" data-w="65.32"></span></span><span class="pct">65.32</span></li>
+        <li class="bar-row"><span class="name">OmniSQL-32B</span><span class="track"><span class="fill" data-w="64.5"></span></span><span class="pct">64.5</span></li>
+        <li class="bar-row"><span class="name">XiYanSQL-QwenCoder-7B</span><span class="track"><span class="fill" data-w="62.13"></span></span><span class="pct">62.13</span></li>
+      </ul>
+
+      <h2>What that table does not tell you</h2>
+      <p>Nothing in it is comparable. Each number comes from its authors under their own prompt, their own schema format and their own decoding, on a benchmark whose annotations are wrong in half the cases. A five point swing from the schema format alone is larger than the gap between most of these rows. That is the entire reason for the measurement below.</p>
+
+      <h2>Results</h2>
+      <div data-when="pending">
+        <div class="callout">
+          <p><strong>The run has not happened yet.</strong> This table is filled by the build from the results files, and the build refuses to publish a figure that no results file backs. Until a run exists, there is nothing here, and that is deliberate rather than an omission.</p>
+          <p>Participants in the first wave: Arctic-Text2SQL-R1-7B, XiYanSQL-QwenCoder at 7B, 14B and 32B, OmniSQL-32B, Qwen2.5-Coder at 7B, 14B and 32B as the baseline that ties these numbers to arXiv:2606.29733, and Qwen3-Coder-30B-A3B. Arctic-Text2SQL-R1-32B is excluded: its weights are not published, so its reported figure can be neither reproduced nor deployed.</p>
+        </div>
+      </div>
+      <div data-when="results">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Model</th><th class="num">BIRD dev</th><th class="num">Ours, English</th><th class="num">Ours, Russian</th><th class="num">p95 latency</th></tr></thead>
+          <tbody>
+            <tr><td>Arctic-Text2SQL-R1-7B</td><td class="num">{=arctic-7b-q4|base|ex_accuracy}</td><td class="num">{=arctic-7b-q4|holdout-en|ex_accuracy}</td><td class="num">{=arctic-7b-q4|holdout-ru|ex_accuracy}</td><td class="num">{=arctic-7b-q4|base|s_per_query}</td></tr>
+            <tr><td>XiYanSQL-QwenCoder-7B</td><td class="num">{=xiyan-7b-q4|base|ex_accuracy}</td><td class="num">{=xiyan-7b-q4|holdout-en|ex_accuracy}</td><td class="num">{=xiyan-7b-q4|holdout-ru|ex_accuracy}</td><td class="num">{=xiyan-7b-q4|base|s_per_query}</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+      <h2>The protocol, fixed before the run</h2>
+      <p>Everything here was written down before any model was measured, and it is in the repository with the commit that fixed it. If any of it changes, the run is repeated, not edited.</p>
+      <ul>
+        <li>The same questions for every participant, in the same order, from a deterministic sample.</li>
+        <li>One prompt, greedy decoding, a single call, no examples in the context, unless the thing being measured is one of those.</li>
+        <li>The same context budget and the same execution timeout for everyone.</li>
+        <li>Our own engine runs through the same interface as everyone else, with no privileges.</li>
+        <li>Per-question predictions are published for every run, including the wrong ones.</li>
+        <li>Confidence intervals by bootstrap over questions, 2000 resamples, seed 0. A verdict that moves between seeds 0 and 5 is recorded as undetermined.</li>
+      </ul>
+
+      <h2>What is measured, and on what</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Dataset</th><th>What it is</th><th class="num">Size</th><th>What it settles</th></tr></thead>
+        <tbody>
+          <tr><td>BIRD dev</td><td>the public English standard</td><td class="num">1534</td><td>comparability with the published literature</td></tr>
+          <tr><td>BIRD dev, cleaned</td><td>the same set after the authors' quality pass</td><td class="num">1534</td><td>how much of our own result is annotation noise</td></tr>
+          <tr><td>RedSQL</td><td>public Russian, domain-specific</td><td class="num">409</td><td>an outside reference point in a second language</td></tr>
+          <tr><td><strong>Our held-out set</strong></td><td>frozen with a SHA-256 digest before any tool sees it</td><td class="num">600</td><td>the verdict, and the gap between languages</td></tr>
+        </tbody>
+      </table></div>
+      <p>The held-out set is one set of schemas and one gold query per task, with four wordings of the question: two English, two Russian. That is what makes the gap between languages measurable on an identical target, which no published set offers. The Russian wordings are written from the meaning, never translated from the English, or the measurement collapses into a test of translation quality.</p>
+
+      <div class="callout">
+        <p><strong>Why a set of our own, when public benchmarks exist.</strong> A CIDR 2026 study by Jin, Choi, Zhu and Kang found annotation errors in 52.8% of BIRD Mini-Dev problems and 66.1% of the Spider 2.0-Snow problems with open gold queries. Correcting them moved leading systems by up to 19 points and by as much as three places. A score on a public benchmark is a comparison with other papers, not a promise about anyone's data.</p>
+      </div>
+
+      <h2>Thresholds and the verdict rule</h2>
+      <p>These were fixed before the run as well, so that a result cannot be reinterpreted once it is known.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Threshold</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>The recipe does no harm</td><td>our engine on the held-out set is not below the best available single model under the same protocol</td></tr>
+          <tr><td>English, public set</td><td>not below 65% on BIRD dev</td></tr>
+          <tr><td>English, our set</td><td>not below the best closed model under the same protocol on the same set</td></tr>
+          <tr><td>The second language works</td><td>Russian no more than 10 points behind English</td></tr>
+          <tr><td>Safety</td><td>100% of attempts to go beyond SELECT blocked, 0 queries executed without a row limit and a timeout</td></tr>
+        </tbody>
+      </table></div>
+      <p>One verdict rule for all of them. Met, if the whole 95% interval lies on the right side of the threshold. Not met, if the whole interval lies on the wrong side. Otherwise undetermined, and it is reported as undetermined rather than rounded into an answer.</p>
+
+      <h2>What this page will not do</h2>
+      <p>It will not quote a figure from someone else's model card next to our own measurements as though they were the same kind of thing. Those numbers appear in prose, with a link to their source, and never in this table. It will not drop a model because the result was inconvenient: the participant list above is the list that gets published.</p>
+      <p>Every failure is reviewed by hand before a verdict, at least twenty random ones per run, and split into errors of the model and false alarms of the evaluator. The share of false alarms is published next to the accuracy. That check exists because an evaluator can be wrong in exactly the way a benchmark's annotations can.</p>
+    </div>
+
+    <div class="related">
+      <p class="micro">Related</p>
+      <div class="links">
+        <a href="/comparison/">How the tools compare</a>
+        <a href="/author/">The benchmark this grew from</a>
+      </div>
+    </div>
+  </div>
+</article>
