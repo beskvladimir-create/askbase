@@ -71,7 +71,7 @@ strong { color: var(--white); font-weight: 600; }
 .nav ul a { color: var(--text); }
 .nav ul a:hover { color: var(--white); text-decoration: none; }
 .nav .right { display: flex; align-items: center; gap: 16px; }
-.lang { font: 500 12px/1 var(--mono); letter-spacing: 0.2em; color: var(--text); }
+.lang { font: 500 12px/1 var(--mono); letter-spacing: 0.2em; color: var(--text); white-space: nowrap; }
 .lang a { color: var(--text); padding: 8px 0; }
 .lang a[aria-current] { color: var(--white); }
 @media (max-width: 860px) {
@@ -514,10 +514,6 @@ footer a { color: var(--text); }
   will-change: transform;
 }
 .tilt.live > * { transition: transform 0.12s linear; }
-
-/* the mark in the nav, large enough to read as a logo */
-.brand svg { width: 28px; height: 28px; }
-.brand { font-size: 16px; letter-spacing: -0.03em; }
 
 @media (prefers-reduced-motion: reduce) {
   .js .mark { animation: none; background-position: 50% 0, 0 0; }

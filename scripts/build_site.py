@@ -366,43 +366,49 @@ def _ask(lang: str) -> str:
 ASK = {"en": _ask("en"), "ru": _ask("ru")}
 
 
+MARK = (
+    '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="#fff" stroke-opacity=".5"/><path d="M6.8 9.2h7.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M6.8 12.5h10.4" stroke="#fff" stroke-opacity=".7" stroke-width="1.7" stroke-linecap="round"/><path d="M6.8 15.8h4.8" stroke="#fff" stroke-opacity=".4" stroke-width="1.7" stroke-linecap="round"/><rect x="15.6" y="7.6" width="1.6" height="3.2" rx=".8" fill="#fff"/></svg>'
+)
+
+GH_ICON = (
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.57 2.34 1.12 2.91.86.09-.66.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.79-4.57 5.04.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>'
+)
+
 # Nav and footer are built per language so that every link inside a language
 # stays inside it. A visitor who lands on a Russian page and clicks through
 # should not silently end up reading English.
 NAV = {
     "en": """<nav class="nav" aria-label="Main navigation">
-  <a class="brand" href="/" aria-label="Askbase, home">
-    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
-    Askbase</a>
+  <a class="brand" href="{self_home}" aria-label="Askbase, home">
+    {MARK}
+    Askbase
+  </a>
   <ul>
     <li><a href="/model-ranking/">Ranking</a></li>
     <li><a href="/comparison/">Comparison</a></li>
     <li><a href="/where-your-data-goes/">Your data</a></li>
     <li><a href="/read-only-access/">Read-only</a></li>
-    <li><a href="/author/">Author</a></li>
   </ul>
-  <div class="lang" role="group" aria-label="Language">
-    <a href="{self}" aria-current="true" hreflang="en" lang="en">EN</a>
-    <span aria-hidden="true">/</span>
-    <a href="{twin}" hreflang="ru" lang="ru">RU</a>
+  <div class="right">
+    <span class="lang"><a href="{self}" aria-current="page">EN</a> / <a href="{twin}" hreflang="ru" lang="ru">RU</a></span>
+    <a class="btn primary small" href="https://github.com/beskvladimir-create/askbase">{GH}Source</a>
   </div>
 </nav>
 """,
     "ru": """<nav class="nav" aria-label="Основная навигация">
-  <a class="brand" href="/ru/" aria-label="Askbase, на главную">
-    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2.75" y="2.75" width="22.5" height="22.5" rx="6.5" stroke="#fff" stroke-opacity=".42" stroke-width="1.5"/><path d="M8 10.5h8.4" stroke="#fff" stroke-width="1.9" stroke-linecap="round"/><path d="M8 14.5h12" stroke="#fff" stroke-opacity=".72" stroke-width="1.9" stroke-linecap="round"/><path d="M8 18.5h5.6" stroke="#fff" stroke-opacity=".42" stroke-width="1.9" stroke-linecap="round"/><rect x="18.7" y="8.7" width="1.7" height="3.6" rx=".85" fill="#fff"/></svg>
-    Askbase</a>
+  <a class="brand" href="{self_home}" aria-label="Askbase, на главную">
+    {MARK}
+    Askbase
+  </a>
   <ul>
     <li><a href="/ru/reyting-modeley/">Рейтинг</a></li>
     <li><a href="/ru/sravnenie/">Сравнение</a></li>
     <li><a href="/ru/kuda-uhodyat-dannye/">Ваши данные</a></li>
     <li><a href="/ru/dostup-tolko-chtenie/">Только чтение</a></li>
-    <li><a href="/ru/avtor/">Автор</a></li>
   </ul>
-  <div class="lang" role="group" aria-label="Язык">
-    <a href="{twin}" hreflang="en" lang="en">EN</a>
-    <span aria-hidden="true">/</span>
-    <a href="{self}" aria-current="true" hreflang="ru" lang="ru">RU</a>
+  <div class="right">
+    <span class="lang"><a href="{twin}" hreflang="en" lang="en">EN</a> / <a href="{self}" aria-current="page">RU</a></span>
+    <a class="btn primary small" href="https://github.com/beskvladimir-create/askbase">{GH}Код</a>
   </div>
 </nav>
 """,
@@ -412,34 +418,16 @@ FOOT = {
     "en": """
 <footer>
   <div class="wrap">
-    <div>
-      <p class="micro">Askbase &middot; Besk Tech</p>
-      <p>The model runs on your machine. The application does not need a network, and there is no telemetry.</p>
-    </div>
-    <div class="links">
-      <a href="/comparison/">Comparison</a>
-      <a href="/where-your-data-goes/">Where your data goes</a>
-      <a href="/read-only-access/">Read-only access</a>
-      <a href="/author/">Author</a>
-      <a href="https://besk.tech">besk.tech</a>
-    </div>
+    <span>Vladimir Beskorovainyi, Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span>
+    <span><a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
   </div>
 </footer>
 """,
     "ru": """
 <footer>
   <div class="wrap">
-    <div>
-      <p class="micro">Askbase &middot; Besk Tech</p>
-      <p>Модель работает на вашем компьютере. Приложению не нужна сеть, телеметрии нет.</p>
-    </div>
-    <div class="links">
-      <a href="/ru/sravnenie/">Сравнение</a>
-      <a href="/ru/kuda-uhodyat-dannye/">Куда уходят данные</a>
-      <a href="/ru/dostup-tolko-chtenie/">Доступ только на чтение</a>
-      <a href="/ru/avtor/">Автор</a>
-      <a href="https://besk.tech">besk.tech</a>
-    </div>
+    <span>Владимир Бескоровайный, Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span>
+    <span><a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Написать</a> · <a href="/ru/avtor/">Автор</a> · <a href="https://arxiv.org/abs/2606.29733">Статья</a></span>
   </div>
 </footer>
 """,
@@ -507,7 +495,10 @@ def build(check_only: bool) -> int:
         if not check_only:
             out = SITE / path / "index.html"
             out.parent.mkdir(parents=True, exist_ok=True)
+            home = ROUTES["index" if route.lang == "en" else "ru-index"]
             nav = (NAV[route.lang]
+                   .replace("{MARK}", MARK).replace("{GH}", GH_ICON)
+                   .replace("{self_home}", url_of(home))
                    .replace("{twin}", url_of(ROUTES[route.twin]))
                    .replace("{self}", url_of(route)))
             page = with_prefix(head(route) + nav + body + FOOT[route.lang] + TAIL)

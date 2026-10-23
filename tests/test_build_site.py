@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import sys
 from pathlib import Path
 
@@ -259,3 +260,49 @@ def test_the_not_found_page_is_where_the_host_looks_for_it():
     # Vercel serves /404.html from the root. Our page also lives at /404/, but
     # only the root file replaces the platform's default.
     assert (pathlib.Path(build_site.SITE) / "404.html").exists()
+
+
+REFERENCE = "https://pii-roundtrip.besk.tech/"
+
+
+def test_the_header_has_the_same_parts_as_the_other_site():
+    # Both products share one stylesheet, so the header must carry the same
+    # pieces or the two sites stop looking like one house: brand with a 24px
+    # mark, a list of sections, then a .right holding the language pair and
+    # one primary small button.
+    # the built page, because the mark and the button icon are substituted
+    page = (pathlib.Path(build_site.SITE) / "index.html").read_text(encoding="utf-8")
+    html = re.search(r"<nav class=\"nav\".*?</nav>", page, re.S).group(0)
+    assert 'class="brand"' in html
+    assert 'viewBox="0 0 24 24"' in html      # same box as the other site
+    assert html.count("<li>") == 4
+    assert 'class="right"' in html
+    assert '<span class="lang">' in html
+    assert 'aria-current="page"' in html
+    assert 'class="btn primary small"' in html
+
+
+def test_both_languages_declare_the_same_header_shape():
+    for lang in ("en", "ru"):
+        html = build_site.NAV[lang]
+        assert html.count("<li>") == 4
+        assert 'class="right"' in html
+        assert 'class="btn primary small"' in html
+
+
+def test_the_footer_is_two_spans_author_then_links():
+    for lang in ("en", "ru"):
+        html = build_site.FOOT[lang]
+        assert html.count("<span>") == 2
+        assert "Besk Tech" in html
+        assert "besk.tech" in html
+        assert " · " in html          # the separator the other site uses
+
+
+def test_the_brand_mark_is_not_resized_locally():
+    # An override here would make the two headers differ by a few pixels,
+    # which is exactly the kind of drift nobody notices until both are open
+    # side by side.
+    css = (pathlib.Path(build_site.SITE) / "assets" / "style.css").read_text(encoding="utf-8")
+    assert css.count(".brand svg {") == 1
+    assert "width: 24px" in css.split(".brand svg {")[1].split("}")[0]
