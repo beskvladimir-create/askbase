@@ -4,7 +4,7 @@
 > language, with the model running on your machine. Free, no account, no telemetry.
 > Built and measured by Vladimir Beskorovainyi, Besk Tech.
 
-Updated: 2026-10-21
+Updated: 2026-10-23
 
 ## What makes it different
 

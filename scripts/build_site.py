@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -34,7 +35,11 @@ ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "site"
 PAGES = SITE / "pages"
 RESULTS = ROOT / "results"
-BASE = "https://askbase.besk.tech"
+# GitHub Pages serves a project repository under /<repo>/, so every root
+# relative link needs that prefix. Set both when deploying there; leave them
+# empty for a custom domain, where the site sits at the root.
+BASE = os.environ.get("SITE_BASE", "https://askbase.besk.tech")
+PREFIX = os.environ.get("SITE_PREFIX", "").rstrip("/")
 
 # Primary language is English (decision of 20.10.2026); Russian lives under /ru/.
 PRIMARY_LANG = "en"
@@ -210,6 +215,15 @@ def resolve(body: str, results: dict, page: str) -> str:
             + ", ".join(sorted(set(missing)))
         )
     return text
+
+
+def url_of(route: "Route") -> str:
+    """Site path for a route, with the leading and trailing slash.
+
+    The home page has an empty path, and naive f"/{path}/" turns that into
+    "//", which a browser reads as a protocol relative URL to another host.
+    """
+    return f"/{route.path}/" if route.path else "/"
 
 
 def head(route: Route) -> str:
@@ -448,6 +462,20 @@ _OLD_FOOTER_UNUSED = """
 """
 
 
+def with_prefix(html: str) -> str:
+    """Prefix every root relative link, so the site works under /<repo>/."""
+    if not PREFIX:
+        return html
+    for attr in ('href="', 'src="', 'content="'):
+        html = re.sub(
+            rf'{re.escape(attr)}/(?!/)',       # "/..." but not "//host"
+            f'{attr}{PREFIX}/',
+            html,
+        )
+    # canonical and og:url already carry the absolute BASE, so undo those
+    return html.replace(f'{BASE}{PREFIX}/', f'{BASE}/').replace(f'"{PREFIX}{BASE}', f'"{BASE}')
+
+
 def build(check_only: bool) -> int:
     results = load_results()
     if not PAGES.exists():
@@ -480,9 +508,10 @@ def build(check_only: bool) -> int:
             out = SITE / path / "index.html"
             out.parent.mkdir(parents=True, exist_ok=True)
             nav = (NAV[route.lang]
-                   .replace("{twin}", f"/{ROUTES[route.twin].path}/")
-                   .replace("{self}", f"/{route.path}/"))
-            out.write_text(head(route) + nav + body + FOOT[route.lang] + TAIL, encoding="utf-8")
+                   .replace("{twin}", url_of(ROUTES[route.twin]))
+                   .replace("{self}", url_of(route)))
+            page = head(route) + nav + body + FOOT[route.lang] + TAIL
+            out.write_text(with_prefix(page), encoding="utf-8")
         built.append(path)
         if path.endswith("404"):
             built.pop()   # exists as a file, never in the sitemap

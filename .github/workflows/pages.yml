@@ -26,6 +26,10 @@ jobs:
       # failure here means a page quotes a measurement that does not exist.
       - run: pip install pyyaml
       - run: python scripts/build_site.py
+        env:
+          # Pages serves this project repository under /askbase/
+          SITE_BASE: https://beskvladimir-create.github.io/askbase
+          SITE_PREFIX: /askbase
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

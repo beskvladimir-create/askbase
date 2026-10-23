@@ -213,3 +213,43 @@ def test_the_ranking_page_is_published_and_waiting():
     assert "model-ranking" not in build_site.BLOCKED
     body = (pathlib.Path(build_site.PAGES) / "model-ranking.html").read_text(encoding="utf-8")
     assert 'data-when="pending"' in body and 'data-when="results"' in body
+
+
+def test_root_links_get_the_deployment_prefix(monkeypatch):
+    # GitHub Pages serves a project repo under /<repo>/, where a link written
+    # as "/comparison/" is a 404.
+    monkeypatch.setattr(build_site, "PREFIX", "/askbase")
+    out = build_site.with_prefix('<a href="/comparison/">x</a><link href="/assets/style.css">')
+    assert '/askbase/comparison/' in out
+    assert '/askbase/assets/style.css' in out
+
+
+def test_absolute_urls_are_left_alone(monkeypatch):
+    monkeypatch.setattr(build_site, "PREFIX", "/askbase")
+    out = build_site.with_prefix('<a href="https://besk.tech">x</a><a href="//cdn/x">y</a>')
+    assert 'href="https://besk.tech"' in out
+    assert 'href="//cdn/x"' in out
+
+
+def test_the_canonical_url_does_not_get_the_prefix_twice(monkeypatch):
+    monkeypatch.setattr(build_site, "PREFIX", "/askbase")
+    out = build_site.with_prefix(f'<link rel="canonical" href="{build_site.BASE}/comparison/">')
+    assert f'{build_site.BASE}/comparison/' in out
+    assert "/askbase/askbase/" not in out
+
+
+def test_the_home_page_link_is_not_protocol_relative():
+    # f"/{path}/" with an empty path yields "//", which a browser reads as a
+    # URL on another host. Both home pages have an empty path.
+    assert build_site.url_of(build_site.ROUTES["index"]) == "/"
+    assert build_site.url_of(build_site.ROUTES["ru-index"]) == "/ru/"
+    assert build_site.url_of(build_site.ROUTES["comparison"]) == "/comparison/"
+
+
+def test_no_built_page_contains_a_double_slash_link():
+    for route in build_site.ROUTES.values():
+        out = pathlib.Path(build_site.SITE) / route.path / "index.html"
+        if not out.exists():
+            continue
+        html = out.read_text(encoding="utf-8")
+        assert 'href="//"' not in html, route.path
