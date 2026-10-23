@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://beskvladimir-create.github.io/askbase/sitemap.xml
+Sitemap: https://askbase.besk.tech/sitemap.xml
