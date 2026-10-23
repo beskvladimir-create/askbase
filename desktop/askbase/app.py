@@ -1,28 +1,43 @@
-"""Askbase: three screens, connect then ask then read.
+"""Askbase: connect, ask, read.
+
+Built on the same frame as pii-roundtrip, so the two look like one house: the
+navy Ground with its aurora and particles is the window itself, the brand mark
+sits top left under the system buttons, the progress line runs under the bar,
+and the body is a stack of pages separated by hairlines.
 
 The window is deliberately thin. Everything that can be wrong about an answer
-is decided in engine.py and safety.py, which are tested without Qt; this file
-arranges it on screen and keeps the model off the interface thread.
+is decided in engine.py and safety.py, which are tested without Qt.
 """
 from __future__ import annotations
 
+import csv
 import os
 import sys
 import traceback
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot
-from PySide6.QtGui import QAction, QGuiApplication
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
     QApplication, QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView,
-    QLabel, QMainWindow, QPlainTextEdit, QPushButton, QSizePolicy, QStackedWidget,
+    QLabel, QMainWindow, QPlainTextEdit, QPushButton, QStackedWidget,
     QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
 from . import theme
 from .engine import AskError, Engine
 from .models import ModelClient, installed_models
+from .widgets import BrandMark, DropZone, Ground, ProgressLine, glow
 
+T = {
+    "app": "Askbase",
+    "trust": "данные остаются у вас",
+    # the four keys DropZone reads
+    "drop_title": "Перетащите базу данных сюда",
+    "drop_sub": "файл .sqlite, .sqlite3 или .db",
+    "drop_release": "Отпустите, чтобы открыть",
+    "choose_file": "Выбрать файл",
+}
 STEPS = {
     "writing": "Составляю запрос",
     "checking": "Проверяю запрос",
@@ -31,23 +46,41 @@ STEPS = {
 }
 
 
-def card(*children: QWidget, spacing: int = 16) -> QFrame:
+def label(text: str = "", name: str = "") -> QLabel:
+    lb = QLabel(text)
+    if name:
+        lb.setObjectName(name)
+    lb.setWordWrap(True)
+    return lb
+
+
+def button(text: str, *, primary: bool = False, small: bool = False, link: bool = False) -> QPushButton:
+    b = QPushButton(text)
+    if primary:
+        b.setProperty("primary", True)
+    if small:
+        b.setProperty("small", True)
+    if link:
+        b.setProperty("link", True)
+        return b
+    return glow(b, primary)
+
+
+def card(*children: QWidget, spacing: int = 14, pad: int = 22) -> QFrame:
     f = QFrame()
     f.setObjectName("card")
     lay = QVBoxLayout(f)
-    lay.setContentsMargins(24, 24, 24, 24)
+    lay.setContentsMargins(pad, pad, pad, pad)
     lay.setSpacing(spacing)
     for c in children:
         lay.addWidget(c)
     return f
 
 
-def label(text: str, name: str = "") -> QLabel:
-    lb = QLabel(text)
-    if name:
-        lb.setObjectName(name)
-    lb.setWordWrap(True)
-    return lb
+def hairline() -> QFrame:
+    f = QFrame()
+    f.setObjectName("hair")
+    return f
 
 
 class Signals(QObject):
@@ -71,9 +104,7 @@ class AskTask(QRunnable):
         except AskError as e:
             self.signals.failed.emit(str(e))
         except Exception:                       # never leave the user at a frozen screen
-            self.signals.failed.emit(
-                "Непредвиденная ошибка. Подробности:\n" + traceback.format_exc(limit=3)
-            )
+            self.signals.failed.emit("Непредвиденная ошибка.\n" + traceback.format_exc(limit=2))
         else:
             self.signals.done.emit(answer)
 
@@ -81,82 +112,114 @@ class AskTask(QRunnable):
 class Window(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("Askbase")
-        self.resize(1060, 760)
         self.engine: Engine | None = None
+        self.answer = None
+        self.first_question = True
         self.pool = QThreadPool.globalInstance()
         self.pool.setMaxThreadCount(1)          # one model, one question at a time
 
-        root = QWidget()
-        root.setObjectName("root")
-        self.pages = QStackedWidget()
+        self.setWindowTitle(T["app"])
+        self.resize(980, 720)
+        self.setMinimumSize(820, 620)
+        # the navy ground runs under the native title bar, as in pii-roundtrip
+        self.setWindowFlag(Qt.WindowType.ExpandedClientAreaHint, True)
+        self.setWindowFlag(Qt.WindowType.NoTitleBarBackgroundHint, True)
+
+        root = Ground()
         outer = QVBoxLayout(root)
         outer.setContentsMargins(0, 0, 0, 0)
-        outer.addWidget(self.pages)
-        self.status = label("", "status")
-        outer.addWidget(self.status)
-        self.setCentralWidget(root)
+        outer.setSpacing(0)
+        outer.addWidget(self._bar())
 
-        self.pages.addWidget(self._connect_screen())
-        self.pages.addWidget(self._ask_screen())
-        self.pages.addWidget(self._answer_screen())
+        self.progress = ProgressLine()
+        outer.addWidget(self.progress)
+
+        self.status = label("", "status")
+        self.status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.status.setVisible(False)
+        outer.addWidget(self.status)
+
+        self.pages = QStackedWidget()
+        self.pages.addWidget(self._connect_page())
+        self.pages.addWidget(self._ask_page())
+        self.pages.addWidget(self._answer_page())
+        body = QWidget()
+        bv = QVBoxLayout(body)
+        bv.setContentsMargins(24, 10, 24, 22)
+        bv.setSpacing(0)
+        bv.addWidget(self.pages, 1)
+        outer.addWidget(body, 1)
+
+        self.setCentralWidget(root)
         self.pages.setCurrentIndex(0)
 
-    # ---------- screen 1: connect ----------
-    def _connect_screen(self) -> QWidget:
+    # ---------- the bar, under the system buttons ----------
+    def _bar(self) -> QWidget:
+        bar = QWidget()
+        bar.setFixedHeight(76)
+        h = QHBoxLayout(bar)
+        h.setContentsMargins(24, 32, 24, 8)
+
+        self.brand = BrandMark()
+        self.brand.clicked.connect(self._go_home)
+        left = QWidget()
+        left.setFixedWidth(210)
+        lh = QHBoxLayout(left)
+        lh.setContentsMargins(0, 0, 0, 0)
+        lh.addWidget(self.brand, 0, Qt.AlignmentFlag.AlignLeft)
+        h.addWidget(left)
+
+        self.where = label("", "doctitle")
+        self.where.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        h.addWidget(self.where, 1)
+
+        self.trust = label(T["trust"], "trust")
+        self.trust.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.trust.setWordWrap(False)   # one line, or it rides up into the window buttons
+        right = QWidget()
+        right.setMinimumWidth(210)
+        rh = QHBoxLayout(right)
+        rh.setContentsMargins(0, 0, 0, 0)
+        rh.addStretch(1)
+        rh.addWidget(self.trust)
+        h.addWidget(right)
+        return bar
+
+    # ---------- page 1: connect ----------
+    def _connect_page(self) -> QWidget:
         w = QWidget()
-        lay = QVBoxLayout(w)
-        lay.setContentsMargins(48, 48, 48, 32)
-        lay.setSpacing(20)
+        v = QVBoxLayout(w)
+        v.setContentsMargins(0, 6, 0, 0)
+        v.setSpacing(16)
 
-        lay.addWidget(label("ПОДКЛЮЧЕНИЕ", "micro"))
-        lay.addWidget(label("Спросите свою базу данных\nобычными словами", "headline"))
-        lay.addWidget(label("Данные и модель остаются на этом компьютере.", "sub"))
+        self.drop = DropZone(T)
+        self.drop.file_dropped.connect(self._open)
+        self.drop.choose.connect(self._pick)
+        v.addWidget(self.drop, 1)
 
-        self.drop = label("Перетащите файл .sqlite или .db сюда", "doctitle")
-        self.drop.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.drop.setMinimumHeight(120)
-        pick = QPushButton("Выбрать файл")
-        pick.setProperty("primary", True)
-        pick.clicked.connect(self._pick_file)
-        lay.addWidget(card(self.drop, pick))
-
-        self.model_box = QComboBox()
         found = installed_models()
+        self.model_box = QComboBox()
         self.model_box.addItems(found or ["модель не найдена"])
         self.model_box.setEnabled(bool(found))
         row = QWidget()
-        rl = QHBoxLayout(row)
-        rl.setContentsMargins(0, 0, 0, 0)
-        rl.addWidget(label("Модель на этом компьютере", "note"))
-        rl.addWidget(self.model_box, 1)
-        lay.addWidget(row)
+        rh = QHBoxLayout(row)
+        rh.setContentsMargins(0, 0, 0, 0)
+        rh.setSpacing(12)
+        rh.addWidget(label("Модель на этом компьютере", "note"), 0)
+        rh.addWidget(self.model_box, 1)
+        v.addWidget(row)
 
         if not found:
-            lay.addWidget(label(
-                "Модель не найдена. Askbase работает с моделью, установленной локально "
-                "через Ollama. Установите её командой:\n"
+            v.addWidget(label(
+                "Модель не найдена. Askbase работает с моделью, установленной локально: "
                 "ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M",
                 "errbody",
             ))
-
-        lay.addStretch(1)
-        lay.addWidget(label("Приложению не нужна сеть", "footer"))
-        self.setAcceptDrops(True)
+        v.addWidget(hairline())
+        v.addWidget(label("Подключение только на чтение. Приложению не нужна сеть.", "footer"))
         return w
 
-    def dragEnterEvent(self, e) -> None:          # noqa: N802
-        if e.mimeData().hasUrls():
-            e.acceptProposedAction()
-
-    def dropEvent(self, e) -> None:               # noqa: N802
-        for url in e.mimeData().urls():
-            path = url.toLocalFile()
-            if path:
-                self._open(path)
-                return
-
-    def _pick_file(self) -> None:
+    def _pick(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self, "Выберите базу данных", str(Path.home()),
             "Базы SQLite (*.sqlite *.sqlite3 *.db);;Все файлы (*)",
@@ -174,54 +237,47 @@ class Window(QMainWindow):
             self._say(f"Не удалось открыть базу. {e}")
             return
         s = self.engine.schema
-        self.db_line.setText(
-            f"{Path(path).name} · {len(s.tables)} таблиц · {s.n_columns} столбцов · только чтение"
+        self.where.setText(
+            f"{Path(path).name}  ·  {len(s.tables)} таблиц  ·  {s.n_columns} столбцов  ·  только чтение"
         )
-        self.examples.setText(self._examples())
+        self.examples.setText(
+            "Например: " + ";  ".join(f"сколько записей в {n}" for n in list(s.tables)[:3])
+        )
         self.pages.setCurrentIndex(1)
         self.question.setFocus()
         self._say("")
 
-    def _examples(self) -> str:
-        """Suggestions built from this database, because an empty field is a dead end."""
-        if not self.engine:
-            return ""
-        names = list(self.engine.schema.tables)[:3]
-        return "Например: " + "; ".join(f"сколько записей в {n}" for n in names)
-
-    # ---------- screen 2: ask ----------
-    def _ask_screen(self) -> QWidget:
+    # ---------- page 2: ask ----------
+    def _ask_page(self) -> QWidget:
         w = QWidget()
-        lay = QVBoxLayout(w)
-        lay.setContentsMargins(48, 40, 48, 32)
-        lay.setSpacing(16)
+        v = QVBoxLayout(w)
+        v.setContentsMargins(0, 6, 0, 0)
+        v.setSpacing(14)
 
-        self.db_line = label("", "micro")
-        lay.addWidget(self.db_line)
-
+        v.addWidget(label("ВОПРОС", "micro"))
         self.question = QPlainTextEdit()
         self.question.setObjectName("doc")
         self.question.setPlaceholderText("Сколько новых клиентов пришло из каждого региона в сентябре")
-        self.question.setFixedHeight(120)
-        lay.addWidget(card(self.question))
+        self.question.setFixedHeight(130)
+        v.addWidget(card(self.question))
 
         self.examples = label("", "note")
-        lay.addWidget(self.examples)
+        v.addWidget(self.examples)
+        v.addStretch(1)
+        v.addWidget(hairline())
 
-        self.ask_btn = QPushButton("Спросить")
-        self.ask_btn.setProperty("primary", True)
-        self.ask_btn.clicked.connect(self._ask)
-        back = QPushButton("Другая база")
-        back.setProperty("small", True)
-        back.clicked.connect(lambda: self.pages.setCurrentIndex(0))
         row = QWidget()
-        rl = QHBoxLayout(row)
-        rl.setContentsMargins(0, 0, 0, 0)
-        rl.addWidget(self.ask_btn)
-        rl.addWidget(back)
-        rl.addStretch(1)
-        lay.addWidget(row)
-        lay.addStretch(1)
+        rh = QHBoxLayout(row)
+        rh.setContentsMargins(0, 12, 0, 0)
+        rh.setSpacing(12)
+        self.ask_btn = button("Спросить", primary=True)
+        self.ask_btn.clicked.connect(self._ask)
+        back = button("←  другая база", link=True)
+        back.clicked.connect(self._go_home)
+        rh.addWidget(back)
+        rh.addStretch(1)
+        rh.addWidget(self.ask_btn)
+        v.addWidget(row)
         return w
 
     def _ask(self) -> None:
@@ -230,70 +286,77 @@ class Window(QMainWindow):
             self._say("Напишите вопрос.")
             return
         if not self.engine:
-            self.pages.setCurrentIndex(0)
+            self._go_home()
             return
         self.ask_btn.setEnabled(False)
+        self.progress.start()
+        if self.first_question:
+            self._say("Первый вопрос дольше: модель загружается в память")
         task = AskTask(self.engine, q)
         task.signals.step.connect(lambda s: self._say(STEPS.get(s, s) + "…"))
         task.signals.done.connect(self._show_answer)
         task.signals.failed.connect(self._show_error)
         self.pool.start(task)
 
-    # ---------- screen 3: answer ----------
-    def _answer_screen(self) -> QWidget:
+    # ---------- page 3: answer ----------
+    def _answer_page(self) -> QWidget:
         w = QWidget()
-        lay = QVBoxLayout(w)
-        lay.setContentsMargins(48, 40, 48, 32)
-        lay.setSpacing(14)
+        v = QVBoxLayout(w)
+        v.setContentsMargins(0, 6, 0, 0)
+        v.setSpacing(12)
 
         self.asked = label("", "errtitle")
-        lay.addWidget(self.asked)
+        v.addWidget(self.asked)
 
         self.table = QTableWidget()
-        self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.table.setAlternatingRowColors(False)
-        self.table.setSelectionMode(QTableWidget.SelectionMode.ExtendedSelection)
         self.table.setShowGrid(False)
-        self.table.setMinimumHeight(120)
-        lay.addWidget(self.table, 1)
+        self.table.setMinimumHeight(140)
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)   # no dotted rectangle on row one
+        self.table.horizontalHeader().setDefaultAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
+        v.addWidget(self.table, 1)
 
         self.rowline = label("", "note")
-        lay.addWidget(self.rowline)
+        v.addWidget(self.rowline)
 
-        lay.addWidget(label("ЧТО ПОСЧИТАНО", "micro"))
+        v.addWidget(label("ЧТО ПОСЧИТАНО", "micro"))
         self.said = label("", "summary")
-        lay.addWidget(self.said)
+        v.addWidget(self.said)
 
         self.sql_view = QPlainTextEdit()
         self.sql_view.setObjectName("doc")
         self.sql_view.setReadOnly(True)
-        self.sql_view.setFixedHeight(110)
+        self.sql_view.setFixedHeight(104)
         self.sql_view.setFont(theme.mono())
-        lay.addWidget(card(label("ЗАПРОС SQL", "micro"), self.sql_view, spacing=10))
+        v.addWidget(card(label("ЗАПРОС SQL", "micro"), self.sql_view, spacing=10))
 
-        again = QPushButton("Новый вопрос")
-        again.setProperty("primary", True)
-        again.clicked.connect(self._new_question)
-        copy = QPushButton("Копировать SQL")
-        copy.setProperty("small", True)
-        copy.clicked.connect(self._copy_sql)
-        save = QPushButton("Сохранить CSV")
-        save.setProperty("small", True)
-        save.clicked.connect(self._save_csv)
+        v.addWidget(hairline())
         row = QWidget()
-        rl = QHBoxLayout(row)
-        rl.setContentsMargins(0, 0, 0, 0)
-        for b in (again, copy, save):
-            rl.addWidget(b)
-        rl.addStretch(1)
-        lay.addWidget(row)
+        rh = QHBoxLayout(row)
+        rh.setContentsMargins(0, 12, 0, 0)
+        rh.setSpacing(12)
+        again = button("Новый вопрос", primary=True)
+        again.clicked.connect(self._new_question)
+        copy = button("Копировать SQL", small=True)
+        copy.clicked.connect(self._copy_sql)
+        save = button("Сохранить CSV", small=True)
+        save.clicked.connect(self._save_csv)
+        rh.addWidget(copy)
+        rh.addWidget(save)
+        rh.addStretch(1)
+        rh.addWidget(again)
+        v.addWidget(row)
         return w
 
     def _show_answer(self, a) -> None:
         self.ask_btn.setEnabled(True)
+        self.progress.stop()
+        self.first_question = False
+        self.answer = a
         self.asked.setText(self.question.toPlainText().strip())
         self.table.clear()
         self.table.setColumnCount(len(a.columns))
@@ -301,24 +364,24 @@ class Window(QMainWindow):
         self.table.setRowCount(len(a.rows))
         for r, row in enumerate(a.rows):
             for c, value in enumerate(row):
-                text = "" if value is None else str(value)
-                self.table.setItem(r, c, QTableWidgetItem(text))
+                self.table.setItem(r, c, QTableWidgetItem("" if value is None else str(value)))
+        self.table.clearSelection()
         if not a.rows:
             self.rowline.setText("Запрос выполнен, подходящих строк нет.")
         else:
             extra = "  ·  ".join(a.notes)
             self.rowline.setText(
-                f"{len(a.rows)} строк, {a.seconds:.1f} с" + (f"  ·  {extra}" if extra else "")
+                f"{len(a.rows)} строк  ·  {a.seconds:.1f} с" + (f"  ·  {extra}" if extra else "")
             )
-        self.table.clearSelection()          # no stray box on the first row
         self.said.setText(a.explanation)
         self.sql_view.setPlainText(a.sql)
-        self._answer = a
         self.pages.setCurrentIndex(2)
         self._say("")
 
     def _show_error(self, message: str) -> None:
         self.ask_btn.setEnabled(True)
+        self.progress.stop()
+        self.first_question = False
         self._say(message)
 
     def _new_question(self) -> None:
@@ -326,24 +389,29 @@ class Window(QMainWindow):
         self.pages.setCurrentIndex(1)
         self.question.setFocus()
 
+    def _go_home(self) -> None:
+        self.where.setText("")
+        self.pages.setCurrentIndex(0)
+
     def _copy_sql(self) -> None:
         QGuiApplication.clipboard().setText(self.sql_view.toPlainText())
         self._say("Запрос скопирован")
 
     def _save_csv(self) -> None:
-        import csv
-
+        if not self.answer:
+            return
         path, _ = QFileDialog.getSaveFileName(self, "Сохранить", "answer.csv", "CSV (*.csv)")
         if not path:
             return
         with open(path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerow(self._answer.columns)
-            writer.writerows(self._answer.rows)
+            writer.writerow(self.answer.columns)
+            writer.writerows(self.answer.rows)
         self._say(f"Сохранено: {path}")
 
     def _say(self, text: str) -> None:
         self.status.setText(text)
+        self.status.setVisible(bool(text))
 
 
 def main() -> int:

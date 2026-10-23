@@ -78,14 +78,15 @@ QListWidget::item:selected {{ background: rgba(255, 255, 255, 0.10); }}
 QScrollBar:vertical {{ background: transparent; width: 8px; }}
 QScrollBar::handle:vertical {{ background: {HAIR_2}; border-radius: 4px; min-height: 24px; }}
 QScrollBar::add-line, QScrollBar::sub-line {{ height: 0; }}
-QTableWidget {{ background: transparent; border: 1px solid {HAIR}; border-radius: 12px; gridline-color: transparent;
+QTableWidget {{ outline: none; background: transparent; border: 1px solid {HAIR}; border-radius: 12px; gridline-color: transparent;
   color: {PAPER}; font-size: 14px; }}
 QTableWidget::item {{ padding: 8px 12px; border-bottom: 1px solid {HAIR}; }}
 QTableWidget::item:selected {{ background: rgba(255, 255, 255, 0.10); color: #FFFFFF; }}
-QTableWidget QHeaderView::section {{ background: {CARD}; color: {MUTED};
+QTableWidget::item:focus {{ outline: none; border: none; }}
+QHeaderView::section {{ background: {CARD}; color: {MUTED};
   font-family: "Space Grotesk"; font-size: 11px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
   border: none; border-bottom: 1px solid {HAIR_2}; padding: 10px 12px; text-align: left; }}
-QTableWidget QTableCornerButton::section {{ background: transparent; border: none; }}
+QTableCornerButton::section {{ background: transparent; border: none; }}
 QComboBox {{ background: {CARD}; border: 1px solid {HAIR_2}; border-radius: 8px; padding: 8px 10px; color: {PAPER}; min-height: 24px; }}
 QComboBox::drop-down {{ border: none; width: 22px; }}
 QComboBox QAbstractItemView {{ background: {CARD}; border: 1px solid {HAIR_2}; selection-background-color: rgba(255,255,255,0.10); color: {PAPER}; }}
