@@ -253,3 +253,9 @@ def test_no_built_page_contains_a_double_slash_link():
             continue
         html = out.read_text(encoding="utf-8")
         assert 'href="//"' not in html, route.path
+
+
+def test_the_not_found_page_is_where_the_host_looks_for_it():
+    # Vercel serves /404.html from the root. Our page also lives at /404/, but
+    # only the root file replaces the platform's default.
+    assert (pathlib.Path(build_site.SITE) / "404.html").exists()

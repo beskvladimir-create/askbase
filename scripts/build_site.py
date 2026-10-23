@@ -510,8 +510,12 @@ def build(check_only: bool) -> int:
             nav = (NAV[route.lang]
                    .replace("{twin}", url_of(ROUTES[route.twin]))
                    .replace("{self}", url_of(route)))
-            page = head(route) + nav + body + FOOT[route.lang] + TAIL
-            out.write_text(with_prefix(page), encoding="utf-8")
+            page = with_prefix(head(route) + nav + body + FOOT[route.lang] + TAIL)
+            out.write_text(page, encoding="utf-8")
+            if name == "notfound":
+                # The host serves the not-found page from /404.html at the root.
+                # Without that file a visitor gets the platform's default page.
+                (SITE / "404.html").write_text(page, encoding="utf-8")
         built.append(path)
         if path.endswith("404"):
             built.pop()   # exists as a file, never in the sitemap
