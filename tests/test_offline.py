@@ -96,3 +96,37 @@ def test_connect_ex_is_guarded_too():
 
 def test_the_selftest_passes_in_a_clean_process():
     assert offline.selftest() == 0
+@pytest.mark.parametrize("host", [
+    "127.0.0.1.example.com",          # an ordinary DNS name, resolved by its owner
+    "127.evil.example.com",
+    "127.0.0.1.attacker.test",
+])
+def test_a_name_that_merely_starts_with_127_is_refused(host):
+    # The guard used to match the text "127." at the front of the host, which
+    # a hostname can carry while resolving anywhere in the world. That is the
+    # cheapest way out of a promise that nothing leaves this computer.
+    offline.enable()
+    s = socket.socket()
+    s.settimeout(0.2)
+    try:
+        with pytest.raises(offline.NetworkRefused):
+            s.connect((host, 443))
+    finally:
+        s.close()
+
+
+@pytest.mark.parametrize("host", ["::ffff:127.0.0.1", "0:0:0:0:0:0:0:1", "127.0.0.1%lo0"])
+def test_the_other_spellings_of_this_machine_are_allowed(host):
+    # The model is served over loopback, and a library is free to hand the
+    # address over in any of its forms.
+    offline.enable()
+    s = socket.socket(socket.AF_INET6 if ":" in host else socket.AF_INET)
+    s.settimeout(0.2)
+    try:
+        s.connect((host, 1))
+    except offline.NetworkRefused:
+        pytest.fail(f"{host} должен быть разрешён")
+    except OSError:
+        pass                          # nobody listening: the guard let it through
+    finally:
+        s.close()

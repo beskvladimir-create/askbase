@@ -178,3 +178,126 @@ def test_an_explicit_limit_from_the_model_is_left_alone(db):
     model = StubModel("```sql\nSELECT name FROM clients LIMIT 3\n```")
     a = Engine(db, model, max_rows=1000).ask("three clients")
     assert "LIMIT 3" in a.sql.upper()
+def test_a_hash_in_the_path_opens_that_file_and_not_a_new_one(tmp_path):
+    # The path is pasted into a file: URI. A '#' starts the fragment, so SQLite
+    # used to open a different file, create it because it was missing, and
+    # report a database with no tables. "Отчёты #2" is an ordinary folder name.
+    folder = tmp_path / "Отчёты #2"
+    folder.mkdir()
+    path = folder / "база.sqlite"
+    con = sqlite3.connect(path)
+    con.executescript("CREATE TABLE clients (id INTEGER, name TEXT); INSERT INTO clients VALUES (1,'Ann');")
+    con.commit()
+    con.close()
+
+    s = snapshot(str(path))
+    assert set(s.tables) == {"clients"}, "база с '#' в пути открылась не та"
+    assert sorted(p.name for p in folder.iterdir()) == ["база.sqlite"], "рядом появился лишний файл"
+
+
+def test_the_connection_stays_read_only_for_a_path_with_a_hash(tmp_path):
+    # The same escaping hole broke the promise the whole product rests on: with
+    # the URI cut short at the '#', mode=ro never reached SQLite and the
+    # connection came back writable.
+    path = tmp_path / "data #1.sqlite"
+    con = sqlite3.connect(path)
+    con.executescript("CREATE TABLE clients (id INTEGER); INSERT INTO clients VALUES (1);")
+    con.commit()
+    con.close()
+
+    from askbase.engine import run_query
+    with pytest.raises(sqlite3.OperationalError):
+        run_query(str(path), "DELETE FROM clients", 10, 5.0)
+    with pytest.raises(sqlite3.OperationalError):
+        run_query(str(path), "CREATE TABLE sneaky (a)", 10, 5.0)
+
+
+def test_a_view_is_part_of_the_schema(tmp_path):
+    # In somebody else's database the readable part is often a set of views.
+    # Leaving them out hid them from the model and made the safety check refuse
+    # the question as a name that does not exist.
+    path = tmp_path / "views.sqlite"
+    con = sqlite3.connect(path)
+    con.executescript("""
+        CREATE TABLE raw_clients (id INTEGER, nm TEXT, deleted INTEGER);
+        INSERT INTO raw_clients VALUES (1,'Ann',0),(2,'Bob',1);
+        CREATE VIEW clients AS SELECT id, nm AS name FROM raw_clients WHERE deleted = 0;
+    """)
+    con.commit()
+    con.close()
+
+    s = snapshot(str(path))
+    assert "clients" in s.tables
+    assert s.tables["clients"] == ["id", "name"]
+
+    model = StubModel("```sql\nSELECT name FROM clients\n```")
+    a = Engine(str(path), model).ask("who are the clients")
+    assert [r[0] for r in a.rows] == ["Ann"]
+
+
+def test_names_that_need_quoting_are_quoted_in_the_schema(tmp_path):
+    # "CREATE TABLE sales 2026 (order, ...)" is not SQL. The model copies the
+    # schema it is shown, so the application was handing it a name it could
+    # only write back wrongly.
+    path = tmp_path / "odd.sqlite"
+    con = sqlite3.connect(path)
+    con.executescript(
+        'CREATE TABLE "sales 2026" ("order" TEXT, "итого" INTEGER);'
+        'INSERT INTO "sales 2026" VALUES (\'a\', 5);'
+    )
+    con.commit()
+    con.close()
+
+    model = StubModel('```sql\nSELECT "итого" FROM "sales 2026"\n```')
+    engine = Engine(str(path), model)
+    assert '"sales 2026"' in engine.schema.serialise()
+    assert '"order"' in engine.schema.serialise()
+    a = engine.ask("сколько итого")
+    assert [r[0] for r in a.rows] == [5]
+
+
+def test_a_file_without_tables_is_refused_when_it_is_opened(tmp_path):
+    # Otherwise the file looks opened, and every question dies a minute later
+    # with "there is no such thing in the database", which reads as the
+    # application failing rather than the file being wrong.
+    path = tmp_path / "empty.sqlite"
+    sqlite3.connect(path).close()
+    with pytest.raises(AskError) as e:
+        Engine(str(path), StubModel())
+    assert "таблиц" in str(e.value)
+
+
+def test_a_query_that_runs_out_of_time_is_not_sent_back_to_the_model(db):
+    # A query stopped by the clock is not a broken query: there is nothing for
+    # the model to repair, and the user would wait the whole round again only
+    # to be told "interrupted", which explains nothing.
+    joins = ", ".join(f"clients t{i}" for i in range(14))      # 4**14 combinations
+    heavy = f"SELECT COUNT(*) FROM {joins}"
+    model = StubModel(f"```sql\n{heavy}\n```", "```sql\nSELECT name FROM clients\n```")
+    engine = Engine(db, model, timeout=0.2)
+    with pytest.raises(AskError) as e:
+        engine.ask("тяжёлый вопрос")
+    assert "слишком тяжёлый" in str(e.value)
+    assert len(model.prompts) == 1, "запрос по таймауту не должен уходить на исправление"
+
+
+def test_a_model_that_is_not_running_is_reported_readably(db):
+    # ModelClient raises RuntimeError when nothing answers on the loopback
+    # port. Unwrapped it reached the window as "unexpected error" with a
+    # traceback under it, for the most ordinary failure there is.
+    class Absent:
+        def complete(self, prompt, **_):
+            raise RuntimeError("Локальная модель не отвечает. Проверьте, что Ollama запущена.")
+
+    with pytest.raises(AskError) as e:
+        Engine(db, Absent()).ask("сколько клиентов")
+    assert "Ollama" in str(e.value)
+
+
+def test_a_model_that_times_out_is_reported_readably(db):
+    class TooSlow:
+        def complete(self, prompt, **_):
+            raise TimeoutError("timed out")
+
+    with pytest.raises(AskError):
+        Engine(db, TooSlow()).ask("сколько клиентов")

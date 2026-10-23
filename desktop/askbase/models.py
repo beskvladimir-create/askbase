@@ -13,16 +13,23 @@ import urllib.request
 from dataclasses import dataclass
 
 HOST = "http://127.0.0.1:11434"
+# Own opener, with proxies switched off. urllib otherwise reads http_proxy from
+# the environment and sends even a request to 127.0.0.1 through the proxy: the
+# offline guard refuses that, and the user is told the local model is not
+# running when it is running and listening. Having our own opener also keeps the
+# choice out of urllib's global one, which is built on the first call and then
+# keeps whatever the environment said at that moment for the rest of the run.
+_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 # Models known to be trained for SQL are offered first: a general chat model
 # will answer, but it writes prose around the query and takes several times
 # longer, which on a laptop is the difference between four seconds and a minute.
 PREFERRED = ("xiyansql", "arctic-text2sql", "sqlcoder", "omnisql", "qwen2.5-coder", "coder")
 
 
-def installed_models(timeout: float = 2.0) -> list[str]:
+def installed_models(timeout: float = 2.0, *, host: str = HOST) -> list[str]:
     """Local model names, the SQL-capable ones first. Empty if Ollama is absent."""
     try:
-        with urllib.request.urlopen(f"{HOST}/api/tags", timeout=timeout) as r:
+        with _OPENER.open(f"{host}/api/tags", timeout=timeout) as r:
             data = json.load(r)
     except (urllib.error.URLError, OSError, ValueError, TimeoutError):
         return []
@@ -44,6 +51,10 @@ class Completion:
     seconds: float
 
 
+class Cancelled(Exception):
+    """The question was stopped. Not a failure, and nothing to report."""
+
+
 class ModelClient:
     """Minimal client. No SDK, so the packaged application stays small."""
 
@@ -53,8 +64,31 @@ class ModelClient:
         self.host = host
         self.timeout = timeout
         self.max_tokens = max_tokens
+        self._live = None           # the reply being read, so that it can be dropped
+        self._cancelled = False
+
+    def reset(self) -> None:
+        """A stopped question must not stop the next one."""
+        self._cancelled = False
+
+    def cancel(self) -> None:
+        """Give up on the answer. Called from the interface thread while one is being read.
+
+        Abandoning the result in the window is not enough: one model answers
+        one question at a time, so until this connection is dropped the next
+        question waits behind a question nobody wants any more.
+        """
+        self._cancelled = True
+        live = self._live
+        if live is not None:
+            try:
+                live.close()
+            except Exception:
+                pass                # it had already finished: the flag is enough
 
     def complete(self, prompt: str, temperature: float = 0.0) -> Completion:
+        if self._cancelled:
+            raise Cancelled
         body = json.dumps({
             "model": self.model,
             "messages": [{"role": "user", "content": prompt}],
@@ -67,12 +101,34 @@ class ModelClient:
         )
         t0 = time.perf_counter()
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            with _OPENER.open(req, timeout=self.timeout) as r:
+                self._live = r
                 data = json.load(r)
-        except urllib.error.URLError as e:
+        except TimeoutError as e:
+            # A read timeout is not a URLError, so it used to travel up as an
+            # unexpected error with a traceback. On a laptop without a GPU a
+            # large model running out of time is routine, not a defect.
+            raise RuntimeError(
+                f"Модель не ответила за {self.timeout:.0f} с. "
+                "Попробуйте модель меньше или вопрос попроще."
+            ) from e
+        except (urllib.error.URLError, OSError) as e:
+            # A connection the interface dropped looks exactly like a model
+            # that went away, so what the user did decides which one it was.
+            if self._cancelled:
+                raise Cancelled from None
             raise RuntimeError(
                 "Локальная модель не отвечает. Проверьте, что Ollama запущена."
             ) from e
+        except ValueError as e:
+            if self._cancelled:
+                raise Cancelled from None
+            # Not JSON: something other than the model answered on that port.
+            raise RuntimeError(
+                "Ответ локальной модели не разобрался. Проверьте, что на 11434 отвечает Ollama."
+            ) from e
+        finally:
+            self._live = None
         return Completion(
             text=(data.get("message") or {}).get("content", ""),
             seconds=time.perf_counter() - t0,

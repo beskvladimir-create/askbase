@@ -132,3 +132,33 @@ def test_union_is_bounded_even_without_a_limit_slot():
     )
     assert v.ok, v.reason
     assert v.notes          # the executor is told to cap the fetch
+def test_a_comment_after_the_semicolon_is_not_a_second_statement():
+    # A model that signs off with "; -- all of them" wrote one ordinary query.
+    # sqlglot hands the lone semicolon back as a statement of its own, so this
+    # was refused as an injection attempt and the single repair attempt went on
+    # fixing nothing.
+    v = check("SELECT name FROM clients; -- all of them", schema=SCHEMA)
+    assert v.ok, v.reason
+    assert "LIMIT" in v.sql.upper()
+
+
+def test_a_semicolon_still_does_not_hide_a_second_statement():
+    # The reason the count exists in the first place: a comment between the two
+    # statements must not make the second one invisible.
+    v = check("SELECT name FROM clients; -- \n DROP TABLE clients", schema=SCHEMA)
+    assert not v.ok
+    assert "одно" in v.reason
+@pytest.mark.parametrize("sql", [
+    "ATTACH DATABASE '/tmp/other.db' AS other",
+    "ATTACH DATABASE 'file:/tmp/other.db?mode=rwc' AS other",
+    "DETACH DATABASE other",
+    "VACUUM",
+])
+def test_reaching_for_another_file_is_rejected(sql):
+    # A read-only connection does not stop ATTACH: SQLite applies mode=ro to
+    # the main database only, and the connection is opened with URIs enabled,
+    # so an attached file could be opened for writing. This layer is the one
+    # that stops it, which is why it is pinned here.
+    v = check(sql, schema=SCHEMA)
+    assert not v.ok
+    assert v.sql == ""

@@ -16,18 +16,20 @@ import sys
 import traceback
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot
-from PySide6.QtGui import QAction, QCursor, QGuiApplication, QIcon, QKeySequence, QShortcut
+from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, QTimer, Signal, Slot
+from PySide6.QtGui import (
+    QAction, QCursor, QFontMetrics, QGuiApplication, QIcon, QKeySequence, QShortcut, QTextCursor,
+)
 from PySide6.QtWidgets import (
     QApplication, QDialog, QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView,
-    QLabel, QLineEdit, QMainWindow, QPlainTextEdit, QPushButton, QStackedWidget,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
+    QLabel, QLineEdit, QMainWindow, QPlainTextEdit, QPushButton, QSizePolicy,
+    QStackedWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
-from . import i18n, offline, theme
+from . import i18n, offline, recent, theme
 from .engine import AskError, Engine
-from .models import ModelClient, installed_models
-from .widgets import BrandMark, DropZone, Ground, LangSwitch, ProgressLine, glow
+from .models import Cancelled, ModelClient, installed_models
+from .widgets import BrandMark, DropZone, Ground, LangSwitch, ProgressLine, Segmented, glow, keycap
 
 ICON = Path(__file__).with_name("icon.svg")
 MAKER = "Besk Tech"
@@ -43,6 +45,7 @@ def label(text: str = "", name: str = "") -> QLabel:
 
 def button(text: str, *, primary: bool = False, small: bool = False, link: bool = False) -> QPushButton:
     b = QPushButton(text)
+    b.setCursor(Qt.CursorShape.PointingHandCursor)  # as in pii-roundtrip: pressable things say so
     if primary:
         b.setProperty("primary", True)
     if small:
@@ -88,13 +91,29 @@ class AskTask(QRunnable):
     @Slot()
     def run(self) -> None:
         try:
-            answer = self.engine.ask(self.question, on_step=self.signals.step.emit)
+            answer = self.engine.ask(self.question, on_step=lambda s: self._tell(self.signals.step, s))
+        except Cancelled:
+            pass                                # asked for: the window has already moved on
         except AskError as e:
-            self.signals.failed.emit(str(e))
+            self._tell(self.signals.failed, str(e))
         except Exception:                       # never leave the user at a frozen screen
-            self.signals.failed.emit(f"{self.unexpected}\n" + traceback.format_exc(limit=2))
+            self._tell(self.signals.failed, f"{self.unexpected}\n" + traceback.format_exc(limit=2))
         else:
-            self.signals.done.emit(answer)
+            self._tell(self.signals.done, answer)
+
+    def _tell(self, signal, payload) -> None:
+        """Report back, unless there is no longer anybody to report to.
+
+        A question outlives the window that asked it: closing the window, or
+        switching language, which rebuilds it. Emitting into the deleted window
+        then raised inside the thread, which lost the answer and, when it
+        happened on a step rather than at the end, abandoned the question
+        halfway with the progress line still running.
+        """
+        try:
+            signal.emit(payload)
+        except RuntimeError:
+            pass
 
 
 class Window(QMainWindow):
@@ -105,8 +124,21 @@ class Window(QMainWindow):
         self.lang = lang
         self.t = i18n.TEXTS[lang]
         self.engine: Engine | None = None
+        self.client: ModelClient | None = None
         self.answer = None
         self.first_question = True
+        self.asking = False
+        self.step = ""                          # the stage the question has reached
+        # A local model can think for a minute. Without a clock on the screen
+        # there is no way to tell working from hung, so the wait is counted.
+        self.ticker = QTimer(self)
+        self.ticker.setInterval(1000)
+        self.ticker.timeout.connect(self._tick)
+        self.waited = 0
+        # Every question gets a number, and only the current number may write
+        # on the screen. A question the user has walked away from still ends,
+        # a minute later, in a thread that knows nothing about that.
+        self.request = 0
         self.pool = QThreadPool.globalInstance()
         self.pool.setMaxThreadCount(1)          # one model, one question at a time
 
@@ -139,12 +171,62 @@ class Window(QMainWindow):
         bv = QVBoxLayout(body)
         bv.setContentsMargins(24, 10, 24, 22)
         bv.setSpacing(0)
+        bv.addWidget(self._alert())
         bv.addWidget(self.pages, 1)
         outer.addWidget(body, 1)
 
         self.setCentralWidget(root)
-        self.pages.setCurrentIndex(0)
+        self._refresh_recent()
+        self._to_page(0)
         self._menu()
+
+    # ---------- what went wrong, and what to do about it ----------
+    def _alert(self) -> QWidget:
+        """One card for every failure, because a failure is where the user needs help.
+
+        Errors used to arrive as one grey line of twelve point text across the
+        top of the window, a full screen away from whatever had just been
+        pressed, truncated at the window edge, and with nothing to press next.
+        """
+        self.err_title = label("", "errtitle")
+        self.err_body = label("", "errbody")
+        # a path or a message from SQLite is something people quote to whoever
+        # can help them, so it can be selected and copied
+        self.err_body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.err_do = button("", small=True)
+        # Connected once to a slot that reads what the alert currently offers:
+        # reconnecting per failure left old handlers behind, or warned about
+        # disconnecting one that was never there.
+        self.err_then = None
+        self.err_do.clicked.connect(lambda: self.err_then and self.err_then())
+        row = QWidget()
+        rh = QHBoxLayout(row)
+        rh.setContentsMargins(0, 0, 0, 0)
+        rh.addWidget(self.err_do)
+        rh.addStretch(1)
+        self.alert = card(self.err_title, self.err_body, row, spacing=8, pad=18)
+        self.alert.hide()
+        box = QWidget()
+        bv = QVBoxLayout(box)
+        bv.setContentsMargins(0, 0, 0, 0)
+        bv.setSpacing(0)
+        bv.addWidget(self.alert)
+        bv.addSpacing(12)
+        self.alert_box = box
+        box.hide()
+        return box
+
+    def _fail(self, title: str, body: str, action: str = "", then=None) -> None:
+        self.err_title.setText(title)
+        self.err_body.setText(body)
+        self.err_do.setVisible(bool(action))
+        self.err_do.setText(action)
+        self.err_then = then
+        self.alert.show()
+        self.alert_box.show()
+
+    def _clear_alert(self) -> None:
+        self.alert_box.hide()
 
     def _menu(self) -> None:
         m = self.menuBar().addMenu(self.t["menu_file"])
@@ -152,12 +234,26 @@ class Window(QMainWindow):
         about.setMenuRole(QAction.MenuRole.AboutRole)   # lands in the app menu on macOS
         about.triggered.connect(self._about)
         m.addAction(about)
-        open_db = QAction(self.t["open_db"], self)
-        open_db.setShortcut(QKeySequence.StandardKey.Open)
-        open_db.triggered.connect(self._pick)
-        m.addAction(open_db)
-        QShortcut(QKeySequence("Ctrl+Return"), self, self._ask)
+        # The menu is where a keyboard shortcut is found. Everything the
+        # buttons do is here with its keys written next to it, which is also
+        # the only place the application can say that ⌘↩ asks the question.
+        for text, keys, fn in (
+            (self.t["open_db"], QKeySequence(QKeySequence.StandardKey.Open), self._pick),
+            (self.t["ask"], QKeySequence("Ctrl+Return"), self._ask),
+            (self.t["again"], QKeySequence(QKeySequence.StandardKey.New), self._new_question),
+            (self.t["copy"], QKeySequence("Shift+Ctrl+C"), self._copy_sql),
+            (self.t["csv"], QKeySequence(QKeySequence.StandardKey.Save), self._save_csv),
+        ):
+            a = QAction(text, self)
+            a.setShortcut(keys)
+            a.triggered.connect(fn)
+            m.addAction(a)
         QShortcut(QKeySequence("Meta+Return"), self, self._ask)
+        QShortcut(QKeySequence("Ctrl+1"), self, lambda: self._view(0))
+        QShortcut(QKeySequence("Ctrl+2"), self, lambda: self._view(1))
+        # Escape is how a person leaves something: out of the answer back to
+        # the question, out of the question back to the list of databases.
+        QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self._back)
 
     def _about(self) -> None:
         d = QDialog(self)
@@ -202,11 +298,26 @@ class Window(QMainWindow):
 
         self.where = label("", "doctitle")
         self.where.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.where.setWordWrap(False)   # one line, like the trust line beside it
+        # It takes the room that is left and no more. Asking for the width of
+        # its text pushed the language switch off the edge of a small window.
+        self.where.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.where_full = ""
+        # Re-elided whenever the layout gives the label a new width: asking
+        # for that width from resizeEvent returns the one it had before.
+        self.where.installEventFilter(self)
         h.addWidget(self.where, 1)
 
         self.trust = label(self.t["trust"], "trust")
         self.trust.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.trust.setWordWrap(False)   # one line, or it rides up into the window buttons
+        # The promise is three concrete facts; the line in the bar is only its
+        # headline, and the facts are a hover away rather than nowhere.
+        self.trust.setToolTip(self.t["trust_tip"])
+        self.tabs = Segmented((self.t["tab_answer"], self.t["tab_sql"]))
+        self.tabs.setFixedWidth(170)
+        self.tabs.changed.connect(self._view)
+        self.tabs.hide()
         self.langs = LangSwitch(self.lang)
         self.langs.changed.connect(self.language_changed.emit)
         right = QWidget()
@@ -216,9 +327,38 @@ class Window(QMainWindow):
         rh.setSpacing(14)
         rh.addStretch(1)
         rh.addWidget(self.trust)
+        rh.addWidget(self.tabs)
         rh.addWidget(self.langs)
         h.addWidget(right)
         return bar
+
+    def resizeEvent(self, e) -> None:
+        super().resizeEvent(e)
+        self._fit_bar()
+
+    def eventFilter(self, obj, e) -> bool:
+        from PySide6.QtCore import QEvent
+
+        if obj is self.where and e.type() == QEvent.Type.Resize:
+            self._fit_bar()
+        return False
+
+    def _fit_bar(self) -> None:
+        # Narrow, the promise in Playfair and the name of the open file fight
+        # for the same strip and both lose. The file name wins: it says which
+        # database is open and that it is read-only, and the promise is still
+        # under the drop zone and in the tooltip.
+        self.trust.setVisible(self.width() >= (1180 if self.tabs.isVisible() else 960))
+        # Cut with an ellipsis rather than at the window edge, so that what is
+        # left still reads as a sentence. The whole of it is in the tooltip.
+        room = self.where.width() - 16
+        self.where.setText(
+            QFontMetrics(self.where.font()).elidedText(
+                self.where_full, Qt.TextElideMode.ElideMiddle, room
+            ) if room > 0 else ""
+        )
+        self.where.setToolTip(self.where_full)
+
 
     # ---------- page 1: connect ----------
     def _connect_page(self) -> QWidget:
@@ -231,6 +371,21 @@ class Window(QMainWindow):
         self.drop.file_dropped.connect(self._open)
         self.drop.choose.connect(self._pick)
         v.addWidget(self.drop, 1)
+
+        # The databases opened before. Without them the application forgets
+        # everything each morning and the first act of every day is hunting
+        # for the same file in Finder.
+        self.recent_box = QWidget()
+        rv = QVBoxLayout(self.recent_box)
+        rv.setContentsMargins(0, 0, 0, 0)
+        rv.setSpacing(4)
+        head = label(self.t["recent"], "micro")
+        head.setContentsMargins(12, 0, 12, 4)
+        rv.addWidget(head)
+        self.recent_rows = QVBoxLayout()
+        self.recent_rows.setSpacing(0)
+        rv.addLayout(self.recent_rows)
+        v.addWidget(self.recent_box)
 
         # Typing or pasting a path is how many people hand over a file, and a
         # drop zone on its own quietly excludes anyone working from a terminal
@@ -245,7 +400,7 @@ class Window(QMainWindow):
         ph = QHBoxLayout(prow)
         ph.setContentsMargins(0, 0, 0, 0)
         ph.setSpacing(12)
-        ph.addWidget(label(self.t["path_label"], "note"), 0)
+        ph.addWidget(self._row_label(self.t["path_label"]), 0)
         ph.addWidget(self.path, 1)
         ph.addWidget(go, 0)
         v.addWidget(prow)
@@ -258,7 +413,7 @@ class Window(QMainWindow):
         rh = QHBoxLayout(row)
         rh.setContentsMargins(0, 0, 0, 0)
         rh.setSpacing(12)
-        rh.addWidget(label(self.t["model_label"], "note"), 0)
+        rh.addWidget(self._row_label(self.t["model_label"]), 0)
         rh.addWidget(self.model_box, 1)
         v.addWidget(row)
 
@@ -276,6 +431,64 @@ class Window(QMainWindow):
         v.addWidget(foot)
         return w
 
+    def _size(self, schema) -> str:
+        """How big the open database is, counted in the right grammatical form."""
+        return "  ·  ".join((
+            i18n.plural(self.t, "tables", len(schema.tables)),
+            i18n.plural(self.t, "columns", schema.n_columns),
+            self.t["readonly_short"],
+        ))
+
+    def _row_label(self, text: str) -> QLabel:
+        """A label in the left column of a form row. One width, so the fields line up."""
+        lb = label(text, "note")
+        lb.setFixedWidth(170)
+        return lb
+
+    def _refresh_recent(self) -> None:
+        while self.recent_rows.count():
+            item = self.recent_rows.takeAt(0)
+            row = item.widget()
+            if row is not None:
+                # Held in a name: once the row has no parent the layout item no
+                # longer knows about it and asking again returns None. Detached
+                # at once, or a row waiting for deleteLater is still drawn
+                # underneath the new ones.
+                row.hide()
+                row.setParent(None)
+                row.deleteLater()
+        paths = recent.paths()
+        self.recent_box.setVisible(bool(paths))
+        for p in paths:
+            row = QPushButton()
+            row.setProperty("recent", True)
+            row.setFixedHeight(36)
+            row.setCursor(Qt.CursorShape.PointingHandCursor)
+            row.setToolTip(p)
+            h = QHBoxLayout(row)
+            h.setContentsMargins(12, 0, 8, 0)
+            name = label(Path(p).name)
+            name.setStyleSheet("color: #FAFAFA; font-size: 14px;")
+            where = label(str(Path(p).parent).replace(str(Path.home()), "~"), "note")
+            where.setWordWrap(False)
+            h.addWidget(name)
+            h.addStretch(1)
+            h.addWidget(where)
+            h.addSpacing(8)
+            forget = QPushButton("✕")
+            forget.setObjectName("remove")
+            forget.setToolTip(self.t["forget"])
+            forget.setCursor(Qt.CursorShape.PointingHandCursor)
+            forget.setFixedSize(26, 26)
+            forget.clicked.connect(lambda _=False, path=p: self._forget(path))
+            h.addWidget(forget)
+            row.clicked.connect(lambda _=False, path=p: self._open(path))
+            self.recent_rows.addWidget(row)
+
+    def _forget(self, path: str) -> None:
+        recent.forget(path)
+        self._refresh_recent()
+
     def _open_typed(self) -> None:
         text = self.path.text().strip().strip('"').strip("'")
         if text.startswith("file://"):
@@ -287,20 +500,42 @@ class Window(QMainWindow):
     def adopt(self, old: "Window") -> None:
         """Take over the open database from the window being replaced."""
         self.engine = old.engine
+        self.client = old.client
         self.model_box.setCurrentText(old.model_box.currentText())
         if self.engine is not None:
-            s = self.engine.schema
-            self.where.setText(
-                f"{Path(self.engine.db_path).name}  ·  "
-                + self.t["tables"].format(n=len(s.tables), c=s.n_columns)
-            )
-            self.examples.setText(
-                self.t["examples"] + ";  ".join(
-                    self.t["example_of"].format(table=n) for n in list(s.tables)[:3]
-                )
-            )
+            # The engine writes the "what it counted" sentence, so switching
+            # the interface language has to reach it too, or the next answer
+            # explains itself in the language the user just left.
+            self.engine.lang = self.lang
+            self._describe(self.engine.db_path)
             self.question.setPlainText(old.question.toPlainText())
-            self.pages.setCurrentIndex(1)
+            self._to_page(1)
+
+    def _describe(self, path: str) -> None:
+        """Put the open database on the screen: its size in the bar, its shape on the page."""
+        s = self.engine.schema
+        self.where_full = f"{Path(path).name}  ·  " + self._size(s)
+        self._fit_bar()
+        self.outline.setPlainText(s.outline())
+        while self.example_row.count() > 1:     # everything after the "for example" label
+            old = self.example_row.takeAt(1).widget()
+            if old is not None:                 # the stretch at the end has no widget
+                old.setParent(None)
+                old.deleteLater()
+        # An example that can only be read leaves the hardest part, the first
+        # sentence, to the person. Pressed, it writes itself into the box.
+        for name in list(s.tables)[:3]:
+            text = self.t["example_of"].format(table=name)
+            b = button(text, link=True)
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.clicked.connect(lambda _=False, q=text: self._use_example(q))
+            self.example_row.addWidget(b)
+        self.example_row.addStretch(1)
+
+    def _use_example(self, text: str) -> None:
+        self.question.setPlainText(text)
+        self.question.setFocus()
+        self.question.moveCursor(QTextCursor.MoveOperation.End)
 
     def _pick(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
@@ -312,23 +547,23 @@ class Window(QMainWindow):
 
     def _open(self, path: str) -> None:
         if not os.path.isfile(path):
-            self._say(self.t["not_a_file"].format(path=path))
+            self._fail(self.t["err_db"], self.t["not_a_file"].format(path=path),
+                       self.t["choose_other"], self._pick)
+            self._forget(path)      # a file that moved should stop being offered
             return
+        self._abandon()
         try:
-            self.engine = Engine(path, ModelClient(self.model_box.currentText()))
+            self.client = ModelClient(self.model_box.currentText())
+            self.engine = Engine(path, self.client, lang=self.lang)
         except Exception as e:
-            self._say(self.t["cannot_open"].format(error=e))
+            self._fail(self.t["err_db"], self.t["cannot_open"].format(error=e),
+                       self.t["choose_other"], self._pick)
             return
-        s = self.engine.schema
-        self.where.setText(
-            f"{Path(path).name}  ·  " + self.t["tables"].format(n=len(s.tables), c=s.n_columns)
-        )
-        self.examples.setText(
-            self.t["examples"] + ";  ".join(
-                self.t["example_of"].format(table=n) for n in list(s.tables)[:3]
-            )
-        )
-        self.pages.setCurrentIndex(1)
+        recent.remember(path)
+        self._refresh_recent()
+        self._clear_alert()
+        self._describe(path)
+        self._to_page(1)
         self.question.setFocus()
         self._say("")
 
@@ -346,9 +581,23 @@ class Window(QMainWindow):
         self.question.setFixedHeight(130)
         v.addWidget(card(self.question))
 
-        self.examples = label("", "note")
-        v.addWidget(self.examples)
-        v.addStretch(1)
+        examples = QWidget()
+        self.example_row = QHBoxLayout(examples)
+        self.example_row.setContentsMargins(0, 0, 0, 0)
+        self.example_row.setSpacing(16)
+        self.example_row.addWidget(label(self.t["examples"], "note"), 0)
+        v.addWidget(examples)
+
+        # What the model is shown, shown to the person as well. A question is
+        # written against whatever the writer believes is in there, and this
+        # is the only place the two beliefs can be compared before asking.
+        self.outline = QPlainTextEdit()
+        self.outline.setObjectName("doc")
+        self.outline.setReadOnly(True)
+        self.outline.setFont(theme.mono())
+        self.outline.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        self.outline.setMinimumHeight(64)   # it gives way when an alert needs the room
+        v.addWidget(card(label(self.t["in_base"], "micro"), self.outline, spacing=10), 1)
         v.addWidget(hairline())
 
         row = QWidget()
@@ -359,8 +608,22 @@ class Window(QMainWindow):
         self.ask_btn.clicked.connect(self._ask)
         back = button(self.t["other_db"], link=True)
         back.clicked.connect(self._go_home)
+        # The step and the seconds belong next to the button that started
+        # them, not in a line of small grey text at the other end of the window.
+        self.working = label("", "note")
+        self.working.setWordWrap(False)
+        self.stop_btn = button(self.t["stop"], link=True)
+        self.stop_btn.clicked.connect(self._stop)
+        self.stop_btn.hide()
+        # The key is shown only while it works: during a question it is
+        # refused, and a key printed next to a dead button teaches nothing.
+        self.key_hint = keycap(self.t["ask_key"])
         rh.addWidget(back)
         rh.addStretch(1)
+        rh.addWidget(self.working)
+        rh.addWidget(self.stop_btn)
+        rh.addWidget(self.key_hint)
+        rh.addSpacing(-4)
         rh.addWidget(self.ask_btn)
         v.addWidget(row)
         return w
@@ -373,17 +636,148 @@ class Window(QMainWindow):
         if not self.engine:
             self._go_home()
             return
+        if self.asking:
+            # The keyboard shortcut does not know that the button is disabled,
+            # so two quick presses used to queue a second question. One model
+            # answers one question at a time, so the second waited for the
+            # first and then landed on top of its answer.
+            return
+        self._clear_alert()
+        self.asking = True
+        self.request += 1
+        rid = self.request
         self.ask_btn.setEnabled(False)
+        self.key_hint.hide()
+        self.stop_btn.show()
+        self.step, self.waited = self.t["writing"], 0
+        self._tick()
+        self.ticker.start()
         self.progress.start()
         if self.first_question:
             self._say(self.t["first_slow"])
+        if self.client is not None:
+            self.client.reset()
         task = AskTask(self.engine, q, self.t["unexpected"])
-        task.signals.step.connect(lambda s: self._say(self.t.get(s, s) + "…"))
-        task.signals.done.connect(self._show_answer)
-        task.signals.failed.connect(self._show_error)
+        task.signals.step.connect(lambda s, r=rid: self._step(r, s))
+        task.signals.done.connect(lambda a, r=rid: self._show_answer(a, r))
+        task.signals.failed.connect(lambda m, r=rid: self._show_error(m, r))
         self.pool.start(task)
 
+    def _abandon(self) -> None:
+        """Stop waiting for the question in flight: its answer is no longer wanted.
+
+        Called when the user opens another database or goes back to the start.
+        The thread cannot be interrupted mid-answer, so instead the answer is
+        dropped when it arrives, and the interface stops pretending to work.
+        """
+        self.request += 1
+        self.asking = False
+        self.ticker.stop()
+        self.working.setText("")
+        self.stop_btn.hide()
+        self.key_hint.show()
+        self.progress.stop()
+        self.ask_btn.setEnabled(True)
+        self._say("")       # nothing is being waited for, so nothing is being reported
+
+    def _stop(self) -> None:
+        """The question is given up on: the window moves on and the model is let go."""
+        if self.client is not None:
+            # Without this the next question would wait behind this one, and
+            # the interface would look stuck for a reason nobody can see.
+            self.client.cancel()
+        self._abandon()
+        self._say(self.t["stopped"])
+
+    def _tick(self) -> None:
+        self.working.setText(self.t["working_for"].format(step=self.step, s=self.waited))
+        self.waited += 1
+
+    def _current(self, rid: int) -> bool:
+        """True when `rid` is still the question on screen."""
+        if rid != self.request:
+            return False
+        self.asking = False
+        self.ask_btn.setEnabled(True)
+        self.stop_btn.hide()
+        self.key_hint.show()
+        self.ticker.stop()
+        self.working.setText("")
+        self.progress.stop()
+        self._say("")       # the hint about the first question has had its moment
+        self.first_question = False
+        return True
+
+    def _step(self, rid: int, name: str) -> None:
+        if rid == self.request:
+            self.step = self.t.get(name, name)
+            self._tick()
+
     # ---------- page 3: answer ----------
+    def _result_view(self) -> QWidget:
+        w = QWidget()
+        v = QVBoxLayout(w)
+        v.setContentsMargins(0, 0, 0, 0)
+        v.setSpacing(12)
+
+        self.table = QTableWidget()
+        head = self.table.horizontalHeader()
+        # Not stretched to the window any more: a column is as wide as what is
+        # in it, capped, and can be dragged. Stretching cut every value longer
+        # than its share down to three dots, with no way to read the rest.
+        head.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        head.setStretchLastSection(True)
+        head.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.table.verticalHeader().setVisible(False)
+        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.table.setShowGrid(False)
+        self.table.setMinimumHeight(72)   # header and one row; above that it follows the answer
+        # Reachable from the keyboard: four hundred rows cannot be read with
+        # the mouse alone, and a cell nobody can select is a cell nobody can
+        # copy. The dotted rectangle it once showed came from selecting row
+        # one, which no longer happens.
+        self.table.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        copy = QShortcut(QKeySequence(QKeySequence.StandardKey.Copy), self.table, self._copy_cells)
+        copy.setContext(Qt.ShortcutContext.WidgetShortcut)
+        v.addWidget(self.table, 1)
+
+        # Nothing found is an answer too, and it belongs where the rows would
+        # have been rather than in a footnote under an empty frame.
+        self.nothing = label(self.t["no_rows"], "sub")
+        self.nothing.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.nothing.hide()
+        v.addWidget(self.nothing, 1)
+
+        self.rowline = label("", "note")
+        v.addWidget(self.rowline)
+        v.addWidget(label(self.t["counted"], "micro"))
+        self.said = label("", "summary")
+        v.addWidget(self.said)
+        v.addStretch(0)     # takes what a short table leaves, so the table can hug its rows
+        return w
+
+    def _query_view(self) -> QWidget:
+        w = QWidget()
+        v = QVBoxLayout(w)
+        v.setContentsMargins(0, 0, 0, 0)
+        v.setSpacing(12)
+        self.sql_view = QPlainTextEdit()
+        self.sql_view.setObjectName("doc")
+        self.sql_view.setReadOnly(True)
+        self.sql_view.setFont(theme.mono())
+        v.addWidget(card(label(self.t["sql"], "micro"), self.sql_view, spacing=10), 0)
+        self.sql_note = label("", "note")
+        v.addWidget(self.sql_note)
+        v.addStretch(1)         # the card is as tall as the query, not as the window
+        return w
+
+    def _view(self, i: int) -> None:
+        """Switch between the rows and the query; ⌘1 and ⌘2 do the same."""
+        if self.pages.currentIndex() != 2:
+            return
+        self.tabs.select(i)
+        self.views.setCurrentIndex(i)
+
     def _answer_page(self) -> QWidget:
         w = QWidget()
         v = QVBoxLayout(w)
@@ -393,31 +787,14 @@ class Window(QMainWindow):
         self.asked = label("", "errtitle")
         v.addWidget(self.asked)
 
-        self.table = QTableWidget()
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.verticalHeader().setVisible(False)
-        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.table.setShowGrid(False)
-        self.table.setMinimumHeight(140)
-        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)   # no dotted rectangle on row one
-        self.table.horizontalHeader().setDefaultAlignment(
-            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-        )
-        v.addWidget(self.table, 1)
-
-        self.rowline = label("", "note")
-        v.addWidget(self.rowline)
-
-        v.addWidget(label(self.t["counted"], "micro"))
-        self.said = label("", "summary")
-        v.addWidget(self.said)
-
-        self.sql_view = QPlainTextEdit()
-        self.sql_view.setObjectName("doc")
-        self.sql_view.setReadOnly(True)
-        self.sql_view.setFixedHeight(104)
-        self.sql_view.setFont(theme.mono())
-        v.addWidget(card(label(self.t["sql"], "micro"), self.sql_view, spacing=10))
+        # The table and the query are two readings of one answer, and on a
+        # laptop screen they were taking each other's room: four rows of four
+        # hundred above a query box with nothing in it. The switch in the bar
+        # gives whichever one is being read the whole page.
+        self.views = QStackedWidget()
+        self.views.addWidget(self._result_view())
+        self.views.addWidget(self._query_view())
+        v.addWidget(self.views, 1)
 
         v.addWidget(hairline())
         row = QWidget()
@@ -437,10 +814,9 @@ class Window(QMainWindow):
         v.addWidget(row)
         return w
 
-    def _show_answer(self, a) -> None:
-        self.ask_btn.setEnabled(True)
-        self.progress.stop()
-        self.first_question = False
+    def _show_answer(self, a, rid: int = 0) -> None:
+        if not self._current(rid):
+            return
         self.answer = a
         self.asked.setText(self.question.toPlainText().strip())
         self.table.clear()
@@ -449,36 +825,96 @@ class Window(QMainWindow):
         self.table.setRowCount(len(a.rows))
         for r, row in enumerate(a.rows):
             for c, value in enumerate(row):
-                self.table.setItem(r, c, QTableWidgetItem("" if value is None else str(value)))
+                text = "" if value is None else str(value)
+                item = QTableWidgetItem(text)
+                item.setToolTip(text)   # a value too wide for its column is still readable
+                self.table.setItem(r, c, item)
+        self.table.resizeColumnsToContents()
+        for c in range(self.table.columnCount()):
+            # One long free-text column must not push the other six off the
+            # screen; past this width the rest is read in the tooltip.
+            self.table.setColumnWidth(c, min(self.table.columnWidth(c), 320))
         self.table.clearSelection()
+        self.table.setCurrentCell(-1, -1)
+        # Two rows in a frame the height of the window read as a table that
+        # failed to load. Past what fits, it fills the page and scrolls.
+        self.table.setMaximumHeight(
+            self.table.horizontalHeader().height() + self.table.verticalHeader().length() + 4
+        )
+        self.table.setVisible(bool(a.rows))
+        self.nothing.setVisible(not a.rows)
+        extra = "  ·  ".join(a.notes)
         if not a.rows:
-            self.rowline.setText(self.t["no_rows"])
+            self.rowline.setText(self.t["seconds"].format(s=a.seconds) + (f"  ·  {extra}" if extra else ""))
         else:
-            extra = "  ·  ".join(a.notes)
             self.rowline.setText(
-                self.t["rows"].format(n=len(a.rows), s=a.seconds) + (f"  ·  {extra}" if extra else "")
+                i18n.plural(self.t, "rows", len(a.rows))
+                + "  ·  " + self.t["seconds"].format(s=a.seconds)
+                + (f"  ·  {extra}" if extra else "")
             )
         self.said.setText(a.explanation)
         self.sql_view.setPlainText(a.sql)
-        self.pages.setCurrentIndex(2)
+        # Four lines of SQL in a box the height of the window read as a
+        # mistake; forty lines need the room. The box follows the query.
+        line = QFontMetrics(self.sql_view.font()).lineSpacing()
+        self.sql_view.setFixedHeight(min(max(3, a.sql.count("\n") + 1) * line + 12, 460))
+        self.sql_note.setText(extra)
+        self._to_page(2)
+        self._view(0)
         self._say("")
 
-    def _show_error(self, message: str) -> None:
-        self.ask_btn.setEnabled(True)
-        self.progress.stop()
-        self.first_question = False
-        self._say(message)
+    def _show_error(self, message: str, rid: int = 0) -> None:
+        if not self._current(rid):
+            return
+        # The first line is what happened; the rest is the detail, which can
+        # be long and is worth keeping rather than cutting at the window edge.
+        head, _, rest = message.partition("\n")
+        self._fail(self.t["err_ask"], (rest.strip() and f"{head}\n{rest.strip()}") or head,
+                   self.t["retry"], self._ask)
 
     def _new_question(self) -> None:
         self.question.selectAll()
-        self.pages.setCurrentIndex(1)
+        self._to_page(1)
         self.question.setFocus()
 
+    def _back(self) -> None:
+        """Escape: one step back, wherever that is from here."""
+        if self.pages.currentIndex() == 2:
+            self._new_question()
+        elif self.pages.currentIndex() == 1:
+            self._go_home()
+
     def _go_home(self) -> None:
-        self.where.setText("")
-        self.pages.setCurrentIndex(0)
+        self._abandon()
+        self.where_full = ""
+        self._refresh_recent()
+        self._to_page(0)
+
+    def _to_page(self, i: int) -> None:
+        # The switch in the bar belongs to the answer and nothing else; an
+        # alert belongs to the screen it was raised on.
+        self.pages.setCurrentIndex(i)
+        self.tabs.setVisible(i == 2)
+        self._fit_bar()
+        self._clear_alert()
+        self.updateGeometry()
+
+    def _copy_cells(self) -> None:
+        """⌘C over the table: the selected cells, tab separated, ready to paste into a sheet."""
+        rows: dict[int, dict[int, str]] = {}
+        for item in self.table.selectedItems():
+            rows.setdefault(item.row(), {})[item.column()] = item.text()
+        if not rows:
+            return
+        text = "\n".join(
+            "\t".join(cells[c] for c in sorted(cells)) for _, cells in sorted(rows.items())
+        )
+        QGuiApplication.clipboard().setText(text)
+        self._say(self.t["copied_cells"])
 
     def _copy_sql(self) -> None:
+        if not self.answer:
+            return              # the menu reaches here from every screen
         QGuiApplication.clipboard().setText(self.sql_view.toPlainText())
         self._say(self.t["copied"])
 
@@ -488,15 +924,37 @@ class Window(QMainWindow):
         path, _ = QFileDialog.getSaveFileName(self, self.t["save_as"], "answer.csv", "CSV (*.csv)")
         if not path:
             return
-        with open(path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerow(self.answer.columns)
-            writer.writerows(self.answer.rows)
+        try:
+            # utf-8-sig, not utf-8: the file is opened in Excel more often than
+            # anywhere else, and without the byte order mark Excel reads it in
+            # the local codepage and every Cyrillic name comes out as noise.
+            with open(path, "w", newline="", encoding="utf-8-sig") as f:
+                writer = csv.writer(f)
+                writer.writerow(self.answer.columns)
+                writer.writerows(self.answer.rows)
+        except OSError as e:
+            # A read-only folder or a full disk is the user's problem to fix,
+            # but they have to be told. This used to raise inside the slot,
+            # which prints a traceback nobody sees and leaves the saved-file
+            # line off the screen with no hint of why.
+            self._say(self.t["cannot_save"].format(error=e))
+            return
         self._say(self.t["saved"].format(path=path))
 
     def _say(self, text: str) -> None:
+        """A passing word: copied, saved, stopped. Failures go to the alert instead.
+
+        It clears itself after a few seconds. Left on the screen, "Запрос
+        скопирован" is still there an hour later, next to a different answer.
+        """
         self.status.setText(text)
         self.status.setVisible(bool(text))
+        if text:
+            QTimer.singleShot(5000, lambda said=text: self._unsay(said))
+
+    def _unsay(self, said: str) -> None:
+        if self.status.text() == said:
+            self.status.setVisible(False)
 
 
 def main() -> int:

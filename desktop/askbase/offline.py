@@ -16,9 +16,10 @@ library doing something helpful that nobody asked for.
 """
 from __future__ import annotations
 
+import ipaddress
 import socket
 
-LOOPBACK = {"127.0.0.1", "::1", "localhost", "0.0.0.0", ""}
+LOOPBACK = {"localhost", "0.0.0.0", ""}
 
 
 class NetworkRefused(OSError):
@@ -29,11 +30,22 @@ def _is_local(address) -> bool:
     if not isinstance(address, tuple) or not address:
         return False                      # unix sockets and the unexpected: refuse
     host = address[0]
+    if not isinstance(host, str):
+        return False
     if host in LOOPBACK:
         return True
-    if isinstance(host, str) and (host.startswith("127.") or host == "::ffff:127.0.0.1"):
-        return True
-    return False
+    try:
+        # Read as an address rather than matched as text. "127." used to be
+        # enough of a prefix, and a name like 127.0.0.1.example.com is a
+        # perfectly ordinary DNS name that resolves wherever its owner wants:
+        # it is also the shortest way out of this guard. Anything that is not
+        # a literal address is refused, loopback is allowed in both families,
+        # and ::ffff:127.0.0.1 is recognised as the loopback it is.
+        ip = ipaddress.ip_address(host.partition("%")[0])
+    except ValueError:
+        return False
+    mapped = getattr(ip, "ipv4_mapped", None)
+    return ip.is_loopback or ip.is_unspecified or bool(mapped and mapped.is_loopback)
 
 
 def enable() -> None:

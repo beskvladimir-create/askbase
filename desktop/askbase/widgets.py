@@ -557,7 +557,12 @@ class BrandMark(QWidget):
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(white(0.9))
         p.drawRoundedRect(QRectF(box.left() + 19.4, 7.6, 1.8, 4.0), 0.9, 0.9)
-        p.end()
+        # The wordmark. Cut once by accident along with the old glyph, which
+        # left the header with a mark and no name at all.
+        p.setFont(self.font_)
+        p.setPen(QColor(255, 255, 255))
+        p.drawText(QRectF(42, 0, self.width() - 42, self.height()),
+                   Qt.AlignmentFlag.AlignVCenter, self.name)
 
 
 class HoverGlow(QObject):

@@ -45,6 +45,13 @@ _FORBIDDEN = {
     exp.Command: "служебная команда",
 }
 
+# sqlglot 30 returns a lone trailing semicolon as a statement of its own, so a
+# model writing "SELECT ...; -- all of them" produced two statements and was
+# refused as an injection attempt. Counting it is wrong: a semicolon separates
+# statements, it is not one. Read through getattr because older sqlglot has no
+# such node, and the empty tuple makes the isinstance check simply false.
+_SEMICOLON = getattr(exp, "Semicolon", ())
+
 
 @dataclass
 class Verdict:
@@ -80,7 +87,10 @@ def check(
         return Verdict(False, reason="Запрос пустой.")
 
     try:
-        statements = [s for s in sqlglot.parse(sql, dialect=dialect) if s is not None]
+        statements = [
+            s for s in sqlglot.parse(sql, dialect=dialect)
+            if s is not None and not isinstance(s, _SEMICOLON)
+        ]
     except Exception as e:
         return Verdict(False, reason=f"Запрос не разобрался как SQL: {e}")
 

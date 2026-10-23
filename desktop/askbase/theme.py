@@ -55,6 +55,11 @@ QPushButton:pressed {{ background: rgba(255, 255, 255, 0.18); }}
 QPushButton[primary="true"] {{ background: #FFFFFF; color: {GROUND}; }}
 QPushButton[primary="true"]:hover {{ background: {PAPER}; }}
 QPushButton[primary="true"]:pressed {{ background: #E5E7EB; }}
+/* A disabled button that still looks pressable is a lie: the question is
+   already on its way and the second press does nothing. */
+QPushButton:disabled {{ background: rgba(255, 255, 255, 0.04); color: {MUTED}; }}
+QPushButton[primary="true"]:disabled {{ background: rgba(255, 255, 255, 0.22); color: rgba(11, 16, 38, 0.55); }}
+QPushButton[link="true"]:disabled {{ background: transparent; color: {MUTED}; }}
 QLabel#wordmark {{ color: #FFFFFF; font-size: 15px; font-weight: 800; }}
 QLabel#maker {{ color: {TEXT}; font-size: 12px; }}
 QLabel#aboutname {{ color: #FFFFFF; font-size: 22px; font-weight: 900; }}
@@ -77,7 +82,9 @@ QListWidget::item {{ padding: 10px 12px; border-radius: 8px; color: {PAPER}; }}
 QListWidget::item:selected {{ background: rgba(255, 255, 255, 0.10); }}
 QScrollBar:vertical {{ background: transparent; width: 8px; }}
 QScrollBar::handle:vertical {{ background: {HAIR_2}; border-radius: 4px; min-height: 24px; }}
-QScrollBar::add-line, QScrollBar::sub-line {{ height: 0; }}
+QScrollBar:horizontal {{ background: transparent; height: 8px; }}
+QScrollBar::handle:horizontal {{ background: {HAIR_2}; border-radius: 4px; min-width: 24px; }}
+QScrollBar::add-line, QScrollBar::sub-line {{ height: 0; width: 0; }}
 QTableWidget {{ outline: none; background: transparent; border: 1px solid {HAIR}; border-radius: 12px; gridline-color: transparent;
   color: {PAPER}; font-size: 14px; }}
 QTableWidget::item {{ padding: 8px 12px; border-bottom: 1px solid {HAIR}; }}
