@@ -38,6 +38,7 @@ INCLUDE: tuple[str, ...] = (
     "scripts",
     "tests",
     "configs",
+    "desktop",
     "site",
     "pyproject.toml",
     "docs/research.md",
@@ -54,7 +55,7 @@ RENAME = {".gitignore.public": ".gitignore"}
 # Never copied, whatever a glob above might pull in.
 EXCLUDE_NAMES = {
     "__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache",
-    ".venv", ".DS_Store", "_mobile.html",
+    ".venv", ".DS_Store", "_mobile.html", "uv.lock",
 }
 EXCLUDE_SUFFIX = {".pyc", ".jsonl"}
 

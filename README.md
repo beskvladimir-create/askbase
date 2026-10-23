@@ -3,9 +3,10 @@
 A desktop application that answers questions about your own database in plain
 language, with the model running on your machine. Free, no account, no telemetry.
 
-**Status: in development.** The benchmark harness, the safety layer, the
-held-out set generator and the site are here and working. The desktop
-application is not written yet, and there is no download.
+**Status: first version, not packaged.** The desktop application runs from
+source and answers real questions against a SQLite file. The benchmark
+harness, the safety layer and the held-out set generator are here and working.
+There is no signed .dmg yet, and no measured accuracy published.
 
 ## Why this exists
 
@@ -28,6 +29,7 @@ market review, with a source for each claim.
 | `src/nl2sql_app/safety.py` | static check of generated SQL before execution: one SELECT, no recursive CTEs, forced row limit |
 | `src/nl2sql_app/holdout/` | generator for the held-out evaluation set, reproducible byte for byte |
 | `scripts/` | run a benchmark arm, re-score saved predictions, summarise a run, build the site |
+| `desktop/askbase/` | the application: three screens, the engine, and the plain-language explanation of each answer |
 | `site/` | the site, built by `scripts/build_site.py` |
 | `docs/research.md` | market and benchmark review, every claim with a source |
 | `docs/readonly-role.md` | for database administrators: what the application runs, and the SQL to constrain it |
@@ -49,6 +51,20 @@ the Spider 2.0-Snow problems with open gold queries; correcting them moved
 leading systems by up to 19 points and three ranking places. That is why this
 project freezes a held-out set of its own with a SHA-256 digest and registers
 the thresholds before the run.
+
+## Running the application
+
+```bash
+cd desktop && uv venv && uv pip install PySide6 sqlglot
+ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M
+.venv/bin/python -m askbase
+```
+
+Drop in a `.sqlite` file, ask a question in Russian or English, and you get the
+table, the query and a sentence saying what was counted and what was left out.
+The model never touches the database: it is shown a schema snapshot and returns
+text, that text is parsed and checked before anything runs, and it runs on a
+read-only connection with a row limit and a timeout.
 
 ## Running the benchmark
 
