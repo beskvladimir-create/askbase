@@ -129,6 +129,13 @@ def run(
         "s_per_query": round(wall_s / n, 2) if n else None,
         "mean_table_recall": round(sum(recalls) / len(recalls), 4) if recalls else None,
         "concurrency": workers,
+        # Recorded so a run can be read back against the conditions it ran under.
+        # A timeout that drops answers is indistinguishable from a model that
+        # gets them wrong, unless the number is written down next to the score.
+        "request_timeout_s": getattr(client, "timeout_s", None),
+        "max_retries": getattr(client, "max_retries", None),
+        "timed_out": sum(1 for r in records
+                         if r and "APITimeoutError" in (r.get("error") or "")),
         "results_file": out_path,
     }
     with open(out_path.replace(".jsonl", ".summary.json"), "w") as f:

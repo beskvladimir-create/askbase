@@ -110,16 +110,49 @@ def check(
     if not isinstance(stmt, (exp.Select, exp.Union, exp.Subquery)):
         return Verdict(False, reason=f"Разрешён только SELECT, а это {type(stmt).__name__.upper()}.")
 
+    # SQLite exposes its pragmas as table-valued functions as well as as
+    # statements. `PRAGMA table_list` is refused above as a Command, but
+    # `SELECT * FROM pragma_table_list` parses as an anonymous function in the
+    # FROM clause, so it is not an exp.Table and the name whitelist below never
+    # sees it. The reach is schema enumeration rather than data, but the check
+    # claims every name is validated, and a whitelist with a parallel spelling
+    # that skips it is not a whitelist.
+    for fn in stmt.find_all(exp.Anonymous):
+        if (fn.this or "").lower().startswith("pragma_"):
+            return Verdict(
+                False,
+                reason="Запрос выходит за чтение данных: служебные функции PRAGMA запрещены.",
+            )
+
     # Found by walking the tree rather than by arg key: sqlglot renamed the slot
     # from "with" to "with_" in 30.x, and reading the key silently returned None,
     # which let a recursive CTE straight through. A whitelist check must not
     # depend on a key name that a minor upgrade can move.
+    #
+    # And not by the keyword either. SQLite does not require RECURSIVE: both
+    #   WITH c AS (SELECT 1 n UNION ALL SELECT n+1 FROM c WHERE n<5) SELECT * FROM c
+    #   WITH c(n) AS (VALUES(1) UNION ALL SELECT n+1 FROM c WHERE n<5) SELECT * FROM c
+    # recurse perfectly well with no keyword present, and both used to pass,
+    # because `args["recursive"]` is set only when the word is written. What
+    # makes a CTE recursive is that its body names itself, so that is what is
+    # checked: the keyword is accepted as a declaration, and the structure is
+    # read for the cases where nobody declared anything.
     for with_clause in stmt.find_all(exp.With):
         if with_clause.args.get("recursive"):
             return Verdict(
                 False,
                 reason="Рекурсивные выражения WITH запрещены, они могут не завершиться.",
             )
+        for cte in with_clause.find_all(exp.CTE):
+            name = (cte.alias_or_name or "").lower()
+            if not name:
+                continue
+            for ref in cte.this.find_all(exp.Table):
+                if (ref.name or "").lower() == name:
+                    return Verdict(
+                        False,
+                        reason="Рекурсивные выражения WITH запрещены, они могут не завершиться.",
+                    )
 
     notes: list[str] = []
     if schema is not None:

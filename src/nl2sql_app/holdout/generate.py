@@ -22,119 +22,33 @@ import hashlib
 import json
 import random
 import sqlite3
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
 
-from .domains import medicine
+from .domains import banking, logistics, medicine
 from .schema_spec import Domain
 
-DOMAINS: dict[str, Domain] = {
-    medicine.DOMAIN.name: medicine.DOMAIN,
-}
-LOOKUPS: dict[str, dict[str, list[tuple]]] = {
-    medicine.DOMAIN.name: medicine.LOOKUPS,
-}
-
-# Name pools are held here rather than taken from Faker so that the output does
-# not move when Faker's own data files are updated. A locale upgrade silently
-# changing a set is the same class of bug as the shifting "today".
-_FIRST = ("Anna", "Mark", "Elena", "Pavel", "Irina", "Victor", "Olga", "Daniel",
-          "Sofia", "Timur", "Vera", "Igor", "Alina", "Boris", "Nina", "Artem")
-_LAST = ("Kovach", "Reiner", "Almeida", "Bauer", "Novak", "Linde", "Marek",
-         "Soto", "Hale", "Varga", "Petran", "Oduya", "Kristof", "Benali")
-_CITY = ("Northport", "Eastvale", "Marden", "Lowick", "Thorne", "Avelin")
-_DEPT = ("cardiology", "neurology", "oncology", "surgery", "endocrinology")
-_DRUG = ("amoxicillin", "metformin", "atorvastatin", "omeprazole", "insulin",
-         "ibuprofen", "warfarin", "salbutamol")
-_DX = (
-    ("E11", "type 2 diabetes mellitus", "endocrine"),
-    ("I10", "essential hypertension", "circulatory"),
-    ("J45", "asthma", "respiratory"),
-    ("I21", "acute myocardial infarction", "circulatory"),
-    ("C50", "malignant neoplasm of breast", "neoplasms"),
-    ("K21", "gastro-oesophageal reflux", "digestive"),
-    ("G40", "epilepsy", "nervous"),
-    ("N18", "chronic kidney disease", "genitourinary"),
-)
-
-
-def _iso(d: date) -> str:
-    return d.isoformat()
+# A domain owns its own tables, its own lookups and its own row builder. The
+# generator used to reach into medicine's table names directly, which meant a
+# second domain could not exist without either renaming its tables to match or
+# forking this file. Adding a domain is now adding a module to this tuple.
+MODULES = (medicine, banking, logistics)
+DOMAINS: dict[str, Domain] = {m.DOMAIN.name: m.DOMAIN for m in MODULES}
+_BY_NAME = {m.DOMAIN.name: m for m in MODULES}
 
 
 def build_rows(domain: Domain, seed: int, now: date) -> dict[str, list[tuple]]:
-    """Generate every table's rows deterministically from (seed, now)."""
+    """Generate every table's rows deterministically from (seed, now).
+
+    Lookup tables come first and verbatim: their contents are part of the
+    schema's meaning rather than sample data, and a model is expected to reach
+    them through a join. Everything after that is the domain's own business,
+    built from one shared rng so that a domain cannot perturb another's bytes.
+    """
+    module = _BY_NAME[domain.name]
     rng = random.Random(seed)
-    rows: dict[str, list[tuple]] = {}
-
-    for name, content in LOOKUPS[domain.name].items():
-        rows[name] = list(content)
-
-    n_pat = domain.row_counts["pat"]
-    rows["pat"] = [
-        (
-            i + 1,
-            f"{rng.choice(_FIRST)} {rng.choice(_LAST)}",
-            _iso(now - timedelta(days=rng.randint(6_000, 32_000))),
-            rng.choice((1, 2)),
-            rng.choice(_CITY) if rng.random() > 0.08 else None,   # some rows lack a city
-        )
-        for i in range(n_pat)
-    ]
-
-    n_doc = domain.row_counts["doc"]
-    rows["doc"] = [
-        (
-            i + 1,
-            f"{rng.choice(_FIRST)} {rng.choice(_LAST)}",
-            rng.choice(_DEPT),
-            _iso(now - timedelta(days=rng.randint(200, 7_000))),
-        )
-        for i in range(n_doc)
-    ]
-
-    rows["dx_ref"] = list(_DX)
-
-    n_enc = domain.row_counts["enc"]
-    encounters: list[tuple] = []
-    for i in range(n_enc):
-        adm = now - timedelta(days=rng.randint(0, 540))
-        status = rng.choices((0, 1, 2, 3), weights=(8, 14, 70, 8))[0]
-        disch = _iso(adm + timedelta(days=rng.randint(1, 21))) if status == 2 else None
-        # The legacy split: rows older than a year kept the old column, newer
-        # rows use the new one. Exactly one of the two is ever populated.
-        old_row = (now - adm).days > 365
-        encounters.append((
-            i + 1,
-            rng.randint(1, n_pat),
-            rng.randint(1, n_doc),
-            _iso(adm) if old_row else None,
-            None if old_row else _iso(adm),
-            disch,
-            status,
-        ))
-    rows["enc"] = encounters
-
-    rows["dx"] = [
-        (
-            i + 1,
-            rng.randint(1, n_enc),
-            rng.choice(_DX)[0],
-            1 if rng.random() < 0.6 else 0,
-        )
-        for i in range(domain.row_counts["dx"])
-    ]
-
-    rows["rx"] = [
-        (
-            i + 1,
-            rng.randint(1, n_enc),
-            rng.choice(_DRUG),
-            rng.choice((1, 2, 3, 4)),
-            rng.randint(1, 30),
-        )
-        for i in range(domain.row_counts["rx"])
-    ]
+    rows: dict[str, list[tuple]] = {n: list(v) for n, v in module.LOOKUPS.items()}
+    rows.update(module.build_rows(rng, now, domain.row_counts))
     return rows
 
 

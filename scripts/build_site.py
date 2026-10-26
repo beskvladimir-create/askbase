@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import pathlib
 import re
 import sys
 from dataclasses import dataclass
@@ -73,6 +74,18 @@ ROUTES: dict[str, Route] = {
         "Настольное приложение, которое отвечает на вопросы к вашей базе данных. "
         "Модель работает на вашем компьютере, вопрос и данные его не покидают.",
         twin="index", signed=False,
+    ),
+    "install": Route(
+        "install", "en",
+        "Askbase: install",
+        "Download for macOS, and how to let the system open an unsigned build.",
+        twin="ru-ustanovka", signed=False,
+    ),
+    "ru-ustanovka": Route(
+        "ru/ustanovka", "ru",
+        "Askbase: установка",
+        "Скачать для macOS и как разрешить системе открыть неподписанную сборку.",
+        twin="install", signed=False,
     ),
     "model-ranking": Route(
         "model-ranking", "en",
@@ -164,11 +177,32 @@ class Unbacked(Exception):
 
 
 def load_results() -> dict:
-    """Every summary under results/, keyed by its file stem."""
-    out = {}
-    for path in sorted(RESULTS.rglob("*.summary.json")):
+    """Published runs, keyed by file stem. The top level of results/ only.
+
+    Not rglob. Subdirectories of results/ hold runs that are deliberately not
+    published: results/probe/ is a twenty-question smoke test and results/void/
+    holds runs withdrawn with a written reason. Walking the tree made those
+    indistinguishable from a measurement, and it was not hypothetical: the
+    voided Arctic-7B run, whose own README says "числом не является", resolved
+    under exactly the key the ranking page references, and the single thing
+    keeping 45.6% off the site was that the same region also wanted a holdout
+    key that did not exist yet.
+
+    A duplicate stem is refused rather than resolved by sort order. Two files
+    claiming one key is a mistake somewhere, and picking the alphabetically
+    later one is how a smoke test with n=20 ends up published as the run.
+    """
+    out: dict[str, dict] = {}
+    seen: dict[str, pathlib.Path] = {}
+    for path in sorted(RESULTS.glob("*.summary.json")):
+        key = path.name[: -len(".summary.json")]
+        if key in seen:
+            raise Unbacked(
+                f"две сводки под одним именем {key}: {seen[key]} и {path}"
+            )
+        seen[key] = path
         try:
-            out[path.stem.replace(".summary", "")] = json.loads(path.read_text())
+            out[key] = json.loads(path.read_text())
         except json.JSONDecodeError as e:
             raise Unbacked(f"{path}: нечитаемый JSON: {e}") from e
     return out
@@ -228,12 +262,17 @@ def url_of(route: "Route") -> str:
 
 def head(route: Route) -> str:
     path, lang, title, desc = route.path, route.lang, route.title, route.desc
-    url = f"{BASE}/{path}/" if path else f"{BASE}/"
+    # The canonical guarded the empty path and the two alternates did not, so
+    # both home pages declared their alternate and x-default at
+    # https://askbase.besk.tech// , a URL that is not the canonical one and not
+    # the one anything links to. url_of exists for exactly this and was not
+    # used here.
+    url = f"{BASE}/{url_of(route).lstrip('/')}"
     twin = ROUTES[route.twin]
-    alt = twin.path
+    alt_url = f"{BASE}/{url_of(twin).lstrip('/')}"
     other_lang = twin.lang
     # x-default points at the primary language, which is English.
-    default = path if lang == PRIMARY_LANG else alt
+    default_url = url if lang == PRIMARY_LANG else alt_url
     schema = {
         "@context": "https://schema.org",
         "@type": "WebPage",
@@ -255,8 +294,8 @@ def head(route: Route) -> str:
 <meta name="description" content="{desc}">
 <link rel="canonical" href="{url}">
 <link rel="alternate" hreflang="{lang}" href="{url}">
-<link rel="alternate" hreflang="{other_lang}" href="{BASE}/{alt}/">
-<link rel="alternate" hreflang="x-default" href="{BASE}/{default}/">
+<link rel="alternate" hreflang="{other_lang}" href="{alt_url}">
+<link rel="alternate" hreflang="x-default" href="{default_url}">
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
@@ -370,6 +409,10 @@ MARK = (
     '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="#fff" stroke-opacity=".5"/><path d="M6.8 9.2h7.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M6.8 12.5h10.4" stroke="#fff" stroke-opacity=".7" stroke-width="1.7" stroke-linecap="round"/><path d="M6.8 15.8h4.8" stroke="#fff" stroke-opacity=".4" stroke-width="1.7" stroke-linecap="round"/><rect x="15.6" y="7.6" width="1.6" height="3.2" rx=".8" fill="#fff"/></svg>'
 )
 
+DL_ICON = (
+    '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.9-3-.8C7 7.3 5.6 8.2 4.8 9.6c-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.7 2.3 2.8 2.3 1.1-.1 1.6-.7 2.9-.7s1.8.7 3 .7 2-1.1 2.7-2.2c.9-1.3 1.2-2.5 1.2-2.6 0 0-2.3-.9-2.3-3.6zM14.2 5.6c.6-.8 1-1.8.9-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-.9 2.7 1 .1 2-.5 2.6-1.3z"/></svg>'
+)
+
 GH_ICON = (
     '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.57 2.34 1.12 2.91.86.09-.66.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.79-4.57 5.04.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>'
 )
@@ -384,14 +427,14 @@ NAV = {
     Askbase
   </a>
   <ul>
-    <li><a href="/model-ranking/">Ranking</a></li>
-    <li><a href="/comparison/">Comparison</a></li>
+    <li><a href="/#questions">What you can ask</a></li>
+    <li><a href="/comparison/">Other tools</a></li>
     <li><a href="/where-your-data-goes/">Your data</a></li>
-    <li><a href="/read-only-access/">Read-only</a></li>
+    <li><a href="/install/">Install</a></li>
   </ul>
   <div class="right">
     <span class="lang"><a href="{self}" aria-current="page">EN</a> / <a href="{twin}" hreflang="ru" lang="ru">RU</a></span>
-    <a class="btn primary small" href="https://github.com/beskvladimir-create/askbase">{GH}Source</a>
+    <a class="btn primary small" href="/install/">{DL}Download</a>
   </div>
 </nav>
 """,
@@ -401,14 +444,14 @@ NAV = {
     Askbase
   </a>
   <ul>
-    <li><a href="/ru/reyting-modeley/">Рейтинг</a></li>
-    <li><a href="/ru/sravnenie/">Сравнение</a></li>
+    <li><a href="/ru/#questions">О чём спросить</a></li>
+    <li><a href="/ru/sravnenie/">Другие инструменты</a></li>
     <li><a href="/ru/kuda-uhodyat-dannye/">Ваши данные</a></li>
-    <li><a href="/ru/dostup-tolko-chtenie/">Только чтение</a></li>
+    <li><a href="/ru/ustanovka/">Установка</a></li>
   </ul>
   <div class="right">
     <span class="lang"><a href="{twin}" hreflang="en" lang="en">EN</a> / <a href="{self}" aria-current="page">RU</a></span>
-    <a class="btn primary small" href="https://github.com/beskvladimir-create/askbase">{GH}Код</a>
+    <a class="btn primary small" href="/ru/ustanovka/">{DL}Скачать</a>
   </div>
 </nav>
 """,
@@ -419,7 +462,7 @@ FOOT = {
 <footer>
   <div class="wrap">
     <span>Vladimir Beskorovainyi, Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span>
-    <span><a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
+    <span><a href="/install/">Install</a> · <a href="/model-ranking/">Model ranking</a> · <a href="/read-only-access/">Read-only access</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
   </div>
 </footer>
 """,
@@ -427,7 +470,7 @@ FOOT = {
 <footer>
   <div class="wrap">
     <span>Владимир Бескоровайный, Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span>
-    <span><a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Написать</a> · <a href="/ru/avtor/">Автор</a> · <a href="https://arxiv.org/abs/2606.29733">Статья</a></span>
+    <span><a href="/ru/ustanovka/">Установка</a> · <a href="/ru/reyting-modeley/">Рейтинг моделей</a> · <a href="/ru/dostup-tolko-chtenie/">Только чтение</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Написать</a> · <a href="/ru/avtor/">Автор</a> · <a href="https://arxiv.org/abs/2606.29733">Статья</a></span>
   </div>
 </footer>
 """,
@@ -470,17 +513,34 @@ def build(check_only: bool) -> int:
         print(f"нет каталога {PAGES}", file=sys.stderr)
         return 1
 
-    built, problems, pending = [], [], []
+    # Two lists, not one, and never a substring match to tell them apart. The
+    # gate used to read `"без подтверждения" in p or "нечитаемый" in p` over a
+    # list of sentences, so rewording a message in `resolve` silently turned a
+    # blocked publish into exit 0. That is the same shape as reading a dict key
+    # a library has renamed, which already cost this project a dead safety
+    # check: the condition keeps compiling and stops meaning anything.
+    #
+    # Every Unbacked is fatal by construction now. A page nobody has written
+    # yet, or one missing its byline, is not: that is work outstanding, not a
+    # false number going out.
+    built, fatal, soft, pending = [], [], [], []
     for name, route in ROUTES.items():
         path = route.path
         src = PAGES / f"{name}.html"
         if not src.exists():
-            problems.append(f"{name}: текст страницы не написан ({src.relative_to(ROOT)})")
+            # relative_to raises when PAGES is not under ROOT, which happens
+            # in tests and would turn "this page is not written yet" into a
+            # traceback. Reporting a problem must not be able to fail.
+            try:
+                where = src.relative_to(ROOT)
+            except ValueError:
+                where = src
+            soft.append(f"{name}: текст страницы не написан ({where})")
             continue
         body = src.read_text(encoding="utf-8")
         body = re.sub(r"^<!--meta.*?-->\s*", "", body, flags=re.S)
         if route.signed and "<!--byline-->" not in body:
-            problems.append(f"{name}: нет метки <!--byline-->, подписанная страница пойдёт без автора")
+            soft.append(f"{name}: нет метки <!--byline-->, подписанная страница пойдёт без автора")
             continue
         body = body.replace("<!--byline-->", BYLINE[route.lang])
         body = body.replace("<!--ASK-->", ASK[route.lang])
@@ -490,14 +550,21 @@ def build(check_only: bool) -> int:
                 pending.append(name)
             body = resolve(body, results, name)
         except Unbacked as e:
-            problems.append(str(e))
+            fatal.append(f"{name}: {e}")
+            # The stale page is removed, not left behind. Skipping the write
+            # kept the previous build's file in site/, so a page whose number
+            # lost its backing went on being served with the old number, and
+            # deploy_site.sh, which gates only on the exit code, published it.
+            if not check_only:
+                stale = SITE / path / "index.html"
+                stale.unlink(missing_ok=True)
             continue
         if not check_only:
             out = SITE / path / "index.html"
             out.parent.mkdir(parents=True, exist_ok=True)
             home = ROUTES["index" if route.lang == "en" else "ru-index"]
             nav = (NAV[route.lang]
-                   .replace("{MARK}", MARK).replace("{GH}", GH_ICON)
+                   .replace("{MARK}", MARK).replace("{GH}", GH_ICON).replace("{DL}", DL_ICON)
                    .replace("{self_home}", url_of(home))
                    .replace("{twin}", url_of(ROUTES[route.twin]))
                    .replace("{self}", url_of(route)))
@@ -512,7 +579,7 @@ def build(check_only: bool) -> int:
             built.pop()   # exists as a file, never in the sitemap
 
     for name, why in BLOCKED.items():
-        problems.append(f"{name}: не собирается намеренно, {why}")
+        soft.append(f"{name}: не собирается намеренно, {why}")
 
     print(f"собрано страниц: {len(built)}")
     for p in built:
@@ -521,14 +588,16 @@ def build(check_only: bool) -> int:
         print("\nсобрано, но ждёт прогона:")
         for p in pending:
             print(f"  {p}: таблица результатов пуста, заполнится из results/")
-    if problems:
+    if soft:
         print("\nне собрано:")
-        for p in problems:
+        for p in soft:
             print(f"  {p}")
-    # Unbacked numbers are a failure; a page simply not written yet is not.
-    hard = [p for p in problems if "без подтверждения" in p or "нечитаемый" in p]
-    if hard:
-        print(f"\nсборка остановлена: {len(hard)} страниц с неподтверждёнными числами", file=sys.stderr)
+    if fatal:
+        print("\nне собрано, числа без подтверждения:")
+        for p in fatal:
+            print(f"  {p}")
+        print(f"\nсборка остановлена: {len(fatal)} страниц с неподтверждёнными числами",
+              file=sys.stderr)
         return 1
     if not check_only:
         write_meta(built)

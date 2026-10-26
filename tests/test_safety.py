@@ -162,3 +162,31 @@ def test_reaching_for_another_file_is_rejected(sql):
     v = check(sql, schema=SCHEMA)
     assert not v.ok
     assert v.sql == ""
+
+
+@pytest.mark.parametrize("sql", [
+    # SQLite does not require the RECURSIVE keyword, and both of these recurse.
+    # They used to pass, because the check read args["recursive"], which is set
+    # only when the word is written. What makes a CTE recursive is that its
+    # body names itself, and that is what is checked now.
+    "WITH c AS (SELECT 1 AS n UNION ALL SELECT n + 1 FROM c WHERE n < 5) SELECT n FROM c",
+    "WITH c(n) AS (VALUES(1) UNION ALL SELECT n + 1 FROM c WHERE n < 5) SELECT n FROM c",
+    "WITH outer_c AS (SELECT 1 AS n UNION ALL SELECT n + 1 FROM outer_c) SELECT n FROM outer_c",
+])
+def test_a_recursive_cte_without_the_keyword_is_rejected(sql):
+    v = check(sql, schema=SCHEMA)
+    assert not v.ok
+    assert "екурсив" in v.reason
+    assert v.sql == ""
+
+
+@pytest.mark.parametrize("sql", [
+    # Ordinary CTEs, including one reading another, must keep working: a false
+    # rejection here would break the most useful shape of query the model writes.
+    "WITH recent AS (SELECT id FROM clients WHERE dt_reg > '2026-01-01') SELECT id FROM recent",
+    "WITH a AS (SELECT id FROM clients), b AS (SELECT id FROM a) SELECT id FROM b",
+    "WITH r AS (SELECT id, name FROM regions) SELECT c.name FROM clients c JOIN r ON r.id = c.region_id",
+])
+def test_a_plain_cte_still_passes(sql):
+    v = check(sql, schema=SCHEMA)
+    assert v.ok, v.reason

@@ -5,6 +5,7 @@ here cannot leak into the rest of the suite.
 """
 from __future__ import annotations
 
+import inspect
 import socket
 import sys
 from pathlib import Path
@@ -15,16 +16,38 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "desktop"))
 from askbase import offline  # noqa: E402
 
 
+# Everything enable() touches, so a test cannot leave the process patched. The
+# earlier version restored three names out of the eight; once UDP and DNS were
+# guarded too, one test enabling the guard would have left name resolution
+# broken for every test after it, in this file and in any other.
+_PATCHED_ON_SOCKET = ("connect", "connect_ex", "sendto", "sendmsg")
+_PATCHED_ON_MODULE = ("create_connection", "gethostbyname", "gethostbyname_ex",
+                      "getaddrinfo")
+
+
 @pytest.fixture(autouse=True)
 def restore():
-    saved = (socket.socket.connect, socket.socket.connect_ex, socket.create_connection,
-             getattr(socket.socket, "_askbase_guarded", False))
+    on_class = {n: getattr(socket.socket, n) for n in _PATCHED_ON_SOCKET
+                if hasattr(socket.socket, n)}
+    on_module = {n: getattr(socket, n) for n in _PATCHED_ON_MODULE
+                 if hasattr(socket, n)}
+    was_guarded = getattr(socket.socket, "_askbase_guarded", False)
     yield
-    socket.socket.connect, socket.socket.connect_ex, socket.create_connection = saved[:3]
-    if saved[3]:
-        socket.socket._askbase_guarded = saved[3]
+    for name, fn in on_class.items():
+        setattr(socket.socket, name, fn)
+    for name, fn in on_module.items():
+        setattr(socket, name, fn)
+    if was_guarded:
+        socket.socket._askbase_guarded = was_guarded
     elif hasattr(socket.socket, "_askbase_guarded"):
         del socket.socket._askbase_guarded
+
+
+@pytest.fixture
+def guarded(restore):
+    """The guard installed, and taken back off afterwards by `restore`."""
+    offline.enable()
+    return offline
 
 
 def test_the_outside_world_is_refused():
@@ -130,3 +153,72 @@ def test_the_other_spellings_of_this_machine_are_allowed(host):
         pass                          # nobody listening: the guard let it through
     finally:
         s.close()
+
+
+# ---- the channels the guard used to miss ------------------------------------
+# Each of these was reproduced against a listener on this machine's own
+# non-loopback address, so the old result was the guard's decision rather than
+# the internet being unreachable. selftest() passed while all of them were
+# open, because it only ever tried create_connection.
+
+OUTSIDE = ("8.8.8.8", 53)
+
+
+def test_a_udp_datagram_cannot_leave(guarded):
+    # sendto carries its destination and never calls connect(), so guarding
+    # connect() alone checked nothing. This is the shape of statsd telemetry.
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    with pytest.raises(offline.NetworkRefused):
+        s.sendto(b"exfiltrated", OUTSIDE)
+    s.close()
+
+
+def test_sendmsg_cannot_leave_either(guarded):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    with pytest.raises(offline.NetworkRefused):
+        s.sendmsg([b"exfiltrated"], [], 0, OUTSIDE)
+    s.close()
+
+
+def test_a_datagram_to_this_machine_is_allowed(guarded):
+    # The model is reached over loopback, so loopback must stay open, and a
+    # guard that blocked it would break the product rather than protect it.
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.sendto(b"ping", ("127.0.0.1", 11434))
+    except offline.NetworkRefused:
+        pytest.fail("локальная датаграмма отклонена")
+    except OSError:
+        pass                        # nobody listening is fine
+    finally:
+        s.close()
+
+
+def test_resolving_a_name_is_refused(guarded):
+    # A lookup is itself a message to a server, and a usable exfiltration
+    # channel that needs no bug in any dependency. Nothing in this product
+    # resolves a name: the model sits at a literal loopback address.
+    with pytest.raises(offline.NetworkRefused):
+        socket.gethostbyname("example.com")
+    with pytest.raises(offline.NetworkRefused):
+        socket.getaddrinfo("example.com", 80)
+
+
+def test_a_literal_loopback_address_still_resolves(guarded):
+    # getaddrinfo cannot simply be refused: create_connection uses it.
+    assert socket.getaddrinfo("127.0.0.1", 11434)
+
+
+def test_the_selftest_checks_every_channel_not_one(guarded):
+    # The regression that matters most here: a selftest that passes while the
+    # guard leaks is worse than no selftest, because the install page tells
+    # people to run it as proof.
+    source = inspect.getsource(offline.selftest)
+    for channel in ("sendto", "sendmsg", "gethostbyname", "getaddrinfo",
+                    "connect_ex", "create_connection"):
+        assert channel in source, f"самопроверка не трогает {channel}"
+
+
+def test_the_selftest_passes_with_the_guard_installed(guarded, capsys):
+    assert offline.selftest() == 0
+    assert "пройдена" in capsys.readouterr().out

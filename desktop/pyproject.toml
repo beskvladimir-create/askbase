@@ -1,9 +1,18 @@
 [project]
 name = "askbase-desktop"
-version = "0.1.0"
+version = "0.1.1"
 description = "Ask your database in plain words, with the model on your own machine"
 requires-python = ">=3.11"
 dependencies = ["PySide6>=6.7", "sqlglot>=25.0"]
+
+# The terminal command. It is deliberately not a separate distribution: it
+# wraps the same engine the window uses, so that the safety check, the
+# read-only connection and the bounds cannot drift apart between the two
+# surfaces. Qt is a dependency of the window, not of the command, and
+# askbase.cli imports nothing from it, which is what lets the command run on
+# Windows and Linux where the packaged application does not go.
+[project.scripts]
+askbase = "askbase.cli:main"
 
 [build-system]
 requires = ["hatchling"]

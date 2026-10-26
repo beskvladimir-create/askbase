@@ -109,16 +109,21 @@ def test_hreflang_points_at_a_real_path():
     known = {r.path for r in build_site.ROUTES.values()}
     for route in build_site.ROUTES.values():
         html = build_site.head(route)
-        twin_url = f"{build_site.BASE}/{build_site.ROUTES[route.twin].path}/"
-        assert f'hreflang="{build_site.ROUTES[route.twin].lang}" href="{twin_url}"' in html
+        # Built with url_of, not with a naive f-string. The naive version is
+        # what the page used to emit, so this test asserted the defect and
+        # passed: both home pages declared their alternate at BASE + "//".
+        twin = build_site.ROUTES[route.twin]
+        twin_url = f"{build_site.BASE}{build_site.url_of(twin)}"
+        assert f'hreflang="{twin.lang}" href="{twin_url}"' in html
         assert build_site.ROUTES[route.twin].path in known
 
 
 def test_x_default_points_at_the_primary_language():
     for route in build_site.ROUTES.values():
         html = build_site.head(route)
-        en_path = route.path if route.lang == "en" else build_site.ROUTES[route.twin].path
-        assert f'hreflang="x-default" href="{build_site.BASE}/{en_path}/"' in html
+        en_route = route if route.lang == "en" else build_site.ROUTES[route.twin]
+        en_url = f"{build_site.BASE}{build_site.url_of(en_route)}"
+        assert f'hreflang="x-default" href="{en_url}"' in html
 
 
 def test_prose_figures_are_left_alone(results):
@@ -306,3 +311,150 @@ def test_the_brand_mark_is_not_resized_locally():
     css = (pathlib.Path(build_site.SITE) / "assets" / "style.css").read_text(encoding="utf-8")
     assert css.count(".brand svg {") == 1
     assert "width: 24px" in css.split(".brand svg {")[1].split("}")[0]
+
+
+# ---- the publish gate itself ------------------------------------------------
+# Everything above tests one level down, inside resolve() and split_regions().
+# The gate is build(), and it was found deciding hard failure from soft by
+# substring-matching a Russian sentence, so rewording a message turned a
+# blocked publish into exit 0 with nothing failing anywhere.
+
+def test_an_unbacked_number_stops_the_build(tmp_path, monkeypatch):
+    monkeypatch.setattr(build_site, "RESULTS", tmp_path / "results")
+    (tmp_path / "results").mkdir()
+    pages = tmp_path / "pages"
+    pages.mkdir()
+    site = tmp_path / "site"
+    route = build_site.Route(path="made-up", lang="en", title="T", desc="D", twin="made-up", signed=False)
+    monkeypatch.setattr(build_site, "PAGES", pages)
+    monkeypatch.setattr(build_site, "SITE", site)
+    monkeypatch.setattr(build_site, "ROUTES", {"made-up": route})
+    (pages / "made-up.html").write_text(
+        "<p>accuracy {=never-ran|holdout:en|ex}</p>", encoding="utf-8")
+    assert build_site.build(check_only=True) == 1
+
+
+def test_a_reworded_message_still_stops_the_build(tmp_path, monkeypatch):
+    # The regression this pins. The gate must not depend on the words in the
+    # message; an Unbacked is fatal because of what it is.
+    monkeypatch.setattr(build_site, "RESULTS", tmp_path / "results")
+    (tmp_path / "results").mkdir()
+    pages = tmp_path / "pages"
+    pages.mkdir()
+    route = build_site.Route(path="made-up", lang="en", title="T", desc="D", twin="made-up", signed=False)
+    monkeypatch.setattr(build_site, "PAGES", pages)
+    monkeypatch.setattr(build_site, "SITE", tmp_path / "site")
+    monkeypatch.setattr(build_site, "ROUTES", {"made-up": route})
+    (pages / "made-up.html").write_text("<p>{=nope|holdout:en|ex}</p>", encoding="utf-8")
+
+    real = build_site.resolve
+
+    def reworded(body, results, page):
+        try:
+            return real(body, results, page)
+        except build_site.Unbacked:
+            raise build_site.Unbacked("anything at all, in any language") from None
+
+    monkeypatch.setattr(build_site, "resolve", reworded)
+    assert build_site.build(check_only=True) == 1
+
+
+def test_a_page_that_loses_its_backing_is_removed_not_left_behind(tmp_path, monkeypatch):
+    # Skipping the write kept the previous build's file in site/, so a page
+    # whose number lost its backing went on being served with the old number,
+    # and deploy_site.sh, which gates only on the exit code, published it.
+    monkeypatch.setattr(build_site, "RESULTS", tmp_path / "results")
+    (tmp_path / "results").mkdir()
+    pages = tmp_path / "pages"
+    pages.mkdir()
+    site = tmp_path / "site"
+    (site / "made-up").mkdir(parents=True)
+    stale = site / "made-up" / "index.html"
+    stale.write_text("<p>accuracy 99.9%</p>", encoding="utf-8")
+    route = build_site.Route(path="made-up", lang="en", title="T", desc="D", twin="made-up", signed=False)
+    monkeypatch.setattr(build_site, "PAGES", pages)
+    monkeypatch.setattr(build_site, "SITE", site)
+    monkeypatch.setattr(build_site, "ROUTES", {"made-up": route})
+    (pages / "made-up.html").write_text("<p>{=nope|holdout:en|ex}</p>", encoding="utf-8")
+
+    assert build_site.build(check_only=False) == 1
+    assert not stale.exists(), "страница со старым числом осталась в site/"
+
+
+def test_a_missing_page_is_not_a_publish_failure(tmp_path, monkeypatch):
+    # Work outstanding is not a false number going out, and must not block a
+    # deploy of everything else.
+    monkeypatch.setattr(build_site, "RESULTS", tmp_path / "results")
+    (tmp_path / "results").mkdir()
+    pages = tmp_path / "pages"
+    pages.mkdir()
+    route = build_site.Route(path="unwritten", lang="en", title="T", desc="D", twin="unwritten", signed=False)
+    monkeypatch.setattr(build_site, "PAGES", pages)
+    monkeypatch.setattr(build_site, "SITE", tmp_path / "site")
+    monkeypatch.setattr(build_site, "ROUTES", {"unwritten": route})
+    assert build_site.build(check_only=True) == 0
+
+
+# ---- which runs the build is allowed to see ---------------------------------
+
+def test_runs_in_subdirectories_are_not_published(tmp_path, monkeypatch):
+    # results/void/ holds runs withdrawn with a written reason and results/probe/
+    # holds smoke tests. Walking the tree made a voided run indistinguishable
+    # from a measurement: the withdrawn Arctic-7B run resolved under exactly the
+    # key the ranking page references.
+    monkeypatch.setattr(build_site, "RESULTS", tmp_path)
+    (tmp_path / "void").mkdir()
+    (tmp_path / "void" / "m.base.summary.json").write_text(
+        '{"ex_accuracy": 0.456, "n": 500}', encoding="utf-8")
+    (tmp_path / "probe").mkdir()
+    (tmp_path / "probe" / "m.base.summary.json").write_text(
+        '{"ex_accuracy": 0.9, "n": 20}', encoding="utf-8")
+    assert build_site.load_results() == {}
+
+
+def test_a_real_run_beside_a_voided_one_is_the_one_that_counts(tmp_path, monkeypatch):
+    monkeypatch.setattr(build_site, "RESULTS", tmp_path)
+    (tmp_path / "void").mkdir()
+    (tmp_path / "void" / "m.base.summary.json").write_text(
+        '{"ex_accuracy": 0.456}', encoding="utf-8")
+    (tmp_path / "m.base.summary.json").write_text(
+        '{"ex_accuracy": 0.5}', encoding="utf-8")
+    assert build_site.load_results() == {"m.base": {"ex_accuracy": 0.5}}
+
+
+def test_two_summaries_under_one_name_are_refused(tmp_path, monkeypatch):
+    # Cannot arise from the filesystem at the top level, but can from a rename
+    # or a merge, and resolving it by sort order is how an n=20 smoke test gets
+    # published as the run.
+    monkeypatch.setattr(build_site, "RESULTS", tmp_path)
+    (tmp_path / "m.base.summary.json").write_text('{"ex_accuracy": 0.5}', encoding="utf-8")
+    real_glob = build_site.pathlib.Path.glob
+
+    def doubled(self, pattern):
+        got = list(real_glob(self, pattern))
+        return got + got
+
+    monkeypatch.setattr(build_site.pathlib.Path, "glob", doubled)
+    with pytest.raises(build_site.Unbacked):
+        build_site.load_results()
+
+
+def test_unreadable_json_is_a_publish_failure(tmp_path, monkeypatch):
+    monkeypatch.setattr(build_site, "RESULTS", tmp_path)
+    (tmp_path / "m.base.summary.json").write_text("{ not json", encoding="utf-8")
+    with pytest.raises(build_site.Unbacked):
+        build_site.load_results()
+
+
+def test_no_link_in_any_head_has_a_double_slash():
+    """A browser reads "//" as a protocol-relative URL to another host.
+
+    url_of exists for this and guarded the canonical only; the two alternates
+    and x-default were built by hand and did not, so every head on the two home
+    pages carried three links to https://askbase.besk.tech// . The tests that
+    covered hreflang built the expected value the same wrong way and passed.
+    """
+    for route in build_site.ROUTES.values():
+        html = build_site.head(route)
+        for link in re.findall(r'href="(https://[^"]+)"', html):
+            assert "//" not in link[len("https://"):], f"{route.path or 'главная'}: {link}"

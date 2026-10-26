@@ -12,22 +12,25 @@ from __future__ import annotations
 
 import csv
 import os
+import sqlite3
 import sys
 import traceback
+from datetime import datetime, timezone
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, QTimer, Signal, Slot
+from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import (
-    QAction, QCursor, QFontMetrics, QGuiApplication, QIcon, QKeySequence, QShortcut, QTextCursor,
+    QAction, QCursor, QDesktopServices, QFontMetrics, QGuiApplication, QIcon, QKeySequence,
+    QShortcut, QTextCursor,
 )
 from PySide6.QtWidgets import (
     QApplication, QDialog, QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QMainWindow, QPlainTextEdit, QPushButton, QSizePolicy,
-    QStackedWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
+    QSpinBox, QStackedWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
-from . import i18n, offline, recent, theme
-from .engine import AskError, Engine
+from . import i18n, journal, offline, recent, suggest, theme
+from .engine import AskError, Engine, export_csv
 from .models import Cancelled, ModelClient, installed_models
 from .widgets import BrandMark, DropZone, Ground, LangSwitch, ProgressLine, Segmented, glow, keycap
 
@@ -73,9 +76,79 @@ def hairline() -> QFrame:
     return f
 
 
+# Kept in step with docs/readonly-role.md, which carries the reasoning around
+# it. Only the statements are here: a dialog is not the place for an essay, and
+# the full page is one button away.
+READONLY_SQL = """-- PostgreSQL
+CREATE ROLE askbase_ro LOGIN PASSWORD 'set_your_own_password';
+GRANT CONNECT ON DATABASE analytics TO askbase_ro;
+GRANT USAGE ON SCHEMA public TO askbase_ro;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO askbase_ro;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO askbase_ro;
+
+-- MySQL
+CREATE USER 'askbase_ro'@'localhost' IDENTIFIED BY 'set_your_own_password';
+GRANT SELECT ON analytics.* TO 'askbase_ro'@'localhost';
+
+-- SQLite
+-- There are no roles. Give the user a copy of the file, or set the file
+-- permissions to read-only; the application opens it with mode=ro either way
+-- and verifies on connect that a write is refused."""
+
+
+def _ellipsis(text: str, n: int) -> str:
+    """Shorten for a one-line button without hiding that it was shortened."""
+    text = " ".join(text.split())
+    return text if len(text) <= n else text[: n - 1].rstrip() + "\u2026"
+
+
+def _prefs():
+    from PySide6.QtCore import QSettings
+
+    # Same override as recent.py, and for the same reason: a test run must not
+    # write into the preferences of whoever is running it.
+    override = os.environ.get("ASKBASE_SETTINGS")
+    if override:
+        return QSettings(override, QSettings.Format.IniFormat)
+    return QSettings("Besk Tech", "Askbase")
+
+
+def _pref(key: str, default, *, low=None, high=None):
+    """One preference, coerced to the default's type and kept inside its range.
+
+    QSettings on macOS hands numbers back as strings often enough that reading
+    them raw and using them as a row limit is a crash waiting for the first
+    person who changes a setting.
+
+    Clamped as well as coerced. A plist written by anything other than the
+    settings screen can hold 0, a negative number or inf, and all three got
+    through: a row bound of 0 made every answer empty, with a row line
+    reporting that more than zero rows existed and the first zero were shown,
+    and a negative one removed the row bound altogether, because SQLite reads
+    LIMIT -1 as no limit and fetchmany of a negative count returns everything.
+    The spin box cannot even display those values, so there was no way to see
+    what was wrong, let alone fix it.
+    """
+    raw = _prefs().value(key, default)
+    try:
+        value = type(default)(raw)
+    except (TypeError, ValueError):
+        return default
+    if value != value or value in (float("inf"), float("-inf")):   # NaN or infinite
+        return default
+    if low is not None:
+        value = max(low, value)
+    if high is not None:
+        value = min(high, value)
+    return value
+
+
 class Signals(QObject):
     done = Signal(object)
-    failed = Signal(str)
+    # The message and, when the failure was about a query that exists, that
+    # query. A refusal that will not show what it refused asks to be believed.
+    failed = Signal(str, str)
     step = Signal(str)
 
 
@@ -95,13 +168,14 @@ class AskTask(QRunnable):
         except Cancelled:
             pass                                # asked for: the window has already moved on
         except AskError as e:
-            self._tell(self.signals.failed, str(e))
+            self._tell(self.signals.failed, str(e), getattr(e, "sql", ""))
         except Exception:                       # never leave the user at a frozen screen
-            self._tell(self.signals.failed, f"{self.unexpected}\n" + traceback.format_exc(limit=2))
+            self._tell(self.signals.failed,
+                       f"{self.unexpected}\n" + traceback.format_exc(limit=2), "")
         else:
             self._tell(self.signals.done, answer)
 
-    def _tell(self, signal, payload) -> None:
+    def _tell(self, signal, *payload) -> None:
         """Report back, unless there is no longer anybody to report to.
 
         A question outlives the window that asked it: closing the window, or
@@ -109,9 +183,19 @@ class AskTask(QRunnable):
         then raised inside the thread, which lost the answer and, when it
         happened on a step rather than at the end, abandoned the question
         halfway with the progress line still running.
+
+        emit(*payload), not emit(payload). The signature took *payload when a
+        failure started carrying its SQL, and the body was left emitting the
+        tuple itself. Qt then tried to marshal a tuple into the first argument:
+        `done` and `step` were dropped silently in the queued connection, and
+        `failed(str, str)` raised "needs 2 argument(s), 1 given" inside the
+        worker thread, which `except RuntimeError` does not catch. Every
+        question hung forever with the clock running and no answer and no
+        error, and all 382 tests passed, because nothing asked a question
+        through the window end to end. test_window.py now does.
         """
         try:
-            signal.emit(payload)
+            signal.emit(*payload)
         except RuntimeError:
             pass
 
@@ -126,8 +210,16 @@ class Window(QMainWindow):
         self.engine: Engine | None = None
         self.client: ModelClient | None = None
         self.answer = None
+        self.asked_question = ""                # the question in flight, for the journal
+        self.in_flight = None                   # keeps the running task alive
         self.first_question = True
         self.asking = False
+        # The bounds on an answer. Defaults from design.md 4.5, overridable on
+        # the settings screen, remembered between launches. They are held on
+        # the window rather than inside Engine because a change has to apply to
+        # the next question without reopening the database.
+        self.max_rows = int(_pref("max_rows", 1000, low=10, high=100_000))
+        self.timeout_s = float(_pref("timeout_s", 30.0, low=5.0, high=600.0))
         self.step = ""                          # the stage the question has reached
         # A local model can think for a minute. Without a clock on the screen
         # there is no way to tell working from hung, so the wait is counted.
@@ -243,6 +335,8 @@ class Window(QMainWindow):
             (self.t["again"], QKeySequence(QKeySequence.StandardKey.New), self._new_question),
             (self.t["copy"], QKeySequence("Shift+Ctrl+C"), self._copy_sql),
             (self.t["csv"], QKeySequence(QKeySequence.StandardKey.Save), self._save_csv),
+            (self.t["settings"], QKeySequence("Ctrl+,"), self._settings),
+            (self.t["ro_title"], QKeySequence("Shift+Ctrl+R"), self._readonly_role),
         ):
             a = QAction(text, self)
             a.setShortcut(keys)
@@ -254,6 +348,160 @@ class Window(QMainWindow):
         # Escape is how a person leaves something: out of the answer back to
         # the question, out of the question back to the list of databases.
         QShortcut(QKeySequence(Qt.Key.Key_Escape), self, self._back)
+
+    def _settings(self) -> None:
+        """design.md 4.5. Absent until now: the bounds existed only as defaults.
+
+        Four things live here and nothing else. The row limit and the timeout,
+        because they are the two numbers that decide whether a heavy question
+        returns or is cut off. The journal, because a local file the
+        application writes must be openable and deletable from inside it. And
+        the statement that there is no telemetry, which belongs on the screen
+        where a person comes looking for what the application collects.
+        """
+        d = QDialog(self)
+        d.setWindowTitle(self.t["settings"])
+        d.setMinimumWidth(460)
+        v = QVBoxLayout(d)
+        v.setContentsMargins(28, 24, 28, 24)
+        v.setSpacing(18)
+
+        v.addWidget(label(self.t["settings_bounds"], "micro"))
+
+        rows_box = QSpinBox()
+        rows_box.setRange(10, 100_000)
+        rows_box.setSingleStep(100)
+        rows_box.setValue(self.max_rows)
+        rows_row = QWidget()
+        rr = QHBoxLayout(rows_row)
+        rr.setContentsMargins(0, 0, 0, 0)
+        rr.addWidget(label(self.t["set_max_rows"], "note"), 1)
+        rr.addWidget(rows_box, 0)
+        v.addWidget(rows_row)
+
+        time_box = QSpinBox()
+        time_box.setRange(5, 600)
+        time_box.setSuffix(" s")
+        time_box.setValue(int(self.timeout_s))
+        time_row = QWidget()
+        tr = QHBoxLayout(time_row)
+        tr.setContentsMargins(0, 0, 0, 0)
+        tr.addWidget(label(self.t["set_timeout"], "note"), 1)
+        tr.addWidget(time_box, 0)
+        v.addWidget(time_row)
+
+        v.addWidget(label(self.t["set_bounds_note"], "note"))
+        v.addWidget(hairline())
+
+        v.addWidget(label(self.t["settings_journal"], "micro"))
+        v.addWidget(label(self.t["set_journal_note"].format(path=journal.path()), "note"))
+        jrow = QWidget()
+        jh = QHBoxLayout(jrow)
+        jh.setContentsMargins(0, 0, 0, 0)
+        jh.setSpacing(12)
+        show = button(self.t["set_journal_show"], link=True)
+        show.clicked.connect(lambda: self._reveal(journal.path()))
+        wipe = button(self.t["set_journal_clear"], link=True)
+
+        def _wipe() -> None:
+            journal.clear()
+            self._refresh_journal()
+            self._say(self.t["set_journal_cleared"])
+        wipe.clicked.connect(_wipe)
+        jh.addWidget(show, 0)
+        jh.addWidget(wipe, 0)
+        jh.addStretch(1)
+        v.addWidget(jrow)
+        v.addWidget(hairline())
+
+        v.addWidget(label(self.t["settings_collect"], "micro"))
+        v.addWidget(label(self.t["set_no_telemetry"], "note"))
+
+        close = button(self.t["save"], primary=True)
+
+        def _save() -> None:
+            self.max_rows = rows_box.value()
+            self.timeout_s = float(time_box.value())
+            s = _prefs()
+            s.setValue("max_rows", self.max_rows)
+            s.setValue("timeout_s", self.timeout_s)
+            if self.engine is not None:
+                # Applies to the next question without reopening the database.
+                self.engine.max_rows = self.max_rows
+                self.engine.timeout = self.timeout_s
+            d.accept()
+            self._say(self.t["set_saved"])
+        close.clicked.connect(_save)
+        brow = QWidget()
+        bh = QHBoxLayout(brow)
+        bh.setContentsMargins(0, 0, 0, 0)
+        bh.addStretch(1)
+        bh.addWidget(close)
+        v.addWidget(brow)
+        d.exec()
+
+    def _readonly_role(self) -> None:
+        """The SQL a database administrator needs, inside the application.
+
+        docs/roles.md serves role 3, the gatekeeper, "with documents rather
+        than features", and the document exists on the site. The application
+        had no way to reach it, which left the one person who decides whether
+        anybody may use this with nothing to read where they are standing.
+
+        It is shown here rather than linked because the application works with
+        the network off, and material a DBA needs during an evaluation should
+        not require a browser and a working connection. The full page is still
+        one button away for whoever wants the reasoning around the SQL.
+        """
+        d = QDialog(self)
+        d.setWindowTitle(self.t["ro_title"])
+        d.setMinimumWidth(620)
+        v = QVBoxLayout(d)
+        v.setContentsMargins(28, 24, 28, 24)
+        v.setSpacing(16)
+        v.addWidget(label(self.t["ro_intro"], "note"))
+
+        box = QPlainTextEdit()
+        box.setObjectName("doc")
+        box.setReadOnly(True)
+        box.setFont(theme.mono())
+        box.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
+        box.setPlainText(READONLY_SQL)
+        box.setMinimumHeight(260)
+        v.addWidget(box, 1)
+
+        v.addWidget(label(self.t["ro_note"], "note"))
+
+        row = QWidget()
+        rh = QHBoxLayout(row)
+        rh.setContentsMargins(0, 0, 0, 0)
+        rh.setSpacing(12)
+        copy = button(self.t["ro_copy"], link=True)
+
+        def _copy() -> None:
+            QGuiApplication.clipboard().setText(READONLY_SQL)
+            self._say(self.t["copied"])
+        copy.clicked.connect(_copy)
+        page = button(self.t["ro_page"], link=True)
+        page.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(
+            "https://askbase.besk.tech/read-only-access/" if self.lang == "en"
+            else "https://askbase.besk.tech/ru/dostup-tolko-chtenie/")))
+        done = button(self.t["close"], primary=True)
+        done.clicked.connect(d.accept)
+        rh.addWidget(copy, 0)
+        rh.addWidget(page, 0)
+        rh.addStretch(1)
+        rh.addWidget(done, 0)
+        v.addWidget(row)
+        d.exec()
+
+    def _reveal(self, p) -> None:
+        """Show a file in Finder, or its folder if it does not exist yet."""
+        target = Path(p)
+        if not target.exists():
+            target = target.parent
+            target.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(target)))
 
     def _about(self) -> None:
         d = QDialog(self)
@@ -524,11 +772,14 @@ class Window(QMainWindow):
                 old.deleteLater()
         # An example that can only be read leaves the hardest part, the first
         # sentence, to the person. Pressed, it writes itself into the box.
-        for name in list(s.tables)[:3]:
-            text = self.t["example_of"].format(table=name)
-            b = button(text, link=True)
+        # The shapes come from this schema: a breakdown is offered only where
+        # a column holds a handful of values, a ranking only where a number
+        # that is not an identifier exists. "How many rows in X" four times
+        # over taught nothing about what else could be asked.
+        for s_ in suggest.for_schema(s, self.t):
+            b = button(s_.text, link=True)
             b.setCursor(Qt.CursorShape.PointingHandCursor)
-            b.clicked.connect(lambda _=False, q=text: self._use_example(q))
+            b.clicked.connect(lambda _=False, q=s_.text: self._use_example(q))
             self.example_row.addWidget(b)
         self.example_row.addStretch(1)
 
@@ -554,7 +805,8 @@ class Window(QMainWindow):
         self._abandon()
         try:
             self.client = ModelClient(self.model_box.currentText())
-            self.engine = Engine(path, self.client, lang=self.lang)
+            self.engine = Engine(path, self.client, lang=self.lang,
+                                 max_rows=self.max_rows, timeout=self.timeout_s)
         except Exception as e:
             self._fail(self.t["err_db"], self.t["cannot_open"].format(error=e),
                        self.t["choose_other"], self._pick)
@@ -598,6 +850,25 @@ class Window(QMainWindow):
         self.outline.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.outline.setMinimumHeight(64)   # it gives way when an alert needs the room
         v.addWidget(card(label(self.t["in_base"], "micro"), self.outline, spacing=10), 1)
+
+        # docs/roles.md, role 1: "a journal of one's own questions with
+        # one-click repeat", because monthly reporting is the same question
+        # twelve times. Until now the only list in the application was of
+        # database files, so the one thing a person could repeat was opening
+        # a file.
+        self.journal_box = QWidget()
+        jv = QVBoxLayout(self.journal_box)
+        jv.setContentsMargins(0, 0, 0, 0)
+        jv.setSpacing(10)
+        jv.addWidget(label(self.t["journal"], "micro"))
+        self.journal_list = QWidget()
+        self.journal_rows = QVBoxLayout(self.journal_list)
+        self.journal_rows.setContentsMargins(0, 0, 0, 0)
+        self.journal_rows.setSpacing(2)
+        jv.addWidget(self.journal_list)
+        v.addWidget(self.journal_box)
+        self._refresh_journal()
+
         v.addWidget(hairline())
 
         row = QWidget()
@@ -643,6 +914,7 @@ class Window(QMainWindow):
             # first and then landed on top of its answer.
             return
         self._clear_alert()
+        self.asked_question = q
         self.asking = True
         self.request += 1
         rid = self.request
@@ -660,7 +932,16 @@ class Window(QMainWindow):
         task = AskTask(self.engine, q, self.t["unexpected"])
         task.signals.step.connect(lambda s, r=rid: self._step(r, s))
         task.signals.done.connect(lambda a, r=rid: self._show_answer(a, r))
-        task.signals.failed.connect(lambda m, r=rid: self._show_error(m, r))
+        task.signals.failed.connect(lambda m, s, r=rid: self._show_error(m, r, s))
+        # Held on the window, not left as a local. QThreadPool.start() does not
+        # take a reference the Python side can see, so the only reference was
+        # this frame's, and the task was collected before a worker picked it
+        # up: activeThreadCount stayed 0, run() was never called, and the
+        # window waited for an answer nobody was computing. The clock ticked,
+        # the Stop button worked, and no question was ever answered. It took a
+        # test that presses Ask and waits to see it; every earlier test built
+        # widgets or called _show_answer directly.
+        self.in_flight = task
         self.pool.start(task)
 
     def _abandon(self) -> None:
@@ -818,7 +1099,11 @@ class Window(QMainWindow):
         if not self._current(rid):
             return
         self.answer = a
-        self.asked.setText(self.question.toPlainText().strip())
+        # The question that was asked, not whatever is in the box now. A local
+        # model thinks for about a minute, so typing the next question while
+        # waiting is the ordinary thing to do, and the answer then appeared
+        # under a heading naming a question it does not answer.
+        self.asked.setText(self.asked_question or self.question.toPlainText().strip())
         self.table.clear()
         self.table.setColumnCount(len(a.columns))
         self.table.setHorizontalHeaderLabels(a.columns)
@@ -859,18 +1144,75 @@ class Window(QMainWindow):
         line = QFontMetrics(self.sql_view.font()).lineSpacing()
         self.sql_view.setFixedHeight(min(max(3, a.sql.count("\n") + 1) * line + 12, 460))
         self.sql_note.setText(extra)
+        self._log(self.asked_question, a.sql, rows=len(a.rows), seconds=a.seconds,
+                  truncated=a.truncated)
         self._to_page(2)
         self._view(0)
         self._say("")
 
-    def _show_error(self, message: str, rid: int = 0) -> None:
+    def _show_error(self, message: str, rid: int = 0, sql: str = "") -> None:
         if not self._current(rid):
             return
+        self._log(self.asked_question, sql, rows=0, seconds=0.0, ok=False, error=message)
         # The first line is what happened; the rest is the detail, which can
         # be long and is worth keeping rather than cutting at the window edge.
         head, _, rest = message.partition("\n")
-        self._fail(self.t["err_ask"], (rest.strip() and f"{head}\n{rest.strip()}") or head,
-                   self.t["retry"], self._ask)
+        detail = (rest.strip() and f"{head}\n{rest.strip()}") or head
+        if sql:
+            # design.md 4.4: "the query is shown, but not executed". It was
+            # neither shown nor executed, so a user told their question went
+            # beyond reading data had no way to see what had been written.
+            detail = f"{detail}\n\n{self.t['refused_sql']}\n{sql}"
+        self._fail(self.t["err_ask"], detail, self.t["retry"], self._ask)
+
+    def _refresh_journal(self) -> None:
+        """Redraw the recent questions. Hidden entirely when there are none."""
+        if not hasattr(self, "journal_rows"):
+            return                              # called before the page is built
+        while self.journal_rows.count():
+            old = self.journal_rows.takeAt(0).widget()
+            if old is not None:
+                old.deleteLater()
+        shown = [e for e in journal.entries(limit=4) if e.ok and e.question]
+        self.journal_box.setVisible(bool(shown))
+        for entry in shown:
+            row = QWidget()
+            rh = QHBoxLayout(row)
+            rh.setContentsMargins(0, 0, 0, 0)
+            rh.setSpacing(12)
+            # The question itself is the button. A row that looks like a label
+            # with a separate "repeat" control beside it is two decisions where
+            # the user has one intention.
+            again = button(_ellipsis(entry.question, 72), link=True)
+            again.setToolTip(self.t["journal_again"])
+            again.clicked.connect(lambda _=False, q=entry.question: self._repeat(q))
+            meta = label(
+                self.t["journal_meta"].format(
+                    when=entry.when(), n=entry.rows, db=entry.db_name),
+                "note")
+            rh.addWidget(again, 0)
+            rh.addStretch(1)
+            rh.addWidget(meta, 0)
+            self.journal_rows.addWidget(row)
+
+    def _repeat(self, question: str) -> None:
+        """Put a past question back in the box and ask it again."""
+        self.question.setPlainText(question)
+        self.question.setFocus()
+        self._ask()
+
+    def _log(self, question: str, sql: str, *, rows: int, seconds: float,
+             truncated: bool = False, ok: bool = True, error: str = "") -> None:
+        """Write one line to the local journal. Never fatal, never remote."""
+        if not question:
+            return
+        journal.append(journal.Entry(
+            at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            question=question, sql=sql, rows=rows, seconds=round(seconds, 2),
+            db_path=self.engine.db_path if self.engine else "", truncated=truncated, ok=ok,
+            error=error.partition("\n")[0][:300],
+        ))
+        self._refresh_journal()
 
     def _new_question(self) -> None:
         self.question.selectAll()
@@ -924,22 +1266,53 @@ class Window(QMainWindow):
         path, _ = QFileDialog.getSaveFileName(self, self.t["save_as"], "answer.csv", "CSV (*.csv)")
         if not path:
             return
+        # A truncated answer holds only the page of rows that fits the screen,
+        # so saving what is in memory would quietly save the part already seen.
+        # That case re-runs the query and streams the whole result. An answer
+        # that was not truncated already *is* the whole result, so it is
+        # written straight out: no second query, nothing to get wrong.
+        # The answer carries its own database, and it has to match the one open
+        # now. "An engine exists" was not enough: opening another file after an
+        # answer made the export run against that one instead, and with two
+        # monthly copies of one schema it succeeded and wrote the wrong rows.
+        same_db = (self.engine is not None
+                   and self.answer.db_path
+                   and self.engine.db_path == self.answer.db_path)
+        full = self.answer.truncated and same_db
+        if self.answer.truncated and not same_db:
+            # The rows on screen are not the whole answer and the database they
+            # came from is no longer the one open. Refusing beats writing a
+            # short file, or another database's rows, and calling it the answer.
+            self._say(self.t["cannot_save_full"])
+            return
         try:
-            # utf-8-sig, not utf-8: the file is opened in Excel more often than
-            # anywhere else, and without the byte order mark Excel reads it in
-            # the local codepage and every Cyrillic name comes out as noise.
-            with open(path, "w", newline="", encoding="utf-8-sig") as f:
-                writer = csv.writer(f)
-                writer.writerow(self.answer.columns)
-                writer.writerows(self.answer.rows)
-        except OSError as e:
+            if full:
+                written = export_csv(self.answer.db_path,
+                                     self.answer.export_sql or self.answer.sql,
+                                     path, timeout=max(120.0, self.timeout_s * 4))
+            else:
+                # utf-8-sig, not utf-8: the file is opened in Excel more often
+                # than anywhere else, and without the byte order mark Excel
+                # reads it in the local codepage and every Cyrillic name comes
+                # out as noise.
+                with open(path, "w", newline="", encoding="utf-8-sig") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(self.answer.columns)
+                    writer.writerows(self.answer.rows)
+                written = len(self.answer.rows)
+        except (OSError, sqlite3.Error) as e:
             # A read-only folder or a full disk is the user's problem to fix,
             # but they have to be told. This used to raise inside the slot,
             # which prints a traceback nobody sees and leaves the saved-file
             # line off the screen with no hint of why.
             self._say(self.t["cannot_save"].format(error=e))
             return
-        self._say(self.t["saved"].format(path=path))
+        if full:
+            # The screen said "first N of more". The file is not capped, and
+            # saying so is the whole point of having re-run the query.
+            self._say(self.t["saved_full"].format(path=path, n=written))
+        else:
+            self._say(self.t["saved"].format(path=path))
 
     def _say(self, text: str) -> None:
         """A passing word: copied, saved, stopped. Failures go to the alert instead.

@@ -34,14 +34,14 @@
     Askbase
   </a>
   <ul>
-    <li><a href="/model-ranking/">Ranking</a></li>
-    <li><a href="/comparison/">Comparison</a></li>
+    <li><a href="/#questions">What you can ask</a></li>
+    <li><a href="/comparison/">Other tools</a></li>
     <li><a href="/where-your-data-goes/">Your data</a></li>
-    <li><a href="/read-only-access/">Read-only</a></li>
+    <li><a href="/install/">Install</a></li>
   </ul>
   <div class="right">
     <span class="lang"><a href="/read-only-access/" aria-current="page">EN</a> / <a href="/ru/dostup-tolko-chtenie/" hreflang="ru" lang="ru">RU</a></span>
-    <a class="btn primary small" href="https://github.com/beskvladimir-create/askbase"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.57 2.34 1.12 2.91.86.09-.66.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.79-4.57 5.04.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>Source</a>
+    <a class="btn primary small" href="/install/"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.9-3-.8C7 7.3 5.6 8.2 4.8 9.6c-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.7 2.3 2.8 2.3 1.1-.1 1.6-.7 2.9-.7s1.8.7 3 .7 2-1.1 2.7-2.2c.9-1.3 1.2-2.5 1.2-2.6 0 0-2.3-.9-2.3-3.6zM14.2 5.6c.6-.8 1-1.8.9-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-.9 2.7 1 .1 2-.5 2.6-1.3z"/></svg>Download</a>
   </div>
 </nav>
 <article class="page">
@@ -54,8 +54,8 @@
 
       <div class="stats">
         <div><b>1</b><span>statement per request, and it must be a SELECT. A second statement after a semicolon is rejected.</span></div>
-        <div><b>0</b><span>network connections. The model is a file on disk and the application runs with the Wi-Fi switched off.</span></div>
-        <div><b>0</b><span>rows of your data in the log. The log holds the query text, the time and the row count.</span></div>
+        <div><b>0</b><span>connections that leave this machine. The model is reached over the loopback address, and everything else is refused by the program, not by policy.</span></div>
+        <div><b>0</b><span>rows of your data in the journal. It holds the question as typed, the query, the row count, the time and the database path, and never a result row.</span></div>
       </div>
 
       <h2>What the application executes</h2>
@@ -107,18 +107,21 @@ FLUSH PRIVILEGES;
 
 ALTER USER 'askbase_ro'@'localhost'
   WITH MAX_QUERIES_PER_HOUR 2000 MAX_USER_CONNECTIONS 4;</code></pre>
-      <p>MySQL has no per-role statement timeout, so the timeout is enforced by the application. As with PostgreSQL, hide individual columns behind views rather than granting the underlying tables.</p>
+      <p>MySQL has no per-role statement timeout. Version 0.1.1 does not connect to MySQL at all, and the timeout the application enforces is a SQLite one, so until MySQL is supported this bound has to come from the server side. As with PostgreSQL, hide individual columns behind views rather than granting the underlying tables.</p>
 
       <h2>SQLite</h2>
       <p>SQLite has no users; permissions are the file's. Work from a copy rather than the live file, and take the copy in a way that cannot catch the database mid-write.</p>
       <pre class="sql"><code>sqlite3 /path/to/analytics.sqlite ".backup '/path/to/analytics-ro.sqlite'"
 chmod 444 /path/to/analytics-ro.sqlite</code></pre>
 
+      <div class="callout">
+        <p><strong>One thing "read-only" does not mean, said plainly.</strong> If the database is in WAL mode, which is the default for anything written by a modern application, opening it for reading creates two files next to it: a <code>-wal</code> and a <code>-shm</code>. They appear even when the database file itself is set read-only, they persist after the connection closes, and SQLite needs them to read a WAL database at all. Your data is not altered and nothing is written into the database, but the folder is not left untouched, and a person who reads "read-only" as "nothing is written" deserves to be told where that is not literally true.</p>
+      </div>
       <h2>Four checks before you allow it</h2>
       <ol>
-        <li>Connect with the new role. The connection screen reports the privileges it found. A warning about write access means the role is not what you intended.</li>
+        <li>Connect with the new role. On connect the application tries to create a table and requires that to fail; a database that accepts the write is not opened at all, with the reason on screen. It does not enumerate your grants, so check those on the server.</li>
         <li>Switch off the Wi-Fi and ask a question. The answer should still arrive.</li>
-        <li>Open the query log and confirm it holds statements and row counts, not data.</li>
+        <li>Open the journal from the settings screen and confirm it holds questions, statements and row counts, not result rows.</li>
         <li>From that role, try to create a table. It must fail on permissions.</li>
       </ol>
 
@@ -139,7 +142,7 @@ chmod 444 /path/to/analytics-ro.sqlite</code></pre>
 <footer>
   <div class="wrap">
     <span>Vladimir Beskorovainyi, Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span>
-    <span><a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
+    <span><a href="/install/">Install</a> · <a href="/model-ranking/">Model ranking</a> · <a href="/read-only-access/">Read-only access</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
   </div>
 </footer>
 <script src="/assets/app.js" defer></script>

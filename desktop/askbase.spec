@@ -36,7 +36,7 @@ app = BUNDLE(
     name="Askbase.app",
     icon="askbase/icon.icns",
     bundle_identifier="tech.besk.askbase",
-    version="0.1.0",
+    version="0.1.1",
     info_plist={
         "CFBundleName": "Askbase",
         "CFBundleDisplayName": "Askbase",

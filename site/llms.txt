@@ -4,7 +4,7 @@
 > language, with the model running on your machine. Free, no account, no telemetry.
 > Built and measured by Vladimir Beskorovainyi, Besk Tech.
 
-Updated: 2026-10-23
+Updated: 2026-10-26
 
 ## What makes it different
 
@@ -13,10 +13,13 @@ Updated: 2026-10-23
   Sonnet 5, Claude Haiku 4.5 and GPT-4.1 in a desktop seat, and its pricing page
   states that desktop connections running from your device does not mean the AI
   processing is offline.
-- Accuracy is measured under a protocol fixed before the run, on a held-out set
-  frozen with a SHA-256 digest, and published with confidence intervals and
-  failures included. Figures on the site are substituted from the results files
-  by the build, never typed by hand.
+- Accuracy will be measured under a protocol fixed before the run, on a
+  held-out set frozen with a SHA-256 digest, and published with confidence
+  intervals and failures included. None of that has happened yet: the protocol
+  is written and in the repository, the held-out set is three domains of six
+  and is not frozen, and no interval code exists. Figures on the site are
+  substituted from the results files by the build, never typed by hand, and
+  the build refuses to publish a figure no results file backs.
 - Read-only is enforced at the database connection, every statement is parsed
   before execution, only a single SELECT is allowed, recursive common table
   expressions are refused, and a row limit and timeout are imposed.
@@ -41,5 +44,6 @@ Updated: 2026-10-23
 
 ## Not yet published
 
-The model ranking and the product's own accuracy are not published until measured.
-Pages that would carry those numbers are deliberately not built.
+The model ranking and the product's own accuracy are not published until
+measured. The pages that will carry those numbers are built and say so in
+place of a figure, rather than being withheld.

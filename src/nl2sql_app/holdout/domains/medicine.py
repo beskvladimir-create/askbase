@@ -19,6 +19,9 @@ The warts here, each deliberate:
 """
 from __future__ import annotations
 
+from datetime import date, timedelta
+
+from ..pools import CITY, person
 from ..schema_spec import Domain, Table, Task
 
 TABLES = (
@@ -281,3 +284,101 @@ DOMAIN = Domain(
     tasks=TASKS,
     row_counts={"pat": 400, "doc": 40, "enc": 900, "dx": 1200, "rx": 1500},
 )
+
+
+_DEPT = ("cardiology", "neurology", "oncology", "surgery", "endocrinology")
+_DRUG = ("amoxicillin", "metformin", "atorvastatin", "omeprazole", "insulin",
+         "ibuprofen", "warfarin", "salbutamol")
+_DX = (
+    ("E11", "type 2 diabetes mellitus", "endocrine"),
+    ("I10", "essential hypertension", "circulatory"),
+    ("J45", "asthma", "respiratory"),
+    ("I21", "acute myocardial infarction", "circulatory"),
+    ("C50", "malignant neoplasm of breast", "neoplasms"),
+    ("K21", "gastro-oesophageal reflux", "digestive"),
+    ("G40", "epilepsy", "nervous"),
+    ("N18", "chronic kidney disease", "genitourinary"),
+)
+
+
+def _iso(d: date) -> str:
+    return d.isoformat()
+
+
+def build_rows(rng, now: date, row_counts: dict[str, int]) -> dict[str, list[tuple]]:
+    """Every non-lookup table, deterministically from the shared rng."""
+    rows: dict[str, list[tuple]] = {}
+
+
+    n_pat = row_counts["pat"]
+    rows["pat"] = [
+        (
+            i + 1,
+            person(rng),
+            _iso(now - timedelta(days=rng.randint(6_000, 32_000))),
+            rng.choice((1, 2)),
+            rng.choice(CITY) if rng.random() > 0.08 else None,   # some rows lack a city
+        )
+        for i in range(n_pat)
+    ]
+
+    n_doc = row_counts["doc"]
+    rows["doc"] = [
+        (
+            i + 1,
+            person(rng),
+            rng.choice(_DEPT),
+            _iso(now - timedelta(days=rng.randint(200, 7_000))),
+        )
+        for i in range(n_doc)
+    ]
+
+    rows["dx_ref"] = list(_DX)
+
+    n_enc = row_counts["enc"]
+    encounters: list[tuple] = []
+    for i in range(n_enc):
+        adm = now - timedelta(days=rng.randint(0, 540))
+        status = rng.choices((0, 1, 2, 3), weights=(8, 14, 70, 8))[0]
+        # A discharge date is written for discharged encounters and, on purpose,
+        # for a few cancelled ones too. Without that the two ways of asking
+        # "discharged" agree exactly, and med-002's trap is decoration: a query
+        # filtering on `discharged IS NOT NULL` returns the gold answer while
+        # missing the point. The test test_the_trap_actually_bites pins this.
+        has_date = status == 2 or (status == 3 and rng.random() < 0.45)
+        disch = _iso(adm + timedelta(days=rng.randint(1, 21))) if has_date else None
+        # The legacy split: rows older than a year kept the old column, newer
+        # rows use the new one. Exactly one of the two is ever populated.
+        old_row = (now - adm).days > 365
+        encounters.append((
+            i + 1,
+            rng.randint(1, n_pat),
+            rng.randint(1, n_doc),
+            _iso(adm) if old_row else None,
+            None if old_row else _iso(adm),
+            disch,
+            status,
+        ))
+    rows["enc"] = encounters
+
+    rows["dx"] = [
+        (
+            i + 1,
+            rng.randint(1, n_enc),
+            rng.choice(_DX)[0],
+            1 if rng.random() < 0.6 else 0,
+        )
+        for i in range(row_counts["dx"])
+    ]
+
+    rows["rx"] = [
+        (
+            i + 1,
+            rng.randint(1, n_enc),
+            rng.choice(_DRUG),
+            rng.choice((1, 2, 3, 4)),
+            rng.randint(1, 30),
+        )
+        for i in range(row_counts["rx"])
+    ]
+    return rows

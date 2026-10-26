@@ -58,6 +58,8 @@ def main() -> None:
         base_url=m.get("base_url", "http://localhost:8000/v1"),
         api_key=m.get("api_key", "EMPTY"),
         max_tokens=m.get("max_tokens", 1024),
+        timeout_s=m.get("request_timeout_s", cfg.get("request_timeout_s", 600.0)),
+        max_retries=m.get("max_retries", cfg.get("max_retries", 2)),
     )
 
     stages = [s for s in ABLATION if args.stages is None or s[0] in args.stages]

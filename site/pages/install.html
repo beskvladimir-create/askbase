@@ -1,0 +1,77 @@
+<!--meta {"path": "/install/", "type": "technical", "published": "2026-10-23"}-->
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Askbase</a> / Install</nav>
+    <div class="eyebrow">Install &middot; version 0.1.1 &middot; macOS, Apple Silicon</div>
+    <h1>Download Askbase, and let macOS open it the first time</h1>
+    <div class="prose">
+      <p class="lead">The build is not signed with an Apple developer certificate yet, so macOS will refuse to open it until you allow it once. That takes two clicks, and this page shows exactly where. It also explains what the warning actually means, because a product that asks you to wave a security prompt away owes you that.</p>
+
+      <div class="links">
+        <a class="btn primary" href="https://github.com/beskvladimir-create/askbase/releases/download/v0.1.1/Askbase-0.1.1-macos-arm64.dmg">Download for macOS &middot; 35 MB</a>
+        <a class="btn" href="https://github.com/beskvladimir-create/askbase/releases/tag/v0.1.1">All releases</a>
+      </div>
+
+      <h2>Before it can answer anything</h2>
+      <p>Askbase does not download a model and does not use a hosted one. It talks to a model already on your machine, over the loopback address, which is why it works with the network switched off. Install one with <a href="https://ollama.com">Ollama</a>:</p>
+      <pre><code>ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M</code></pre>
+      <p>About 4.7 GB on disk. The first question after a launch takes around a minute while the model loads into memory, and the ones after it take a few seconds.</p>
+
+      <h2>Opening it the first time</h2>
+      <ol>
+        <li>Open the .dmg and drag <strong>Askbase</strong> into Applications.</li>
+        <li>Launch it. macOS says the developer cannot be verified and offers only <em>Done</em>. That is expected.</li>
+        <li>Open <strong>System Settings → Privacy &amp; Security</strong>, scroll to the Security section, and press <strong>Open Anyway</strong> next to the line about Askbase.</li>
+        <li>Launch it again and confirm. macOS remembers the decision; you will not be asked again.</li>
+      </ol>
+
+      <div class="callout">
+        <p><strong>What that warning means, honestly.</strong> It does not mean macOS found anything wrong with the application. It means nobody has paid Apple to vouch for it: signing and notarisation require a developer account, and this build has neither. So the system cannot tell you who made it or that it has not been altered since, and it declines to assume.</p>
+        <p>You are entitled to be suspicious of that. The checkable answer is that the source is published: every line of what the application does to your database is in the <a href="https://github.com/beskvladimir-create/askbase">repository</a>, including the <a href="/read-only-access/">read-only enforcement</a> and the rule that refuses any connection beyond this machine. If you would rather not take the warning on faith, build it yourself from that source, below.</p>
+      </div>
+
+      <h2>Or run it from source, with no warning at all</h2>
+      <p>Four commands. You get the same application, built on your own machine, so there is nothing to trust and nothing to allow.</p>
+      <pre><code>git clone https://github.com/beskvladimir-create/askbase
+cd askbase/desktop
+uv venv &amp;&amp; uv pip install PySide6 sqlglot
+.venv/bin/python -m askbase</code></pre>
+      <p>This is also how to check the promise rather than believe it:</p>
+      <pre><code>.venv/bin/python -m askbase --selftest</code></pre>
+      <p>It tries to reach the outside world, expects to be refused, tries this machine, expects to get through, and exits 0 only if both held.</p>
+
+
+      <h2>The same thing from the terminal</h2>
+      <p>For anyone who would rather have the query than the answer. It wraps the engine the window uses, so the read-only connection, the safety check and the bounds are the same code; it does not need Qt, which is why it runs where the packaged application does not. It is not in the .dmg yet, so it comes from source:</p>
+      <pre><code>git clone https://github.com/beskvladimir-create/askbase
+cd askbase/desktop
+uv venv &amp;&amp; uv pip install -e .
+
+askbase "how many customers came from each region in September" --db sales.sqlite
+askbase "top ten customers by revenue" --db sales.sqlite --sql-only
+echo "unpaid orders over 30 days" | askbase --db sales.sqlite --json | jq .sql</code></pre>
+      <p>Exit codes are the contract, so a script can tell the cases apart: <code>0</code> an answer, <code>1</code> wrong usage, or the local model is absent or not answering, <code>2</code> the question produced nothing the read-only check would pass, <code>3</code> the database refused the query, could not be opened, or the query was stopped for running past the timeout. <code>--csv</code> writes the whole result rather than the rows shown, and <code>--no-journal</code> keeps the question out of the local journal.</p>
+
+      <h2>What you need, and what you do not</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Needed</th><th>Not needed</th></tr></thead>
+        <tbody>
+          <tr><td>macOS 13 or later, Apple Silicon</td><td>a network connection, after the model is installed</td></tr>
+          <tr><td>about 5 GB free for the model</td><td>an account, a licence key or a payment method</td></tr>
+          <tr><td>a database file, or a read-only connection to one</td><td>Python, if you use the .dmg</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>When the warning will go away</h2>
+      <p>When the build is signed and notarised, which needs an Apple developer account. Until then this page will keep saying so rather than pretending the step does not exist. An Intel build and a Windows build are not available either; the application is written to be portable, but each platform needs its own packaging and its own signing.</p>
+    </div>
+
+    <div class="related">
+      <p class="micro">Related</p>
+      <div class="links">
+        <a href="/read-only-access/">What it runs against your database</a>
+        <a href="/where-your-data-goes/">Where your data goes</a>
+      </div>
+    </div>
+  </div>
+</article>

@@ -53,15 +53,28 @@ def main() -> None:
 
     after = sum(1 for r in recs if r["correct"])
     n = len(recs)
+    if not n:
+        # Checked before the file is rewritten, not after. The division below
+        # raised on an empty predictions file, and by then path.write_text had
+        # already replaced it, so a mistyped filename cost the file.
+        raise SystemExit(f"{path}: ни одного предсказания, пересчитывать нечего")
     path.write_text("".join(json.dumps(r) + "\n" for r in recs))
 
-    summary_path = path.with_suffix("").with_suffix(".summary.json")
-    if summary_path.exists():
-        s = json.loads(summary_path.read_text())
-        s["ex_accuracy_before_rescore"] = s.get("ex_accuracy")
-        s["ex_accuracy"] = round(after / n, 4) if n else 0.0
-        s["rescored"] = True
-        summary_path.write_text(json.dumps(s, indent=2))
+    # One .with_suffix, not two. "x.base.jsonl" -> with_suffix("") -> "x.base",
+    # and a second with_suffix(".summary.json") then eats ".base" and writes
+    # "x.summary.json", a name nothing reads. The rescore printed a corrected
+    # figure to the terminal while the sidecar the site builds from kept the old
+    # one, which is how 44.6% outlived its own correction.
+    summary_path = path.with_suffix(".summary.json")
+    if not summary_path.exists():
+        raise SystemExit(
+            f"нет сводки {summary_path}: пересчёт без неё оставит на сайте старое число"
+        )
+    s = json.loads(summary_path.read_text())
+    s["ex_accuracy_before_rescore"] = s.get("ex_accuracy")
+    s["ex_accuracy"] = round(after / n, 4) if n else 0.0
+    s["rescored"] = True
+    summary_path.write_text(json.dumps(s, indent=2))
 
     print(f"файл      {path}")
     print(f"было      {before}/{n} = {before / n:.1%}")

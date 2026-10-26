@@ -25,16 +25,26 @@ class ModelClient:
     api_key: str = "EMPTY"          # vLLM ignores it; set real key for cloud ref
     temperature: float = 0.0
     max_tokens: int = 1024
+    # A request timeout is a property of the harness, not of the model, so it
+    # belongs in the config and in the summary where it can be audited. 90s was
+    # tuned on a terse model and silently broke a verbose one: Arctic-7B writes
+    # a reasoning preamble, its median reply is 316 tokens against XiYan's 45,
+    # and 91 of 500 requests timed out. Those became empty predictions, scored
+    # as wrong, and each one burned up to timeout x (1 + max_retries) seconds
+    # first, so the same setting also halved the throughput it was measuring.
+    timeout_s: float = 600.0
+    max_retries: int = 2
     _client: OpenAI = field(init=False, repr=False)
 
     def __post_init__(self):
         from openai import OpenAI  # lazy: harness core imports without the SDK
 
-        # bounded timeout + retries: a single wedged request must fail, not hang
-        # the whole stage forever (one stuck query stalled an entire ablation stage).
+        # Still bounded: a wedged request must fail rather than hang the stage
+        # forever, which is why this is not None. Just bounded generously enough
+        # that the bound never decides the score.
         self._client = OpenAI(
             base_url=self.base_url, api_key=self.api_key,
-            timeout=90.0, max_retries=2,
+            timeout=self.timeout_s, max_retries=self.max_retries,
         )
 
     def complete(self, prompt: str, temperature: float | None = None) -> Completion:

@@ -6,17 +6,66 @@
     <p class="mark rise d1">Askbase</p>
     <div class="sub">
       <div>
-        <h1 class="rise d2">Ask your database a question. Get the table and the query behind it.</h1>
-        <p class="lead rise d2">The model is a file on your disk, so the question and the data never leave the computer. Free, and there is no account to create.</p>
+        <h1 class="rise d2">You know the question. The database has the answer. Askbase writes the SQL.</h1>
+        <p class="lead rise d2">For the person who owns the numbers but does not write SQL. Instead of sending the question to a developer and waiting, you get the table, the query behind it, and a sentence saying what was counted. The model is a file on your disk, so nothing leaves the computer. Free, no account.</p>
         <div class="cta rise d3">
-          <a class="btn primary" href="#how">See how it works</a>
-          <a class="btn" href="/where-your-data-goes/">Where your data goes</a>
+          <a class="btn primary" href="/install/">Download for macOS</a>
+          <a class="btn" href="#how">See how it works</a>
         </div>
-        <div class="facts rise d3"><p><strong>No network needed.</strong> The application works with the Wi-Fi switched off.</p></div>
+        <div class="facts rise d3"><p><strong>No network needed.</strong> Not one of the eight tools I checked publishes an accuracy figure on a public benchmark. <a href="/model-ranking/">This one publishes the protocol before the run.</a></p></div>
       </div>
       <div class="tilt rise d3"><!--ASK--></div>
     </div>
     <div class="cue"><i></i>Watch it answer</div>
+  </div>
+</section>
+
+<section class="line" id="who">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow">Who it is for</div>
+      <h2>Three people, and the application is built for the first one</h2>
+    </div>
+    <ul class="grid g3 reveal d1">
+      <li>
+        <span class="micro">Primary</span>
+        <h3>The analyst who does not write SQL</h3>
+        <p>You answer for the numbers in your area and know the subject better than anyone, but every query goes through a developer and comes back in an hour, or in a week. Marketing, finance, clinical administration, logistics, HR.</p>
+      </li>
+      <li>
+        <span class="micro">Second</span>
+        <h3>The data engineer</h3>
+        <p>SQL is not your problem. Somebody else's schema is: two hundred tables, columns named <code>fl_act</code>, no documentation, and the author has left. There is a <a href="/install/">terminal command</a> for that: it returns the query rather than the answer, reads a question from a pipe, and exits with a code a script can branch on. From source for now, not in the .dmg.</p>
+      </li>
+      <li>
+        <span class="micro">The gatekeeper</span>
+        <h3>The DBA, and whoever signs off on security</h3>
+        <p>You ask the database nothing. You decide whether anyone may. There is a page for you on exactly what this runs against your data, and <a href="/read-only-access/">the SQL for a read-only role</a> to copy.</p>
+      </li>
+    </ul>
+    <div class="note reveal d2"><p>Who it is not for: if you have no access to the database, Askbase will not help. It does not create access and it cannot ask on anyone else's behalf.</p></div>
+  </div>
+</section>
+
+<section class="line" id="questions">
+  <div class="wrap">
+    <div class="cols">
+      <div class="head reveal">
+        <div class="eyebrow">What you can ask</div>
+        <h2>Questions like these, in the words you already use</h2>
+        <p class="lead">No table names, no joins and no date functions. English and Russian both work, and the same question asked two ways should give the same answer.</p>
+      </div>
+      <div class="reveal d1">
+        <ul class="list">
+          <li>How many new customers came from each region in September</li>
+          <li>The ten products with the highest revenue this year</li>
+          <li>Average order value by month, for last year</li>
+          <li>Which orders have gone unpaid for more than thirty days</li>
+          <li>How many patients were admitted to each department last quarter</li>
+        </ul>
+        <div class="note"><p><strong>And what it will not do.</strong> It cannot answer what the database does not hold, so "why did sales fall" is out of reach. It does not forecast. It cannot change anything: the connection is opened read-only and a parser refuses every statement that is not a single SELECT.</p></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -25,12 +74,12 @@
     <div class="head reveal">
       <div class="eyebrow">Three steps</div>
       <h2>Connect a database, ask in words, read the answer</h2>
-      <p class="lead">There is nothing to model, nothing to configure and no query language to learn. The first answer takes about a minute from opening the application.</p>
+      <p class="lead">There is nothing to model, nothing to configure and no query language to learn. One setup step comes first: the model is a 4.7 GB file you install once with <a href="/install/">Ollama</a>. After that the first answer takes about a minute.</p>
     </div>
     <ol class="flow reveal d1">
       <li>
         <div class="viz"><div class="drop"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13.5 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5L13.5 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 3v5.5H19" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span><b>sales_2026.sqlite</b><br>34 tables, 412 columns</span></div><span class="tag">read-only &middot; checked</span></div>
-        <div class="body"><span class="n">01</span><h3>Connect</h3><p>Drop in an SQLite file, or enter the host for PostgreSQL. The password goes into the macOS Keychain, never into a settings file.</p></div>
+        <div class="body"><span class="n">01</span><h3>Connect</h3><p>Drag in an SQLite file, or type the path to it. Version 0.1.1 reads SQLite; PostgreSQL is next and is not in this build.</p></div>
       </li>
       <li>
         <div class="viz"><div class="field">Top ten customers by revenue this year<i></i></div><span class="tag">no table names needed</span></div>
@@ -66,7 +115,7 @@
     <div class="head reveal">
       <div class="eyebrow">Status</div>
       <h2>In development, and this page says so</h2>
-      <p class="lead">Askbase is being built in the open. The benchmark, the held-out question set and the protocol will be published; the application itself is in progress. There is no download yet, and this page will carry one when there is.</p>
+      <p class="lead">Askbase is being built in the open. Version 0.1.1 runs on macOS today, against SQLite files, with the model on your own disk. It is not signed with an Apple developer certificate yet, so the system asks you to allow it once; the <a href="/install/">install page</a> shows where and says plainly what that warning means.</p>
       <p><em class="p">A number without a protocol is an advertisement.</em></p>
       <div class="links">
         <a class="btn small" href="https://arxiv.org/abs/2606.29733">Read the benchmark it grew from</a>

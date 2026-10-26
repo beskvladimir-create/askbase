@@ -9,8 +9,8 @@
 
       <div class="stats">
         <div><b>1</b><span>statement per request, and it must be a SELECT. A second statement after a semicolon is rejected.</span></div>
-        <div><b>0</b><span>network connections. The model is a file on disk and the application runs with the Wi-Fi switched off.</span></div>
-        <div><b>0</b><span>rows of your data in the log. The log holds the query text, the time and the row count.</span></div>
+        <div><b>0</b><span>connections that leave this machine. The model is reached over the loopback address, and everything else is refused by the program, not by policy.</span></div>
+        <div><b>0</b><span>rows of your data in the journal. It holds the question as typed, the query, the row count, the time and the database path, and never a result row.</span></div>
       </div>
 
       <h2>What the application executes</h2>
@@ -62,18 +62,21 @@ FLUSH PRIVILEGES;
 
 ALTER USER 'askbase_ro'@'localhost'
   WITH MAX_QUERIES_PER_HOUR 2000 MAX_USER_CONNECTIONS 4;</code></pre>
-      <p>MySQL has no per-role statement timeout, so the timeout is enforced by the application. As with PostgreSQL, hide individual columns behind views rather than granting the underlying tables.</p>
+      <p>MySQL has no per-role statement timeout. Version 0.1.1 does not connect to MySQL at all, and the timeout the application enforces is a SQLite one, so until MySQL is supported this bound has to come from the server side. As with PostgreSQL, hide individual columns behind views rather than granting the underlying tables.</p>
 
       <h2>SQLite</h2>
       <p>SQLite has no users; permissions are the file's. Work from a copy rather than the live file, and take the copy in a way that cannot catch the database mid-write.</p>
       <pre class="sql"><code>sqlite3 /path/to/analytics.sqlite ".backup '/path/to/analytics-ro.sqlite'"
 chmod 444 /path/to/analytics-ro.sqlite</code></pre>
 
+      <div class="callout">
+        <p><strong>One thing "read-only" does not mean, said plainly.</strong> If the database is in WAL mode, which is the default for anything written by a modern application, opening it for reading creates two files next to it: a <code>-wal</code> and a <code>-shm</code>. They appear even when the database file itself is set read-only, they persist after the connection closes, and SQLite needs them to read a WAL database at all. Your data is not altered and nothing is written into the database, but the folder is not left untouched, and a person who reads "read-only" as "nothing is written" deserves to be told where that is not literally true.</p>
+      </div>
       <h2>Four checks before you allow it</h2>
       <ol>
-        <li>Connect with the new role. The connection screen reports the privileges it found. A warning about write access means the role is not what you intended.</li>
+        <li>Connect with the new role. On connect the application tries to create a table and requires that to fail; a database that accepts the write is not opened at all, with the reason on screen. It does not enumerate your grants, so check those on the server.</li>
         <li>Switch off the Wi-Fi and ask a question. The answer should still arrive.</li>
-        <li>Open the query log and confirm it holds statements and row counts, not data.</li>
+        <li>Open the journal from the settings screen and confirm it holds questions, statements and row counts, not result rows.</li>
         <li>From that role, try to create a table. It must fail on permissions.</li>
       </ol>
 
