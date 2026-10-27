@@ -23,6 +23,7 @@ from .evaluator import execution_accuracy
 from .model_client import ModelClient
 from .pipeline import Recipe
 from .schema import table_recall
+from .stats import bootstrap_mean
 
 
 def _process(
@@ -104,6 +105,24 @@ def run(
             records[i] = fut.result()
     wall_s = time.perf_counter() - t0
 
+    # A run in which nothing answered is not a result of 0%, it is a run that
+    # did not happen, and writing it as a figure is how a broken shell script
+    # becomes a published number. This cost two bogus 0.0% entries in results/:
+    # a queue script matched the model name only up to the colon, ran against a
+    # tag Ollama does not have, got 500 404s in half a second and wrote them
+    # out as a measurement next to the real ones.
+    #
+    # The bar is deliberately low. Some failures are the model's own doing and
+    # belong in the score; losing almost everything is infrastructure.
+    asked = len(examples)
+    failed = sum(1 for r in records if r and r.get("error"))
+    if asked and failed / asked > 0.5:
+        reasons = {(r.get("error") or "")[:80] for r in records if r and r.get("error")}
+        raise RuntimeError(
+            f"прогон не состоялся: {failed} из {asked} запросов не выполнились, "
+            f"результат не записан. Причины: {sorted(reasons)[:3]}"
+        )
+
     n_correct = sum(int(r["correct"]) for r in records if r)
     with open(out_path, "w") as fout:
         for r in records:
@@ -111,10 +130,21 @@ def run(
 
     n = len(examples)
     recalls = [r["table_recall"] for r in records if r and r.get("table_recall") is not None]
+    # The interval goes in beside the figure, for every run, because the
+    # ranking page promises it in print and because a point estimate on its own
+    # invites a comparison the sample size does not support. Over questions,
+    # 2000 resamples, seed 0, which is the published protocol.
+    per_question = [1.0 if (r and r["correct"]) else 0.0 for r in records]
+    try:
+        ci = bootstrap_mean(per_question).as_dict()
+    except ValueError:
+        ci = None               # no questions at all; ex_accuracy is 0.0 below
+
     summary = {
         "model": client.model,
         "n": n,
         "ex_accuracy": round(n_correct / n, 4) if n else 0.0,
+        "ex_ci": ci,
         "config": {
             "schema_link": schema_link,
             "schema_link_emb": schema_link_emb,

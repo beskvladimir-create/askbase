@@ -8,10 +8,13 @@
       <p class="lead">Сборка пока не подписана удостоверением разработчика Apple, поэтому macOS откажется её открывать, пока вы не разрешите это один раз. Это два нажатия, и здесь показано, где именно. А заодно объяснено, что это предупреждение на самом деле значит: продукт, который просит отмахнуться от предупреждения безопасности, обязан это объяснить.</p>
 
       <div class="links">
-        <a class="btn primary" href="https://github.com/beskvladimir-create/askbase/releases/download/v0.1.1/Askbase-0.1.1-macos-arm64.dmg">Скачать для macOS &middot; 35 МБ</a>
-        <a class="btn" href="https://github.com/beskvladimir-create/askbase/releases/tag/v0.1.1">Все выпуски</a>
+        <a class="btn primary" href="https://github.com/beskvladimir-create/askbase/releases">Выпуски на GitHub</a>
+        <a class="btn" href="https://github.com/beskvladimir-create/askbase">Исходники на GitHub</a>
       </div>
 
+      <div class="callout">
+        <p><strong>0.1.1 собран, но ещё не опубликован, а 0.1.0 пользоваться не стоит.</strong> Выпуск 0.1.0 не отвечает на вопросы вообще: ответ не доходил до окна из потока, который его считал, поэтому часы шли, а ответ не появлялся. Это дефект приложения, а не вашей базы и не модели, и в 0.1.1 он исправлен. Пока 0.1.1 не появился на странице выпусков, соберите из исходников четырьмя командами ниже, так получится исправленная версия.</p>
+      </div>
       <h2>Что нужно, чтобы он мог отвечать</h2>
       <p>Askbase не скачивает модель и не пользуется облачной. Он обращается к модели, которая уже стоит у вас, через локальную петлю, поэтому и работает с выключенной сетью. Поставьте модель через <a href="https://ollama.com">Ollama</a>:</p>
       <pre><code>ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M</code></pre>

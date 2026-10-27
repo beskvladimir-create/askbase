@@ -3,10 +3,21 @@
 A desktop application that answers questions about your own database in plain
 language, with the model running on your machine. Free, no account, no telemetry.
 
-**Status: first version, not packaged.** The desktop application runs from
-source and answers real questions against a SQLite file. The benchmark
-harness, the safety layer and the held-out set generator are here and working.
-There is no signed .dmg yet, and no measured accuracy published.
+**Status: packaged for macOS, and the published release is the broken one.**
+A build for Apple Silicon exists as a .dmg. Version 0.1.0, which is what sits
+on the releases page today, does not answer questions at all: the answer never
+reached the window from the thread computing it, so the clock ran and nothing
+arrived. That is fixed in 0.1.1, which is built and waiting to be published.
+Until it appears there, build from source with the commands below. Neither
+build is signed with an Apple developer certificate, so macOS asks to allow it
+once. No accuracy figure of our own is published yet: the screening runs are
+still going and the held-out set is not frozen.
+
+[SECURITY.md](SECURITY.md) says what the application protects and what it does
+not, and where to report a vulnerability. [NOTICE](NOTICE) lists every
+third-party component and its licence. [CONTRIBUTING.md](CONTRIBUTING.md) has
+the setup and the rules for changes. The privacy notice is at
+[askbase.besk.tech/privacy/](https://askbase.besk.tech/privacy/).
 
 ## Why this exists
 
@@ -29,7 +40,8 @@ market review, with a source for each claim.
 | `src/nl2sql_app/safety.py` | static check of generated SQL before execution: one SELECT, no recursive CTEs, forced row limit |
 | `src/nl2sql_app/holdout/` | generator for the held-out evaluation set, reproducible byte for byte |
 | `scripts/` | run a benchmark arm, re-score saved predictions, summarise a run, build the site |
-| `desktop/askbase/` | the application: three screens, the engine, and the plain-language explanation of each answer |
+| `desktop/askbase/` | the application: three screens, a settings dialog, the engine, the journal, and the plain-language explanation of each answer |
+| `desktop/askbase/cli.py` | the same engine from the terminal: returns the query rather than the answer, and needs no Qt |
 | `site/` | the site, built by `scripts/build_site.py` |
 | `docs/research.md` | market and benchmark review, every claim with a source |
 | `docs/readonly-role.md` | for database administrators: what the application runs, and the SQL to constrain it |
@@ -70,7 +82,7 @@ read-only connection with a row limit and a timeout.
 
 ```bash
 uv venv && uv pip install -e '.[dev]'
-./scripts/test_all.sh                  # 160 tests, no model needed
+./scripts/test_all.sh                  # 669 tests, no model needed
 
 # Download BIRD dev from https://bird-bench.github.io/ into data/bird/
 # then serve a model, for example with Ollama:

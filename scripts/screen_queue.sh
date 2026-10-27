@@ -48,7 +48,11 @@ for pair in "$@"; do
         continue
     fi
 
-    if ! ollama list | grep -q "$(echo "$tag" | cut -d: -f1)"; then
+    # The whole tag, anchored. Cutting at the first colon compared only the
+    # name, so qwen2.5-coder:14b matched the installed qwen2.5-coder:7b and the
+    # Q8 Arctic matched the installed Q4. Both "ran" against a tag Ollama does
+    # not have, got 500 404s in half a second, and wrote a 0.0% result.
+    if ! ollama list | awk '{print $1}' | grep -qxF "$tag"; then
         avail=$(free_gb)
         if [ "$avail" -lt 16 ]; then
             log "ОСТАНОВ: свободно ${avail} ГБ, на скачивание $key не хватит"

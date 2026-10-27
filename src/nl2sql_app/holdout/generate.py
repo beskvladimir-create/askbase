@@ -25,14 +25,21 @@ import sqlite3
 from datetime import date, datetime
 from pathlib import Path
 
-from .domains import banking, logistics, medicine
+from .domains import (
+    banking,
+    hr,
+    logistics,
+    manufacturing,
+    medicine,
+    public_services,
+)
 from .schema_spec import Domain
 
 # A domain owns its own tables, its own lookups and its own row builder. The
 # generator used to reach into medicine's table names directly, which meant a
 # second domain could not exist without either renaming its tables to match or
 # forking this file. Adding a domain is now adding a module to this tuple.
-MODULES = (medicine, banking, logistics)
+MODULES = (medicine, banking, logistics, public_services, manufacturing, hr)
 DOMAINS: dict[str, Domain] = {m.DOMAIN.name: m.DOMAIN for m in MODULES}
 _BY_NAME = {m.DOMAIN.name: m for m in MODULES}
 

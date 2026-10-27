@@ -1,0 +1,69 @@
+Askbase
+Copyright 2026 Vladimir Beskorovainyi, Besk Tech (besk.tech)
+
+Licensed under the MIT License (see LICENSE).
+
+Third-party components and their licences. Versions are the ones the 0.1.1
+build was made with, read from the installed distributions rather than from
+memory.
+
+
+## Inside the macOS application
+
+- Qt for Python: PySide6 6.12.0 and shiboken6 6.12.0
+  (https://doc.qt.io/qtforpython/), "LGPL-3.0-only OR GPL-2.0-only OR
+  GPL-3.0-only" as declared by the distribution. Used here under LGPL-3.0.
+  The Qt libraries ship inside the bundle as separate dynamic libraries under
+  Askbase.app/Contents/Frameworks and are not statically linked, so a user may
+  replace them with a compatible build of their own. Qt modules that are
+  GPL-only, Qt Virtual Keyboard among them, are dropped from the build on
+  purpose; the exclusion list is in desktop/askbase.spec.
+- sqlglot 30.23.0 (https://github.com/tobymao/sqlglot), MIT License.
+- PyInstaller 6.22.3 bootloader (https://pyinstaller.org/), GPL-2.0-or-later
+  with the bootloader exception, which gives unlimited permission to embed the
+  compiled bootloader in a program under another licence.
+- CPython (https://www.python.org/), Python Software Foundation License,
+  embedded by PyInstaller.
+- Fonts: Inter, Playfair Display and Space Grotesk, SIL Open Font License 1.1.
+  The licence texts travel with the font files in
+  desktop/askbase/fonts/licenses/ and are part of the bundle.
+
+
+## Not included, installed by the person using Askbase
+
+- Ollama (https://github.com/ollama/ollama), MIT License. Askbase reaches it
+  over the loopback address. It is neither bundled nor installed by us.
+- XiYanSQL-QwenCoder-7B-2504, Apache License 2.0
+  (https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-7B-2504), the
+  model the application suggests by default. The quantisation used is
+  mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF, also Apache License 2.0. Both
+  derive from Qwen2.5-Coder, Apache License 2.0.
+- Arctic-Text2SQL-R1-7B by Snowflake and Qwen2.5-Coder at 7B and 14B, each
+  Apache License 2.0. They are measured in the model ranking and are not part
+  of the application.
+
+
+## Benchmark harness only, never shipped in the application
+
+- openai 3.35.1, Apache License 2.0. Used as an OpenAI-compatible client
+  against a server on this machine, not against OpenAI.
+- PyYAML 6.0.3, MIT License.
+- tqdm 4.70.1, "MPL-2.0 AND MIT" as declared by the distribution.
+- func-timeout 4.3.5, "LGPLv2" as declared by the distribution. Imported
+  unmodified. The harness is not packaged and not redistributed as a binary.
+
+Development only: pytest (MIT), ruff (MIT), Pillow (MIT-CMU).
+
+
+## Data
+
+BIRD (https://bird-bench.github.io/) is not redistributed here and nothing in
+this repository downloads it. Whoever runs the benchmark places the dev split
+in data/bird/ themselves. Its licence is stated inconsistently by its own
+sources, CC BY-NC 4.0 in the datasheet of the original paper and CC BY-SA 4.0
+on later dataset cards, so read the terms at the source before relying on it,
+commercially in particular.
+
+The held-out set under src/nl2sql_app/holdout/ is generated rather than
+collected. It contains no third-party data and falls under this repository's
+own licence.

@@ -138,8 +138,12 @@ def test_coded_columns_really_hold_codes(dbs, domain):
     db = dbs[domain.name]
     for table in domain.tables:
         for col in table.coded_columns:
-            vals = [r[0] for r in db.execute(f"SELECT DISTINCT {col} FROM {table.name}")]
+            vals = [r[0] for r in db.execute(
+                f"SELECT DISTINCT {col} FROM {table.name} WHERE {col} IS NOT NULL")]
             assert vals, f"{table.name}.{col} пуст"
+            # NULL is allowed and is not a code: public_services.stage.result_cd
+            # is NULL while a stage is open, and telling a missing value apart
+            # from a value meaning "unknown" is the whole of gov-006.
             assert all(isinstance(v, int) for v in vals), f"{table.name}.{col} не коды"
 
 
@@ -150,6 +154,8 @@ LEGACY_PAIRS = [
     ("medicine", "enc", "dt_adm", "admitted_at"),
     ("banking", "txn", "dt_op", "posted_at"),
     ("logistics", "shp", "dt_disp", "dispatched_at"),
+    ("public_services", "case_rec", "dt_sub", "submitted_at"),
+    ("manufacturing", "mov", "dt_op", "recorded_at"),
 ]
 
 
@@ -165,7 +171,8 @@ def test_legacy_column_pair_is_split_not_duplicated(dbs, domain, table, old, new
 
 # Null handling is part of what the set is meant to probe.
 NULLABLE = [("medicine", "pat", "city"), ("banking", "cust", "city"),
-            ("logistics", "cust", "city")]
+            ("logistics", "cust", "city"), ("public_services", "applicant", "city"),
+            ("hr", "emp", "left_at"), ("public_services", "stage", "result_cd")]
 
 
 @pytest.mark.parametrize("domain,table,col", NULLABLE, ids=lambda p: str(p))
@@ -236,6 +243,41 @@ NAIVE = {
     "log-006": "SELECT COUNT(*) FROM shp WHERE delivered_at IS NOT NULL",
     "log-007": "SELECT l.title, COUNT(*) FROM leg g JOIN shp s ON s.id = g.shp_id JOIN loc_ref l ON l.cd = s.dst_cd GROUP BY l.title ORDER BY 2 DESC, 1",
     "log-008": "SELECT g.shp_id, SUM(g.dist_km) FROM leg g GROUP BY g.shp_id ORDER BY 2 DESC, 1",
+
+    "gov-001": "SELECT o.title, COUNT(*) FROM case_rec c JOIN office o ON o.id = c.office_id GROUP BY o.title ORDER BY 2 DESC, 1",
+    # the plausible miss: a strict comparison that also counts the cases closed
+    # exactly on the deadline, which are not late
+    "gov-002": "SELECT COUNT(*) FROM case_rec WHERE closed_at >= due_dt",
+    "gov-003": "SELECT COUNT(*) FROM case_rec",
+    "gov-004": "SELECT COUNT(*) FROM case_rec WHERE dt_sub >= '2026-04-01' AND dt_sub < '2026-07-01'",
+    "gov-005": "SELECT DISTINCT a.full_name FROM applicant a JOIN case_rec c ON c.applicant_id = a.id ORDER BY 1",
+    # the plausible miss: counting the open stages as a result of their own
+    "gov-006": "SELECT s.result_cd, COUNT(*) FROM stage s GROUP BY s.result_cd ORDER BY 2 DESC, 1",
+    "gov-007": "SELECT sv.title, COUNT(*) FROM case_rec c JOIN service sv ON sv.id = c.service_id GROUP BY sv.title ORDER BY 2 DESC, 1",
+    "gov-008": "SELECT a.full_name, COUNT(*) FROM case_rec c JOIN applicant a ON a.id = c.applicant_id GROUP BY a.id, a.full_name ORDER BY 2 DESC, 1",
+
+    "mfg-001": "SELECT kind_cd, COUNT(*) FROM mov GROUP BY kind_cd ORDER BY 2 DESC, 1",
+    # the plausible miss: adding pieces to kilograms to tonnes
+    "mfg-002": "SELECT SUM(qty) FROM mov WHERE kind_cd = 3",
+    "mfg-003": "SELECT COUNT(*) FROM mov WHERE dt_op >= '2026-01-01' AND dt_op < '2026-04-01'",
+    # the plausible miss: joining the price on part_id alone, which multiplies
+    # every movement by the number of price rows the part has
+    "mfg-004": "SELECT p.title, SUM(m.qty * pp.minor / 100.0) FROM mov m JOIN part p ON p.id = m.part_id JOIN part_price pp ON pp.part_id = m.part_id GROUP BY p.title ORDER BY 2 DESC, 1 LIMIT 3",
+    "mfg-005": "SELECT DISTINCT m.id FROM mov m JOIN defect d ON d.mov_id = m.id ORDER BY 1",
+    "mfg-006": "SELECT l.shift_cd, COUNT(*) FROM defect d JOIN mov m ON m.id = d.mov_id JOIN line l ON l.id = m.line_id GROUP BY l.shift_cd ORDER BY 2 DESC, 1",
+    "mfg-007": "SELECT u.title, COUNT(*) FROM mov m JOIN unit_ref u ON u.cd = m.unit_cd GROUP BY u.title ORDER BY 2 DESC, 1",
+    "mfg-008": "SELECT p.title, COUNT(*) FROM defect d JOIN mov m ON m.id = d.mov_id JOIN part p ON p.id = m.part_id GROUP BY p.id, p.title ORDER BY 2 DESC, 1",
+
+    "hr-001": "SELECT status_cd, COUNT(*) FROM emp GROUP BY status_cd ORDER BY 2 DESC, 1",
+    # the plausible miss: unpaid leave has no leaving date and is not working
+    "hr-002": "SELECT COUNT(*) FROM emp WHERE left_at IS NULL",
+    # the plausible miss: every pay row, not the latest one per person
+    "hr-003": "SELECT e.full_name, p.amount_minor / 100.0 FROM emp e JOIN pay_hist p ON p.emp_id = e.id ORDER BY 2 DESC, 1 LIMIT 5",
+    "hr-004": "SELECT d.title, COUNT(*) FROM emp e JOIN dept d ON d.id = e.dept_id GROUP BY d.title ORDER BY 2 DESC, 1",
+    "hr-005": "SELECT DISTINCT e.full_name FROM emp e JOIN pay_hist p ON p.emp_id = e.id ORDER BY 1",
+    "hr-006": "SELECT e.mgr_id, COUNT(*) FROM emp e GROUP BY e.mgr_id ORDER BY 2 DESC, 1 LIMIT 5",
+    "hr-007": "SELECT k.title, COUNT(*) FROM absence a JOIN absence_kind_ref k ON k.cd = a.kind_cd GROUP BY k.title ORDER BY 2 DESC, 1",
+    "hr-008": "SELECT c.title, COUNT(*) FROM pay_hist p JOIN cur_ref c ON c.cd = p.cur_cd GROUP BY c.title ORDER BY 2 DESC, 1",
 }
 
 
@@ -252,3 +294,51 @@ def test_every_task_with_a_trap_has_a_naive_counterexample():
     # out that the trap stopped discriminating.
     missing = [t.tid for _, t in TASKS if t.tid not in NAIVE]
     assert missing == [], f"нет наивного контрпримера: {missing}"
+
+
+def test_the_inclusive_deadline_has_cases_sitting_exactly_on_it(dbs):
+    # gov-002 only discriminates if some cases closed on the due date: those
+    # are the ones a strict comparison gets wrong, in either direction.
+    n = dbs["public_services"].execute(
+        "SELECT COUNT(*) FROM case_rec WHERE closed_at = due_dt").fetchone()[0]
+    assert n > 0
+
+
+def test_pay_history_really_has_several_rows_per_person(dbs):
+    # hr-003 is about the latest row per person, which is only hard when more
+    # than one exists.
+    n = dbs["hr"].execute(
+        "SELECT COUNT(*) FROM (SELECT emp_id FROM pay_hist GROUP BY emp_id "
+        "HAVING COUNT(*) > 1)").fetchone()[0]
+    assert n > 0
+
+
+def test_units_really_differ_within_one_table(dbs):
+    # mfg-002 is about conversion, which needs more than one unit in use.
+    units = [r[0] for r in dbs["manufacturing"].execute(
+        "SELECT DISTINCT unit_cd FROM mov")]
+    assert len(units) > 1
+
+
+def test_price_windows_do_not_overlap(dbs):
+    # Overlapping windows would make mfg-004 ambiguous rather than hard: a
+    # movement would match two prices and the gold query would be wrong too.
+    n = dbs["manufacturing"].execute(
+        "SELECT COUNT(*) FROM part_price a JOIN part_price b "
+        "ON a.part_id = b.part_id AND a.id < b.id "
+        "WHERE a.valid_to IS NULL OR (b.valid_from < a.valid_to "
+        "AND (b.valid_to IS NULL OR a.valid_from < b.valid_to))"
+    ).fetchone()[0]
+    assert n == 0, "окна цен пересекаются, эталон mfg-004 неоднозначен"
+
+
+def test_the_manager_reference_has_no_cycles(dbs):
+    # A cycle would make any question about managers unanswerable, and the
+    # safety check forbids the recursive query that would detect one at runtime.
+    rows = dict(dbs["hr"].execute("SELECT id, mgr_id FROM emp WHERE mgr_id IS NOT NULL"))
+    for start in rows:
+        seen, cur = {start}, rows.get(start)
+        while cur is not None:
+            assert cur not in seen, f"цикл в mgr_id около {cur}"
+            seen.add(cur)
+            cur = rows.get(cur)

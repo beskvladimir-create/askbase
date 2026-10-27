@@ -19,6 +19,8 @@ sys.path.insert(0, str(DESKTOP))
 
 pytest.importorskip("PySide6", reason="интерфейс проверяется там, где установлен Qt")
 
+from PySide6.QtWidgets import QPushButton, QWidget  # noqa: E402
+
 from askbase.engine import AskError  # noqa: E402
 
 
@@ -48,9 +50,23 @@ def test_every_screen_can_be_shown(app, lang):
     from askbase.app import Window
 
     w = Window(lang)
+    # Not `currentWidget() is not None`, which is true for every valid index of
+    # a QStackedWidget and merely restated count() == 3 from the test above.
+    # Each page has to be a different widget that actually holds its screen's
+    # controls, which is what breaks when a page is built but never populated.
+    seen = []
     for i in range(w.pages.count()):
         w.pages.setCurrentIndex(i)
-        assert w.pages.currentWidget() is not None
+        page = w.pages.currentWidget()
+        assert page is w.pages.widget(i)
+        assert page.findChildren(QWidget), f"страница {i} пуста"
+        seen.append(page)
+    assert len({id(p) for p in seen}) == w.pages.count(), "страницы это один и тот же виджет"
+    # The controls each screen is for, so a page swapped for another is caught.
+    w.pages.setCurrentIndex(0)
+    assert w.drop in w.pages.widget(0).findChildren(type(w.drop))
+    assert w.question in w.pages.widget(1).findChildren(type(w.question))
+    assert w.table in w.pages.widget(2).findChildren(type(w.table))
     w.close()
 
 
@@ -89,7 +105,22 @@ def test_a_pasted_file_url_is_understood(app, tmp_path):
     w = Window("ru")
     w.path.setText(f"file://{db}".replace(" ", "%20"))
     w._open_typed()
-    assert "not_a_file" not in w.status.text()
+    # The point is that the file:// URL was decoded into a real path and the
+    # file was reached. The old assertion looked for the i18n key "not_a_file"
+    # in the status line, where a key never appears and where this message is
+    # never sent, so it held however the branch behaved: removing the whole
+    # file:// handling left every test passing.
+    #
+    # The file is empty, so opening it must fail for the right reason, and the
+    # reason is the evidence. "There is not a single table in this file" means
+    # the path was decoded and the file was found and opened. A URL that was
+    # not decoded would have failed with "file not found" instead, which is a
+    # different message and a different screen.
+    assert not w.alert.isHidden(), "пустой файл открылся без возражений"
+    shown = w.err_body.text()
+    assert "таблиц" in shown, f"файл не был найден, URL не раскодирован: {shown}"
+    assert w.t["not_a_file"].split("{")[0] not in shown, (
+        "сообщение про отсутствующий файл: URL не раскодирован")
     w.close()
 class SlowEngine:
     """An engine that holds its thread until the test lets it finish."""
@@ -236,8 +267,13 @@ def test_a_csv_that_cannot_be_written_is_reported_not_raised(app, monkeypatch):
     w = Window("ru")
     w.answer = answer()
     w._save_csv()                        # must not raise
-    assert w.status.text()
-    assert "/нет/такой/папки" not in w.status.text() or w.t["saved"] not in w.status.text()
+    # Not a disjunction against the unformatted template, which can never
+    # appear in a status line and made the whole assertion true for any text.
+    # The failure has to be reported, and reported as a failure.
+    shown = w.status.text()
+    assert shown
+    assert shown.startswith(w.t["cannot_save"].split("{")[0]), shown
+    assert not shown.startswith(w.t["saved"].split("{")[0]), "провал показан как успех"
     w.close()
 def test_a_question_whose_window_is_gone_ends_quietly(app):
     # A question outlives the window that asked it: the window is closed, or
@@ -361,11 +397,16 @@ def test_a_journalled_question_appears_and_can_be_repeated(app, lang, journal_in
     w = Window(lang)
     w._refresh_journal()
     assert w.journal_rows.count() == 1
-    # The question itself is the control; pressing it must load the question.
+    # The row is pressed, not bypassed. The earlier version called _repeat with
+    # the question as a literal and then asserted the row was not None, which
+    # is guaranteed by the count above: if the button were unconnected, or
+    # wired to the wrong entry, it still passed.
     row = w.journal_rows.itemAt(0).widget()
-    w._repeat("сколько клиентов по регионам")
+    button = next(b for b in row.findChildren(QPushButton))
+    assert "сколько клиентов" in button.text()
+    w.question.setPlainText("")
+    button.click()
     assert w.question.toPlainText() == "сколько клиентов по регионам"
-    assert row is not None
     w.close()
 
 

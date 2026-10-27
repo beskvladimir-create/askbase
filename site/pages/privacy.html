@@ -1,0 +1,51 @@
+<!--meta {"path": "/privacy/", "type": "technical", "published": "2026-10-27"}-->
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Askbase</a> / Privacy</nav>
+    <div class="eyebrow">Privacy notice &middot; 27 October 2026</div>
+    <h1>What this site and this application know about you</h1>
+    <div class="prose">
+      <p class="lead">Short version: the application sends nothing anywhere, and this site has no cookies, no analytics and no third-party scripts. The long version below says what is written where, who holds it, and how to have it removed. Every statement here is something you can check in the source.</p>
+
+      <div class="stats">
+        <div><b>0</b><span>accounts. There is no registration, no sign-in and no licence key.</span></div>
+        <div><b>0</b><span>cookies on this site, and no analytics, no tracking pixel, no third-party script.</span></div>
+        <div><b>0</b><span>network connections out of the application. It is blocked in the program, and you can test the block yourself.</span></div>
+      </div>
+
+      <h2>The application</h2>
+      <p>Askbase runs on your computer and the model runs on your computer. Your question, your schema and your answers are not sent anywhere, because the application closes outbound connections at startup and reaches the model over the loopback address of your own machine.</p>
+      <p>That is a claim you can test rather than believe:</p>
+      <pre><code>Askbase.app/Contents/MacOS/Askbase --selftest</code></pre>
+      <p>There is no telemetry, no crash reporting, no usage counter and no update check. Nothing is collected, so nothing has to be anonymised, retained or deleted on our side.</p>
+
+      <h3>What it writes to your own disk</h3>
+      <ul>
+        <li><strong>Settings.</strong> Row limit, timeout, interface language and the model you chose. Stored where macOS keeps application preferences.</li>
+        <li><strong>A journal of your questions.</strong> The question as you typed it, the query that was generated, how many rows came back, how long it took and the path to the database file. Never a result row, so the journal is not a second copy of your data. It holds the last 200 entries and is emptied from the settings screen.</li>
+        <li><strong>CSV exports</strong>, only when you ask for one and only where you choose to put it.</li>
+      </ul>
+      <p>All three live on your machine. We never see them, and there is nowhere for them to be sent.</p>
+
+      <h2>This site</h2>
+      <p>No cookies are set. No analytics product is loaded. Nothing is stored in your browser. The fonts are served from this site rather than from a font CDN, because a request to a CDN would tell a third party which page you opened.</p>
+      <p>The site is hosted by <a href="https://vercel.com/legal/privacy-policy">Vercel</a>. Like any web host it receives your request in order to answer it, and records it in server logs: the IP address, the time, the page and the browser string. Those logs belong to the hosting layer, are kept for a limited period for operating the site and preventing abuse, and are not joined to anything else or used to build a profile.</p>
+      <p>Pages link out to GitHub, Hugging Face, arXiv and a few others. Following a link takes you to a site with its own rules, and those rules are not ours.</p>
+
+      <h2>When you write to us</h2>
+      <p>If you send an email to <a href="mailto:admin@besk.tech?subject=Askbase">admin@besk.tech</a>, we hold your address and what you wrote, for as long as it takes to answer you and to keep a record of the exchange. If you open an issue or a pull request on GitHub, that is public and GitHub's own privacy policy applies to it.</p>
+      <p>Nothing you send us is used for marketing, sold, or passed to anyone else.</p>
+
+      <h2>Who is responsible, and your rights</h2>
+      <p>The controller is Vladimir Beskorovainyi, Besk Tech (<a href="https://besk.tech">besk.tech</a>), reachable at <a href="mailto:admin@besk.tech?subject=Askbase%20privacy">admin@besk.tech</a>.</p>
+      <p>If you are in the United Kingdom or the European Union, you have the right to ask for a copy of the personal data we hold about you, to have it corrected or erased, to restrict or object to its processing, and to receive it in a portable form. Write to the address above and you will get an answer within 30 days. The lawful basis is legitimate interest: running a website and replying to the people who write to it.</p>
+      <p>If you are not satisfied with the answer, you can complain to a supervisory authority. In the United Kingdom that is the <a href="https://ico.org.uk/make-a-complaint/">Information Commissioner's Office</a>; in the European Union it is the authority in your own country.</p>
+
+      <h2>Children</h2>
+      <p>This is a tool for working with databases. It is not aimed at children and collects nothing from anyone.</p>
+
+      <h2>Changes to this notice</h2>
+      <p>This notice is dated at the top and lives in the <a href="https://github.com/beskvladimir-create/askbase">repository</a> with the rest of the site, so every change to it is a commit anyone can read. If a change ever means we start collecting something, it will be stated here before it happens, not after.</p>
+    </div>
+  </div>
+</article>

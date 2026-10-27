@@ -45,6 +45,11 @@ INCLUDE: tuple[str, ...] = (
     "docs/readonly-role.md",
     "README.md",
     "LICENSE",
+    "NOTICE",
+    "SECURITY.md",
+    "SECURITY.ru.md",
+    "CONTRIBUTING.md",
+    "CONTRIBUTING.ru.md",
     ".gitignore.public",
 )
 

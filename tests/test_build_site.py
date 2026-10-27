@@ -43,9 +43,11 @@ def test_a_backed_number_is_substituted(results):
 
 def test_an_unbacked_number_stops_the_build(results):
     loaded = build_site.load_results()
+    # No pytest.fail inside the block: it is unreachable the moment resolve
+    # raises, which reads as a safety net that does not exist. pytest.raises
+    # already fails the test if nothing is raised.
     with pytest.raises(build_site.Unbacked) as e:
         build_site.resolve("<p>EX {=askbase|holdout|ex_accuracy}%</p>", loaded, "index")
-        pytest.fail("страница с неподтверждённым числом собралась")
     assert "index" in str(e.value)
     assert "askbase" in str(e.value)
 
@@ -83,8 +85,19 @@ def test_any_page_quoting_a_measurement_has_a_pending_twin():
 
 
 def test_anything_still_blocked_says_why():
-    for why in build_site.BLOCKED.values():
-        assert why.strip()
+    """Every deliberately unbuilt page carries a reason.
+
+    BLOCKED is empty today, so iterating it asserted nothing: the loop body
+    never ran. The property is checked against a stand-in instead, which keeps
+    working whether the real dictionary is empty or not, and the emptiness is
+    asserted separately so that filling it is a deliberate act.
+    """
+    assert build_site.BLOCKED == {}, (
+        "страницы снова блокируются: проверьте, что у каждой есть причина")
+
+    stand_in = {"some-page": "   ", "other-page": "есть причина"}
+    bad = [name for name, why in stand_in.items() if not why.strip()]
+    assert bad == ["some-page"], "правило «у блокировки есть причина» не работает"
 
 
 def test_the_home_page_quotes_no_measurement(results):

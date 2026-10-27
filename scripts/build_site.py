@@ -155,6 +155,23 @@ ROUTES: dict[str, Route] = {
         "Владимир Бескоровайный, Besk Tech. Публикации и бенчмарки.",
         twin="author",
     ),
+    # Not signed with the article byline: a privacy notice is a statement by
+    # the controller, and a personal signature under it reads as an opinion
+    # rather than an undertaking.
+    "privacy": Route(
+        "privacy", "en",
+        "Askbase: privacy notice",
+        "What the application and this site record, where it is kept, "
+        "and how to have it removed.",
+        twin="ru-konfidentsialnost", signed=False,
+    ),
+    "ru-konfidentsialnost": Route(
+        "ru/konfidentsialnost", "ru",
+        "Askbase: уведомление о приватности",
+        "Что записывает приложение и этот сайт, где это лежит "
+        "и как это удалить.",
+        twin="privacy", signed=False,
+    ),
 }
 
 # Pages that may not be built until our own measurements exist. Listed rather
@@ -462,7 +479,7 @@ FOOT = {
 <footer>
   <div class="wrap">
     <span>Vladimir Beskorovainyi, Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span>
-    <span><a href="/install/">Install</a> · <a href="/model-ranking/">Model ranking</a> · <a href="/read-only-access/">Read-only access</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
+    <span><a href="/install/">Install</a> · <a href="/model-ranking/">Model ranking</a> · <a href="/read-only-access/">Read-only access</a> · <a href="/privacy/">Privacy</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
   </div>
 </footer>
 """,
@@ -470,7 +487,7 @@ FOOT = {
 <footer>
   <div class="wrap">
     <span>Владимир Бескоровайный, Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span>
-    <span><a href="/ru/ustanovka/">Установка</a> · <a href="/ru/reyting-modeley/">Рейтинг моделей</a> · <a href="/ru/dostup-tolko-chtenie/">Только чтение</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Написать</a> · <a href="/ru/avtor/">Автор</a> · <a href="https://arxiv.org/abs/2606.29733">Статья</a></span>
+    <span><a href="/ru/ustanovka/">Установка</a> · <a href="/ru/reyting-modeley/">Рейтинг моделей</a> · <a href="/ru/dostup-tolko-chtenie/">Только чтение</a> · <a href="/ru/konfidentsialnost/">Приватность</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Написать</a> · <a href="/ru/avtor/">Автор</a> · <a href="https://arxiv.org/abs/2606.29733">Статья</a></span>
   </div>
 </footer>
 """,

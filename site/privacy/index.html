@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>document.documentElement.classList.add("js")</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Askbase: privacy notice</title>
+<meta name="description" content="What the application and this site record, where it is kept, and how to have it removed.">
+<link rel="canonical" href="https://askbase.besk.tech/privacy/">
+<link rel="alternate" hreflang="en" href="https://askbase.besk.tech/privacy/">
+<link rel="alternate" hreflang="ru" href="https://askbase.besk.tech/ru/konfidentsialnost/">
+<link rel="alternate" hreflang="x-default" href="https://askbase.besk.tech/privacy/">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Askbase">
+<meta property="og:title" content="Askbase: privacy notice">
+<meta property="og:description" content="What the application and this site record, where it is kept, and how to have it removed.">
+<meta property="og:url" content="https://askbase.besk.tech/privacy/">
+<meta property="og:locale" content="en_GB">
+<meta property="og:image" content="https://askbase.besk.tech/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/assets/fonts.css">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Askbase: privacy notice", "description": "What the application and this site record, where it is kept, and how to have it removed.", "inLanguage": "en", "url": "https://askbase.besk.tech/privacy/", "isPartOf": {"@type": "WebSite", "name": "Askbase", "url": "https://askbase.besk.tech/"}}</script>
+</head>
+<body>
+<nav class="nav" aria-label="Main navigation">
+  <a class="brand" href="/" aria-label="Askbase, home">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="#fff" stroke-opacity=".5"/><path d="M6.8 9.2h7.2" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><path d="M6.8 12.5h10.4" stroke="#fff" stroke-opacity=".7" stroke-width="1.7" stroke-linecap="round"/><path d="M6.8 15.8h4.8" stroke="#fff" stroke-opacity=".4" stroke-width="1.7" stroke-linecap="round"/><rect x="15.6" y="7.6" width="1.6" height="3.2" rx=".8" fill="#fff"/></svg>
+    Askbase
+  </a>
+  <ul>
+    <li><a href="/#questions">What you can ask</a></li>
+    <li><a href="/comparison/">Other tools</a></li>
+    <li><a href="/where-your-data-goes/">Your data</a></li>
+    <li><a href="/install/">Install</a></li>
+  </ul>
+  <div class="right">
+    <span class="lang"><a href="/privacy/" aria-current="page">EN</a> / <a href="/ru/konfidentsialnost/" hreflang="ru" lang="ru">RU</a></span>
+    <a class="btn primary small" href="/install/"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.9-3-.8C7 7.3 5.6 8.2 4.8 9.6c-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.7 2.3 2.8 2.3 1.1-.1 1.6-.7 2.9-.7s1.8.7 3 .7 2-1.1 2.7-2.2c.9-1.3 1.2-2.5 1.2-2.6 0 0-2.3-.9-2.3-3.6zM14.2 5.6c.6-.8 1-1.8.9-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-.9 2.7 1 .1 2-.5 2.6-1.3z"/></svg>Download</a>
+  </div>
+</nav>
+<article class="page">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Askbase</a> / Privacy</nav>
+    <div class="eyebrow">Privacy notice &middot; 27 October 2026</div>
+    <h1>What this site and this application know about you</h1>
+    <div class="prose">
+      <p class="lead">Short version: the application sends nothing anywhere, and this site has no cookies, no analytics and no third-party scripts. The long version below says what is written where, who holds it, and how to have it removed. Every statement here is something you can check in the source.</p>
+
+      <div class="stats">
+        <div><b>0</b><span>accounts. There is no registration, no sign-in and no licence key.</span></div>
+        <div><b>0</b><span>cookies on this site, and no analytics, no tracking pixel, no third-party script.</span></div>
+        <div><b>0</b><span>network connections out of the application. It is blocked in the program, and you can test the block yourself.</span></div>
+      </div>
+
+      <h2>The application</h2>
+      <p>Askbase runs on your computer and the model runs on your computer. Your question, your schema and your answers are not sent anywhere, because the application closes outbound connections at startup and reaches the model over the loopback address of your own machine.</p>
+      <p>That is a claim you can test rather than believe:</p>
+      <pre><code>Askbase.app/Contents/MacOS/Askbase --selftest</code></pre>
+      <p>There is no telemetry, no crash reporting, no usage counter and no update check. Nothing is collected, so nothing has to be anonymised, retained or deleted on our side.</p>
+
+      <h3>What it writes to your own disk</h3>
+      <ul>
+        <li><strong>Settings.</strong> Row limit, timeout, interface language and the model you chose. Stored where macOS keeps application preferences.</li>
+        <li><strong>A journal of your questions.</strong> The question as you typed it, the query that was generated, how many rows came back, how long it took and the path to the database file. Never a result row, so the journal is not a second copy of your data. It holds the last 200 entries and is emptied from the settings screen.</li>
+        <li><strong>CSV exports</strong>, only when you ask for one and only where you choose to put it.</li>
+      </ul>
+      <p>All three live on your machine. We never see them, and there is nowhere for them to be sent.</p>
+
+      <h2>This site</h2>
+      <p>No cookies are set. No analytics product is loaded. Nothing is stored in your browser. The fonts are served from this site rather than from a font CDN, because a request to a CDN would tell a third party which page you opened.</p>
+      <p>The site is hosted by <a href="https://vercel.com/legal/privacy-policy">Vercel</a>. Like any web host it receives your request in order to answer it, and records it in server logs: the IP address, the time, the page and the browser string. Those logs belong to the hosting layer, are kept for a limited period for operating the site and preventing abuse, and are not joined to anything else or used to build a profile.</p>
+      <p>Pages link out to GitHub, Hugging Face, arXiv and a few others. Following a link takes you to a site with its own rules, and those rules are not ours.</p>
+
+      <h2>When you write to us</h2>
+      <p>If you send an email to <a href="mailto:admin@besk.tech?subject=Askbase">admin@besk.tech</a>, we hold your address and what you wrote, for as long as it takes to answer you and to keep a record of the exchange. If you open an issue or a pull request on GitHub, that is public and GitHub's own privacy policy applies to it.</p>
+      <p>Nothing you send us is used for marketing, sold, or passed to anyone else.</p>
+
+      <h2>Who is responsible, and your rights</h2>
+      <p>The controller is Vladimir Beskorovainyi, Besk Tech (<a href="https://besk.tech">besk.tech</a>), reachable at <a href="mailto:admin@besk.tech?subject=Askbase%20privacy">admin@besk.tech</a>.</p>
+      <p>If you are in the United Kingdom or the European Union, you have the right to ask for a copy of the personal data we hold about you, to have it corrected or erased, to restrict or object to its processing, and to receive it in a portable form. Write to the address above and you will get an answer within 30 days. The lawful basis is legitimate interest: running a website and replying to the people who write to it.</p>
+      <p>If you are not satisfied with the answer, you can complain to a supervisory authority. In the United Kingdom that is the <a href="https://ico.org.uk/make-a-complaint/">Information Commissioner's Office</a>; in the European Union it is the authority in your own country.</p>
+
+      <h2>Children</h2>
+      <p>This is a tool for working with databases. It is not aimed at children and collects nothing from anyone.</p>
+
+      <h2>Changes to this notice</h2>
+      <p>This notice is dated at the top and lives in the <a href="https://github.com/beskvladimir-create/askbase">repository</a> with the rest of the site, so every change to it is a commit anyone can read. If a change ever means we start collecting something, it will be stated here before it happens, not after.</p>
+    </div>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <span>Vladimir Beskorovainyi, Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span>
+    <span><a href="/install/">Install</a> · <a href="/model-ranking/">Model ranking</a> · <a href="/read-only-access/">Read-only access</a> · <a href="/privacy/">Privacy</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
+  </div>
+</footer>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
