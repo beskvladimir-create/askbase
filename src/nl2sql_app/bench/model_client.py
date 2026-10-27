@@ -8,6 +8,10 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:          # the SDK is imported lazily; see __post_init__
+    from openai import OpenAI
 
 
 @dataclass

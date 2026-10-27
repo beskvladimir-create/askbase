@@ -15,7 +15,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 
 from func_timeout import FunctionTimedOut
-
 from tqdm import tqdm
 
 from .data import Example, load_bird_dev
@@ -84,13 +83,13 @@ def run(
         examples = sorted(rng.sample(examples, sample), key=lambda e: e.qid)
 
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    flags = dict(
-        schema_link=schema_link,
-        schema_link_emb=schema_link_emb,
-        emb_top_k=emb_top_k,
-        self_correct=self_correct,
-        self_consistency=self_consistency,
-    )
+    flags = {
+        "schema_link": schema_link,
+        "schema_link_emb": schema_link_emb,
+        "emb_top_k": emb_top_k,
+        "self_correct": self_correct,
+        "self_consistency": self_consistency,
+    }
 
     records: list[dict | None] = [None] * len(examples)
     workers = max(1, min(concurrency, len(examples)))

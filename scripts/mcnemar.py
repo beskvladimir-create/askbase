@@ -18,9 +18,10 @@ import math
 
 def load_correct(path: str) -> dict[int, bool]:
     out = {}
-    for line in open(path):
-        r = json.loads(line)
-        out[r["qid"]] = bool(r["correct"])
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            r = json.loads(line)
+            out[r["qid"]] = bool(r["correct"])
     return out
 
 
@@ -30,7 +31,7 @@ def mcnemar_exact_p(b: int, c: int) -> float:
     if n == 0:
         return 1.0
     k = min(b, c)
-    tail = sum(math.comb(n, i) for i in range(0, k + 1)) / (2 ** n)
+    tail = sum(math.comb(n, i) for i in range(k + 1)) / (2 ** n)
     return min(1.0, 2 * tail)
 
 

@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
-import build_site  # noqa: E402
+import build_site
 
 
 @pytest.fixture
@@ -332,7 +332,9 @@ def test_the_brand_mark_is_not_resized_locally():
 # substring-matching a Russian sentence, so rewording a message turned a
 # blocked publish into exit 0 with nothing failing anywhere.
 
-def test_an_unbacked_number_stops_the_build(tmp_path, monkeypatch):
+def test_the_build_gate_fails_on_an_unbacked_number(tmp_path, monkeypatch):
+    # Renamed: it shared a name with the test at the top of this file, so for
+    # as long as both existed only this one ran and the other was shadowed.
     monkeypatch.setattr(build_site, "RESULTS", tmp_path / "results")
     (tmp_path / "results").mkdir()
     pages = tmp_path / "pages"

@@ -45,7 +45,8 @@ def main() -> None:
                     help="cap used for the run; completions at the cap count as truncated")
     args = ap.parse_args()
 
-    recs = [json.loads(line) for line in open(args.path) if line.strip()]
+    with open(args.path, encoding="utf-8") as f:
+        recs = [json.loads(line) for line in f if line.strip()]
     if not recs:
         raise SystemExit(f"{args.path}: пусто")
 

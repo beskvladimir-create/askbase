@@ -17,15 +17,15 @@ from nl2sql_app.bench.model_client import ModelClient
 from nl2sql_app.bench.runner import run
 
 ABLATION = [
-    ("base", dict(schema_link=False, self_correct=False, self_consistency=False)),
-    ("correct", dict(schema_link=False, self_correct=True, self_consistency=False)),
-    ("consistency", dict(schema_link=False, self_correct=True, self_consistency=True)),
-    ("link", dict(schema_link=True, self_correct=False, self_consistency=False)),
-    ("link_correct", dict(schema_link=True, self_correct=True, self_consistency=False)),
-    ("link_correct_consistency", dict(schema_link=True, self_correct=True, self_consistency=True)),
+    ("base", {"schema_link": False, "self_correct": False, "self_consistency": False}),
+    ("correct", {"schema_link": False, "self_correct": True, "self_consistency": False}),
+    ("consistency", {"schema_link": False, "self_correct": True, "self_consistency": True}),
+    ("link", {"schema_link": True, "self_correct": False, "self_consistency": False}),
+    ("link_correct", {"schema_link": True, "self_correct": True, "self_consistency": False}),
+    ("link_correct_consistency", {"schema_link": True, "self_correct": True, "self_consistency": True}),
     # retrieval-based (embedding) schema linker, for the lexical-vs-embedding comparison
-    ("link_emb", dict(schema_link_emb=True, self_correct=False, self_consistency=False)),
-    ("link_emb_correct", dict(schema_link_emb=True, self_correct=True, self_consistency=False)),
+    ("link_emb", {"schema_link_emb": True, "self_correct": False, "self_consistency": False}),
+    ("link_emb_correct", {"schema_link_emb": True, "self_correct": True, "self_consistency": False}),
 ]
 
 

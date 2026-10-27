@@ -13,7 +13,6 @@ import json
 import pathlib
 import sqlite3
 import subprocess
-import sys
 
 import pytest
 
@@ -67,7 +66,7 @@ def test_the_sidecar_beside_the_predictions_is_the_one_updated(run):
 def test_the_verdicts_in_the_predictions_are_rewritten(run):
     preds, _, data = run
     rescore(preds, data)
-    recs = [json.loads(l) for l in preds.read_text().splitlines()]
+    recs = [json.loads(ln) for ln in preds.read_text().splitlines()]
     assert [r["correct"] for r in recs] == [True, False]
     # the old verdict is kept, so a score cannot silently replace an earlier one
     assert [r["correct_before"] for r in recs] == [False, True]

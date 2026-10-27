@@ -1,0 +1,15 @@
+{
+  "set": 1,
+  "generated": "2026-10-27",
+  "seed": 20261027,
+  "now": "2026-10-27",
+  "note": "SHA-256 of canonical.json per domain. HOLDOUT.md quotes the same values and a test asserts the two agree.",
+  "domains": {
+    "banking": "59dfd23d17ba05ebffc2d94f42ac46ab5f61320637341bd7c8b7230d99e8d6f7",
+    "hr": "08e446f428d5595573d8bfa85159d33130bb2468b3d20c54538b4c8b6e1640f3",
+    "logistics": "95df177d3cd716c39528156078a959da95b7a30e5804d54729cd38021376b683",
+    "manufacturing": "c7a40eed77fe0a9c03e1d763b839777d4306147a51c49d5a84dfa5889008eaca",
+    "medicine": "72c891de040330d98c2c02af7e2ec5370435dfdc3573ec35a4b079470ce557c6",
+    "public_services": "59276e69a8cfecc59ea03fafde325b0fbf272d4296ef8bbea1b47b09e8f8f857"
+  }
+}

@@ -10,12 +10,16 @@ questions at all, because the answer never reached the window from the thread
 computing it. That is fixed in 0.1.1. The build is not signed with an Apple
 developer certificate, so macOS asks to allow it once and the SHA-256 in the
 release notes is worth checking. No accuracy figure of our own is published
-yet: the screening runs are still going and the held-out set is not frozen.
+yet: the screening runs are still going. Set 1 of the held-out set was frozen
+on 27 October 2026 with a SHA-256 per domain and its rules written down before
+any run; see [HOLDOUT.md](HOLDOUT.md).
 
 [SECURITY.md](SECURITY.md) says what the application protects and what it does
 not, and where to report a vulnerability. [NOTICE](NOTICE) lists every
 third-party component and its licence. [CONTRIBUTING.md](CONTRIBUTING.md) has
-the setup and the rules for changes. The privacy notice is at
+the setup and the rules for changes. [HOLDOUT.md](HOLDOUT.md) is the frozen
+held-out set: digests, thresholds and evaluation rules, all dated before the
+run. The privacy notice is at
 [askbase.besk.tech/privacy/](https://askbase.besk.tech/privacy/).
 
 ## Why this exists

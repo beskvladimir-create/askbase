@@ -6,6 +6,7 @@ loopback address, which is why the application works with the network off.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import time
 import urllib.error
@@ -81,10 +82,9 @@ class ModelClient:
         self._cancelled = True
         live = self._live
         if live is not None:
-            try:
+            # It may already have finished, in which case the flag is enough.
+            with contextlib.suppress(Exception):
                 live.close()
-            except Exception:
-                pass                # it had already finished: the flag is enough
 
     def complete(self, prompt: str, temperature: float = 0.0) -> Completion:
         if self._cancelled:

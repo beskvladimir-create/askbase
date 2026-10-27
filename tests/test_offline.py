@@ -13,8 +13,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "desktop"))
-from askbase import offline  # noqa: E402
-
+from askbase import offline
 
 # Everything enable() touches, so a test cannot leave the process patched. The
 # earlier version restored three names out of the eight; once UDP and DNS were

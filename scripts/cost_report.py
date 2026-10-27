@@ -18,11 +18,12 @@ def mean_tokens(jsonl_path: str):
     if not os.path.exists(jsonl_path):
         return None, None
     n = pt = ct = 0
-    for line in open(jsonl_path):
-        u = json.loads(line).get("usage", {})
-        pt += u.get("prompt_tokens", 0)
-        ct += u.get("completion_tokens", 0)
-        n += 1
+    with open(jsonl_path, encoding="utf-8") as f:
+        for line in f:
+            u = json.loads(line).get("usage", {})
+            pt += u.get("prompt_tokens", 0)
+            ct += u.get("completion_tokens", 0)
+            n += 1
     if not n:
         return None, None
     return pt / n, ct / n
@@ -42,7 +43,8 @@ def main() -> None:
           f"{'tok/q':>8}{'$/1k-q':>9}")
     print("-" * 88)
     for p in paths:
-        d = json.load(open(p))
+        with open(p, encoding="utf-8") as f:
+            d = json.load(f)
         n = d.get("n") or 0
         wall = d.get("wall_s")
         stage = os.path.basename(p).replace(".summary.json", "")

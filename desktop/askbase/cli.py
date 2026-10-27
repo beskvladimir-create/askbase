@@ -35,11 +35,10 @@ the documented contract mis-routed both.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import sqlite3
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from . import journal, offline
@@ -89,7 +88,7 @@ def _print_table(columns, rows, out) -> None:
     widths = [min(w, 40) for w in widths]
 
     def line(values):
-        return "  ".join(str(v)[:w].ljust(w) for v, w in zip(values, widths))
+        return "  ".join(str(v)[:w].ljust(w) for v, w in zip(values, widths, strict=False))
 
     print(line(columns), file=out)
     print("  ".join("-" * w for w in widths), file=out)
@@ -277,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
 def _journal(question: str, sql: str, rows: int, seconds: float, db: str, *,
              truncated: bool = False, ok: bool = True, error: str = "") -> None:
     journal.append(journal.Entry(
-        at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        at=datetime.now(UTC).isoformat(timespec="seconds"),
         question=question, sql=sql, rows=rows, seconds=round(seconds, 2),
         db_path=db, truncated=truncated, ok=ok, error=error.partition("\n")[0][:300],
     ))

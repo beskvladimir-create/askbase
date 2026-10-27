@@ -8,13 +8,18 @@ knows anything about SQL.
 
 from __future__ import annotations
 
-import re
+import itertools
 import sys
 
 from PySide6.QtCore import Property, QEasingCurve, QObject, QPointF, QPropertyAnimation, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen, QSyntaxHighlighter, QTextCharFormat, QTextCursor
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPlainTextEdit, QPushButton, QToolTip, QVBoxLayout, QWidget
-
+from PySide6.QtGui import (
+    QColor,
+    QFont,
+    QPainter,
+    QPainterPath,
+    QPen,
+)
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPlainTextEdit, QPushButton, QVBoxLayout, QWidget
 
 
 def white(alpha: float) -> QColor:
@@ -329,7 +334,7 @@ class Ground(QWidget):
 
     def _occupied(self) -> list[QRectF]:
         """Where the interface has something to read or press, in this widget's coordinates."""
-        from PySide6.QtWidgets import QAbstractButton, QFrame, QLabel, QPlainTextEdit, QTextBrowser
+        from PySide6.QtWidgets import QAbstractButton, QFrame, QLabel, QTextBrowser
 
         rects = []
         for w in self.findChildren(QWidget):
@@ -370,8 +375,8 @@ class Ground(QWidget):
         busy = self._occupied()
         for size in (220.0, 180.0, 150.0, 120.0, 100.0) if name == "besk" else (150.0, 115.0, 90.0):
             spots = []
-            for gx in range(0, 30):
-                for gy in range(0, 30):
+            for gx in range(30):
+                for gy in range(30):
                     x = 16 + (w - size - 32) * gx / 29
                     y = self.DRAG_HEIGHT + 8 + (h - self.DRAG_HEIGHT - size * aspect - 48) * gy / 29
                     box = QRectF(x, y, size, size * aspect + 30)  # with the name under it
@@ -384,9 +389,10 @@ class Ground(QWidget):
         return False
 
     def _paint_sky(self, p: QPainter, t: float) -> None:
-        if self._sky is None and t >= self._next_sky:
-            if not self.show_constellation(self._rnd.choice(["ursa", "lock", "label"]), t):
-                self._next_sky = t + 20  # no free sky right now: try again a little later
+        if (self._sky is None and t >= self._next_sky
+                and not self.show_constellation(
+                    self._rnd.choice(["ursa", "lock", "label"]), t)):
+            self._next_sky = t + 20  # no free sky right now: try again a little later
         if self._sky is None:
             return
         name, start, x, y, size = self._sky
@@ -405,7 +411,7 @@ class Ground(QWidget):
         p.setPen(QPen(white(0.16 * env), 1))
         p.setBrush(Qt.BrushStyle.NoBrush)
         for line in CONSTELLATIONS[name]:
-            for a, b in zip(line, line[1:]):
+            for a, b in itertools.pairwise(line):
                 p.drawLine(at(a), at(b))
         p.setPen(Qt.PenStyle.NoPen)
         for line in CONSTELLATIONS[name]:

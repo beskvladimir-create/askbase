@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import re
 import sys
-
-import pytest
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "desktop"))
-from askbase.explain import explain  # noqa: E402
+from askbase.explain import explain
 
 
 def test_a_plain_select_is_described():

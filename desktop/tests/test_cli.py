@@ -18,7 +18,6 @@ import sys
 from pathlib import Path
 
 import pytest
-
 from askbase import cli
 
 MODEL = "stub-model"
@@ -117,7 +116,7 @@ def test_no_question_exits_one(db, stub, monkeypatch, capsys):
 
 
 def test_no_model_exits_one(db, monkeypatch, capsys):
-    monkeypatch.setattr(cli, "installed_models", lambda: [])
+    monkeypatch.setattr(cli, "installed_models", list)
     assert cli.main(["anything", "--db", db, "--quiet"]) == cli.USAGE
 
 
@@ -308,7 +307,7 @@ def test_a_closed_stdin_gives_the_usage_error_not_a_traceback(db, stub, monkeypa
 
 
 def test_undecodable_bytes_on_stdin_do_not_crash_after_the_answer(db, stub, monkeypatch, capsys):
-    client = stub("```sql\nSELECT id FROM customers\n```")
+    stub("```sql\nSELECT id FROM customers\n```")
     monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
     monkeypatch.setattr(sys, "stdin", type("S", (), {
         "isatty": staticmethod(lambda: False),

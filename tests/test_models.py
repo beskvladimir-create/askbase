@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "desktop"))
-from askbase.models import ModelClient, installed_models  # noqa: E402
+from askbase.models import ModelClient, installed_models
 
 
 def serve(handler_class):

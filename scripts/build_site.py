@@ -268,7 +268,7 @@ def resolve(body: str, results: dict, page: str) -> str:
     return text
 
 
-def url_of(route: "Route") -> str:
+def url_of(route: Route) -> str:
     """Site path for a route, with the leading and trailing slash.
 
     The home page has an empty path, and naive f"/{path}/" turns that into
@@ -278,7 +278,7 @@ def url_of(route: "Route") -> str:
 
 
 def head(route: Route) -> str:
-    path, lang, title, desc = route.path, route.lang, route.title, route.desc
+    lang, title, desc = route.lang, route.title, route.desc
     # The canonical guarded the empty path and the two alternates did not, so
     # both home pages declared their alternate and x-default at
     # https://askbase.besk.tech// , a URL that is not the canonical one and not
@@ -366,31 +366,35 @@ _LOCK = ('<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">'
 def _ask(lang: str) -> str:
     """The hero demo: three steps shown one at a time in a fixed frame."""
     w = {
-        "en": dict(
-            aria="How Askbase answers a question",
-            db="<span class=\"pre\">connected to </span><b>analytics</b> &middot; read-only",
-            steps=("Question", "Query", "Answer"),
-            q="How many new customers came from each region in September?",
-            th=("Region", "Customers"),
-            said="<b>What it counted.</b> Customers whose registration date falls in "
+        "en": {
+            "aria": "How Askbase answers a question",
+            "db": "<span class=\"pre\">connected to </span><b>analytics</b> &middot; read-only",
+            "steps": ("Question", "Query", "Answer"),
+            "q": "How many new customers came from each region in September?",
+            "th": ("Region", "Customers"),
+            "said": "<b>What it counted.</b> Customers whose registration date falls in "
                  "September 2026, grouped by region. Customers with no region are not in the answer.",
-            foot="Model and data stay on this computer",
-            play="PLAY", stop="PAUSE",
-        ),
-        "ru": dict(
-            aria="Как Askbase отвечает на вопрос",
-            db="<span class=\"pre\">база </span><b>analytics</b> &middot; только чтение",
-            steps=("Вопрос", "Запрос", "Ответ"),
-            q="Сколько новых клиентов пришло из каждого региона в сентябре?",
-            th=("Регион", "Клиентов"),
-            said="<b>Что посчитано.</b> Клиенты с датой регистрации в сентябре 2026 года, "
+            "foot": "Model and data stay on this computer",
+            "play": "PLAY", "stop": "PAUSE",
+        },
+        "ru": {
+            "aria": "Как Askbase отвечает на вопрос",
+            "db": "<span class=\"pre\">база </span><b>analytics</b> &middot; только чтение",
+            "steps": ("Вопрос", "Запрос", "Ответ"),
+            "q": "Сколько новых клиентов пришло из каждого региона в сентябре?",
+            "th": ("Регион", "Клиентов"),
+            "said": "<b>Что посчитано.</b> Клиенты с датой регистрации в сентябре 2026 года, "
                  "с группировкой по региону. Клиенты без региона в ответ не попали.",
-            foot="Модель и данные остаются на этом компьютере",
-            play="ПУСК", stop="ПАУЗА",
-        ),
+            "foot": "Модель и данные остаются на этом компьютере",
+            "play": "ПУСК", "stop": "ПАУЗА",
+        },
     }[lang]
+    # The attribute is a plain string rather than an escape inside the
+    # f-string: a backslash in an f-string is a syntax error before Python
+    # 3.12, and this project supports 3.11.
+    current = ' aria-current="step"'
     rail = "".join(
-        f'<button type="button" data-step="{i}"{" aria-current=\"step\"" if i == 0 else ""}>'
+        f'<button type="button" data-step="{i}"{current if i == 0 else ""}>'
         f'<span class="t"></span><span class="s">{i + 1}. {name}</span></button>'
         for i, name in enumerate(w["steps"])
     )

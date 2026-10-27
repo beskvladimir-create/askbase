@@ -10,9 +10,9 @@ import sqlite3
 import time
 
 import pytest
-
 from askbase.engine import (
     MAX_CELL_BYTES,
+    AskError,
     Engine,
     export_csv,
     run_query,
@@ -125,7 +125,7 @@ def test_an_ordinary_large_cell_still_comes_through(tmp_path):
     # hurts, or it becomes a bug of its own.
     db = make(tmp_path, "CREATE TABLE notes (body TEXT);",
               [("INSERT INTO notes VALUES (?)", [("x" * 200_000,)])])
-    cols, rows, _ = run_query(db, "SELECT body FROM notes LIMIT 2", 1, 10.0)
+    _cols, rows, _ = run_query(db, "SELECT body FROM notes LIMIT 2", 1, 10.0)
     assert len(rows[0][0]) == 200_000
     assert MAX_CELL_BYTES > 200_000
 
@@ -134,8 +134,9 @@ def test_a_runaway_query_is_still_stopped_by_the_timeout(tmp_path):
     db = make(tmp_path, "CREATE TABLE t (a INTEGER);",
               [("INSERT INTO t VALUES (?)", [(i,) for i in range(60)])])
     t0 = time.monotonic()
-    with pytest.raises(Exception):
+    with pytest.raises(AskError) as e:
         run_query(db, "SELECT COUNT(*) FROM t a, t b, t c, t d, t e", 10, 1.0)
+    assert e.value.kind == "timeout", e.value.kind
     assert time.monotonic() - t0 < 6.0
 
 

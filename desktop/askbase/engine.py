@@ -10,23 +10,23 @@ is executed on is read-only.
 """
 from __future__ import annotations
 
+import contextlib
 import csv
 import re
 import sqlite3
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import quote
 
-import sys
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-import sqlglot  # noqa: E402
-from sqlglot import exp  # noqa: E402
+import sqlglot
+from sqlglot import exp
 
-from nl2sql_app.safety import check  # noqa: E402
+from nl2sql_app.safety import check
 
-from .explain import explain  # noqa: E402
+from .explain import explain
 
 PROMPT = """You are an expert SQLite analyst. Given the schema, write ONE SQLite \
 query that answers the question. Return only the query in a ```sql block.
@@ -194,12 +194,10 @@ def _connect(db_path: str, timeout: float = 30.0):
     con = sqlite3.connect(read_only_uri(db_path), uri=True, timeout=timeout)
     deadline = time.monotonic() + timeout
     con.set_progress_handler(lambda: time.monotonic() > deadline, 10_000)
-    try:
+    # setlimit arrived in Python 3.11. The application requires 3.11, so this
+    # is belt and braces for a source build on something older.
+    with contextlib.suppress(AttributeError):
         con.setlimit(sqlite3.SQLITE_LIMIT_LENGTH, MAX_CELL_BYTES)
-    except AttributeError:
-        # setlimit arrived in Python 3.11. The application requires 3.11, so
-        # this is belt and braces for a source build on something older.
-        pass
     return con
 
 

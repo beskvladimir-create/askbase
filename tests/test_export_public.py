@@ -14,8 +14,7 @@ import pytest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "scripts"))
 
-import export_public  # noqa: E402
-
+import export_public
 
 # ---- the whitelist ---------------------------------------------------------
 

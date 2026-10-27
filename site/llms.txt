@@ -18,9 +18,14 @@ Updated: 2026-10-27
   intervals and failures included. Part of that is done and part is not. The
   protocol is written and in the repository. The interval code exists
   (percentile bootstrap over questions, 2000 resamples, seed 0, and one
-  verdict rule that is allowed to return "undetermined"). The held-out set
-  covers all six domains but holds 48 of the planned 600 tasks and is not
-  frozen: there is no SHA-256 digest for it yet. Figures on the site are
+  verdict rule that is allowed to return "undetermined"). Set 1 of the
+  held-out set was frozen on 27.10.2026 with a SHA-256 per domain, published
+  before any tool ran on it, together with the thresholds and the evaluation
+  rules (HOLDOUT.md). It covers all six domains and holds 48 of the planned
+  600 tasks, which is why it is a calibration set: at that size it fixes the
+  three open thresholds and measures the gap between languages, and it cannot
+  separate models whose accuracy differs by less than about 28 points. Set 2,
+  the deciding one, is not generated yet. Figures on the site are
   substituted from the results files by the build, never typed by hand, and
   the build refuses to publish a figure no results file backs. A run in which
   more than half the requests failed is refused by the runner rather than

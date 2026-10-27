@@ -26,18 +26,18 @@ TEXT = (156, 163, 175)         # #9CA3AF
 HAIR = (41, 47, 71)
 
 CARDS = {
-    "og.png": dict(
-        lang="en",
-        tagline="Ask your database a question.",
-        line2="Get the table and the query behind it.",
-        foot="The model runs on your machine  ·  besk.tech",
-    ),
-    "og-ru.png": dict(
-        lang="ru",
-        tagline="Спросите свою базу данных словами.",
-        line2="Получите таблицу и запрос.",
-        foot="Модель работает на вашем компьютере  ·  besk.tech",
-    ),
+    "og.png": {
+        "lang": "en",
+        "tagline": "Ask your database a question.",
+        "line2": "Get the table and the query behind it.",
+        "foot": "The model runs on your machine  ·  besk.tech",
+    },
+    "og-ru.png": {
+        "lang": "ru",
+        "tagline": "Спросите свою базу данных словами.",
+        "line2": "Получите таблицу и запрос.",
+        "foot": "Модель работает на вашем компьютере  ·  besk.tech",
+    },
 }
 
 

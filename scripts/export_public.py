@@ -34,6 +34,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 INCLUDE: tuple[str, ...] = (
+    # The workflow has to travel with the code it checks: the public
+    # repository is the one GitHub runs Actions for.
+    ".github",
     "src",
     "scripts",
     "tests",
@@ -50,6 +53,8 @@ INCLUDE: tuple[str, ...] = (
     "SECURITY.ru.md",
     "CONTRIBUTING.md",
     "CONTRIBUTING.ru.md",
+    "HOLDOUT.md",
+    "HOLDOUT.ru.md",
     ".gitignore.public",
 )
 

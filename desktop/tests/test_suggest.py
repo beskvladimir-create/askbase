@@ -11,7 +11,6 @@ from __future__ import annotations
 import sqlite3
 
 import pytest
-
 from askbase import i18n, suggest
 from askbase.engine import snapshot
 

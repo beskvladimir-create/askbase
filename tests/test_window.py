@@ -19,16 +19,14 @@ sys.path.insert(0, str(DESKTOP))
 
 pytest.importorskip("PySide6", reason="интерфейс проверяется там, где установлен Qt")
 
-from PySide6.QtWidgets import QPushButton, QWidget  # noqa: E402
-
 from askbase.engine import AskError  # noqa: E402
+from PySide6.QtWidgets import QPushButton, QWidget  # noqa: E402
 
 
 @pytest.fixture(scope="module")
 def app():
-    from PySide6.QtWidgets import QApplication
-
     from askbase import theme
+    from PySide6.QtWidgets import QApplication
 
     a = QApplication.instance() or QApplication(["test", "-platform", "offscreen"])
     theme.apply(a)
@@ -281,7 +279,6 @@ def test_a_question_whose_window_is_gone_ends_quietly(app):
     # deleted window raised inside the thread, and on a step that happens
     # mid-question, which lost the answer and left the line spinning.
     import shiboken6
-
     from askbase.app import AskTask
 
     engine = SlowEngine()
@@ -578,6 +575,7 @@ def test_saving_a_truncated_answer_after_opening_another_database_is_refused(
     succeed, writing the wrong year's rows under the right year's answer.
     """
     import sqlite3
+
     from askbase.app import Window
     from askbase.engine import Engine
 

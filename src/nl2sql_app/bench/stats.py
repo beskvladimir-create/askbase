@@ -220,5 +220,5 @@ def paired_difference(a, b, *, resamples: int = RESAMPLES, seed: int = SEED,
     ys = [float(v) for v in b]
     if len(xs) != len(ys):
         raise ValueError(f"выборки не спарены: {len(xs)} против {len(ys)}")
-    return bootstrap_mean([x - y for x, y in zip(xs, ys)],
+    return bootstrap_mean([x - y for x, y in zip(xs, ys, strict=False)],
                           resamples=resamples, seed=seed, level=level)

@@ -11,7 +11,6 @@ import json
 import pathlib
 
 import pytest
-
 from askbase import journal
 
 
@@ -21,9 +20,9 @@ def journal_in_tmp(tmp_path, monkeypatch):
 
 
 def entry(**over):
-    base = dict(at="2026-10-26T09:00:00+00:00", question="how many customers",
-                sql="SELECT COUNT(*) FROM customers", rows=1, seconds=0.9,
-                db_path="/data/shop.sqlite")
+    base = {"at": "2026-10-26T09:00:00+00:00", "question": "how many customers",
+                "sql": "SELECT COUNT(*) FROM customers", "rows": 1, "seconds": 0.9,
+                "db_path": "/data/shop.sqlite"}
     base.update(over)
     return journal.Entry(**base)
 
@@ -196,4 +195,4 @@ def test_two_processes_writing_at_once_lose_nothing(tmp_path):
     assert want <= kept, f"потеряно: {sorted(want - kept)[:10]}"
     lines = jpath.read_text(encoding="utf-8").splitlines()
     assert len(lines) <= journal.LIMIT
-    assert all(not l.strip() or l.strip().startswith("{") for l in lines), "рваные строки"
+    assert all(not ln.strip() or ln.strip().startswith("{") for ln in lines), "рваные строки"

@@ -10,23 +10,48 @@ is decided in engine.py and safety.py, which are tested without Qt.
 """
 from __future__ import annotations
 
+import contextlib
 import csv
+import math
 import os
 import sqlite3
 import sys
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import (
-    QAction, QCursor, QDesktopServices, QFontMetrics, QGuiApplication, QIcon, QKeySequence,
-    QShortcut, QTextCursor,
+    QAction,
+    QCursor,
+    QDesktopServices,
+    QFontMetrics,
+    QGuiApplication,
+    QIcon,
+    QKeySequence,
+    QShortcut,
+    QTextCursor,
 )
 from PySide6.QtWidgets import (
-    QApplication, QDialog, QComboBox, QFileDialog, QFrame, QHBoxLayout, QHeaderView,
-    QLabel, QLineEdit, QMainWindow, QPlainTextEdit, QPushButton, QSizePolicy,
-    QSpinBox, QStackedWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
+    QApplication,
+    QComboBox,
+    QDialog,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QPlainTextEdit,
+    QPushButton,
+    QSizePolicy,
+    QSpinBox,
+    QStackedWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
 
 from . import i18n, journal, offline, recent, suggest, theme
@@ -135,7 +160,7 @@ def _pref(key: str, default, *, low=None, high=None):
         value = type(default)(raw)
     except (TypeError, ValueError):
         return default
-    if value != value or value in (float("inf"), float("-inf")):   # NaN or infinite
+    if math.isnan(value) or math.isinf(value):
         return default
     if low is not None:
         value = max(low, value)
@@ -194,10 +219,8 @@ class AskTask(QRunnable):
         error, and all 382 tests passed, because nothing asked a question
         through the window end to end. test_window.py now does.
         """
-        try:
+        with contextlib.suppress(RuntimeError):
             signal.emit(*payload)
-        except RuntimeError:
-            pass
 
 
 class Window(QMainWindow):
@@ -745,7 +768,7 @@ class Window(QMainWindow):
         if text:
             self._open(str(Path(text).expanduser()))
 
-    def adopt(self, old: "Window") -> None:
+    def adopt(self, old: Window) -> None:
         """Take over the open database from the window being replaced."""
         self.engine = old.engine
         self.client = old.client
@@ -1207,7 +1230,7 @@ class Window(QMainWindow):
         if not question:
             return
         journal.append(journal.Entry(
-            at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            at=datetime.now(UTC).isoformat(timespec="seconds"),
             question=question, sql=sql, rows=rows, seconds=round(seconds, 2),
             db_path=self.engine.db_path if self.engine else "", truncated=truncated, ok=ok,
             error=error.partition("\n")[0][:300],

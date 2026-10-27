@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import re
 import sqlite3
-from collections import Counter
 from dataclasses import dataclass, field
 
 from func_timeout import FunctionTimedOut, func_timeout
