@@ -8,12 +8,13 @@
       <p class="lead">The build is not signed with an Apple developer certificate yet, so macOS will refuse to open it until you allow it once. That takes two clicks, and this page shows exactly where. It also explains what the warning actually means, because a product that asks you to wave a security prompt away owes you that.</p>
 
       <div class="links">
-        <a class="btn primary" href="https://github.com/beskvladimir-create/askbase/releases">Releases on GitHub</a>
-        <a class="btn" href="https://github.com/beskvladimir-create/askbase">Source on GitHub</a>
+        <a class="btn primary" href="https://github.com/beskvladimir-create/askbase/releases/download/v0.1.1/Askbase-0.1.1-macos-arm64.dmg">Download for macOS, 35 MB</a>
+        <a class="btn" href="https://github.com/beskvladimir-create/askbase/releases">All releases</a>
       </div>
 
       <div class="callout">
-        <p><strong>0.1.1 is built and not yet published, and 0.1.0 should not be used.</strong> Release 0.1.0 does not answer questions at all: the answer never reached the window from the thread computing it, so the clock ran and nothing arrived. It is a defect in the application, not in your database or your model, and it is fixed in 0.1.1. Until 0.1.1 appears on the releases page, build from source with the four commands below, which produces the fixed version.</p>
+        <p><strong>Take 0.1.1, not 0.1.0.</strong> The button above gives you 0.1.1. Release 0.1.0, which was the one here until today, does not answer questions at all: the answer never reached the window from the thread computing it, so the clock ran and nothing arrived. It was a defect in the application, not in your database or your model. It is fixed, and it is left on the releases page rather than deleted, because withdrawing a bad release quietly is how nobody learns it was bad.</p>
+        <p>The disk image is not signed, so check it before you open it: <code>shasum -a 256 Askbase-0.1.1-macos-arm64.dmg</code> must print <code>4fe81fe133911482436f4ede8e122230951bac62de5593df0fb34933034656f7</code>.</p>
       </div>
       <h2>Before it can answer anything</h2>
       <p>Askbase does not download a model and does not use a hosted one. It talks to a model already on your machine, over the loopback address, which is why it works with the network switched off. Install one with <a href="https://ollama.com">Ollama</a>:</p>

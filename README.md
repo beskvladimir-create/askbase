@@ -3,15 +3,14 @@
 A desktop application that answers questions about your own database in plain
 language, with the model running on your machine. Free, no account, no telemetry.
 
-**Status: packaged for macOS, and the published release is the broken one.**
-A build for Apple Silicon exists as a .dmg. Version 0.1.0, which is what sits
-on the releases page today, does not answer questions at all: the answer never
-reached the window from the thread computing it, so the clock ran and nothing
-arrived. That is fixed in 0.1.1, which is built and waiting to be published.
-Until it appears there, build from source with the commands below. Neither
-build is signed with an Apple developer certificate, so macOS asks to allow it
-once. No accuracy figure of our own is published yet: the screening runs are
-still going and the held-out set is not frozen.
+**Status: 0.1.1 released for macOS on Apple Silicon.** The .dmg is on the
+[releases page](https://github.com/beskvladimir-create/askbase/releases).
+Release 0.1.0 is still listed and should not be used: it does not answer
+questions at all, because the answer never reached the window from the thread
+computing it. That is fixed in 0.1.1. The build is not signed with an Apple
+developer certificate, so macOS asks to allow it once and the SHA-256 in the
+release notes is worth checking. No accuracy figure of our own is published
+yet: the screening runs are still going and the held-out set is not frozen.
 
 [SECURITY.md](SECURITY.md) says what the application protects and what it does
 not, and where to report a vulnerability. [NOTICE](NOTICE) lists every
