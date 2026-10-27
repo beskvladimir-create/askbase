@@ -32,13 +32,16 @@ cd desktop && .venv/bin/python -m askbase
 ## Checks
 
 ```bash
-./scripts/test_all.sh          # 669 tests, no model needed
+./scripts/test_all.sh          # 684 tests, no model needed
 .venv/bin/python -m ruff check .
 python scripts/build_site.py --check
 ```
 
-There is no CI yet. The three commands above are what has to pass, and they
-have to be run locally.
+GitHub Actions runs exactly these three on every push and pull request, on
+Python 3.11 and 3.13: [.github/workflows/tests.yml](.github/workflows/tests.yml).
+Run them locally first anyway. A red build is a slower way to learn the same
+thing, and the matrix starts at 3.11 because that is the version pyproject
+promises and the one nobody develops on.
 
 `test_all.sh` runs all three suites on purpose. Running only the first silently
 skips every interface test, which is how a window that could not answer a
