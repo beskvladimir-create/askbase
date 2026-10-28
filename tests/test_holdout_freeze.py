@@ -9,8 +9,6 @@ verifier can be lenient about exactly the cases it exists to catch.
 from __future__ import annotations
 
 import json
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -24,19 +22,14 @@ DOC_RU = ROOT / "HOLDOUT.ru.md"
 
 
 @pytest.fixture(scope="module")
-def frozen(tmp_path_factory) -> Path:
-    """Regenerate the whole set from the recorded seed and date."""
-    out = tmp_path_factory.mktemp("holdout")
-    meta = verify.expected()
-    for name in sorted(meta["domains"]):
-        r = subprocess.run(
-            [sys.executable, "-m", "nl2sql_app.holdout.generate",
-             "--domain", name, "--seed", str(meta["seed"]),
-             "--now", meta["now"], "--out", str(out)],
-            cwd=ROOT, capture_output=True, text=True, check=False,
-        )
-        assert r.returncode == 0, r.stderr
-    return out
+def frozen(frozen_holdout) -> Path:
+    """Regenerate the whole set from the recorded seed and date.
+
+    The generation itself lives in conftest, because the stage tests need the
+    same set and neither suite may read it off `data/holdout`: that directory
+    is not in the public export, so a disk-backed fixture skips on GitHub.
+    """
+    return frozen_holdout
 
 
 def test_the_recorded_command_reproduces_every_recorded_digest(frozen):

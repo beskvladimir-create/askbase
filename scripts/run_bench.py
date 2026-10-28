@@ -4,6 +4,14 @@
 Example:
     python scripts/run_bench.py --config configs/run.yaml --model qwen25-coder-32b
     python scripts/run_bench.py --config configs/run.yaml --model qwen25-coder-32b --limit 50
+
+The held-out set is a separate pair of stages and has to be named:
+
+    python -m nl2sql_app.holdout.verify --data data/holdout --record xiyan-7b-q4
+    python scripts/run_bench.py --config configs/holdout.yaml --model xiyan-7b-q4 \
+        --stages holdout-en holdout-ru
+
+Both steps, in that order. See HOLDOUT.md.
 """
 from __future__ import annotations
 
@@ -28,6 +36,52 @@ ABLATION = [
     ("link_emb_correct", {"schema_link_emb": True, "self_correct": True, "self_consistency": False}),
 ]
 
+# The held-out stages are deliberately NOT in ABLATION. A run with no --stages
+# sweeps everything in that list, and set 1 is run once: reading its failures
+# afterwards is the point of it, and that reading turns it into development
+# data (HOLDOUT.md, "After the run"). A set that gets spent by a command
+# someone typed out of habit is not a held-out set. It has to be asked for by
+# name, which is also why the names match the figures the site expects.
+HOLDOUT_STAGES = [
+    ("holdout-en", {"dataset": "holdout", "lang": "en",
+                    "schema_link": False, "self_correct": False, "self_consistency": False}),
+    ("holdout-ru", {"dataset": "holdout", "lang": "ru",
+                    "schema_link": False, "self_correct": False, "self_consistency": False}),
+]
+BY_NAME = dict(ABLATION + HOLDOUT_STAGES)
+
+
+def pick_stages(names: list[str] | None) -> list[tuple[str, dict]]:
+    """Resolve --stages. Without it, the ablation only, never the held-out set."""
+    if names is None:
+        return list(ABLATION)
+    unknown = [n for n in names if n not in BY_NAME]
+    if unknown:
+        raise SystemExit(
+            f"неизвестные стадии: {', '.join(unknown)}. "
+            f"Известны: {', '.join(BY_NAME)}"
+        )
+    return [(n, BY_NAME[n]) for n in names]
+
+
+def require_recorded_run(model: str) -> None:
+    """Refuse a held-out run that was never written into the journal.
+
+    Step 1 of the run plan is `verify --record <tool>`, which is what makes a
+    second run of the same tool visible and a repeat need a reason. A first
+    step that the second step does not check is advice, not a protocol, so the
+    check lives here.
+    """
+    from nl2sql_app.holdout.verify import expected, previous_runs
+
+    set_no = expected()["set"]
+    if not previous_runs(model, set_no):
+        raise SystemExit(
+            f"ОТКАЗ: прогон {model} по набору {set_no} не записан в журнал.\n"
+            f"Сначала шаг 1 плана прогона:\n"
+            f"  python -m nl2sql_app.holdout.verify --data data/holdout --record {model}"
+        )
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -39,7 +93,9 @@ def main() -> None:
                     help="deterministic random subset of N examples; use this for screening")
     ap.add_argument("--sample-seed", type=int, default=0)
     ap.add_argument("--stages", nargs="*", default=None,
-                    help="subset of ablation stage names; default all")
+                    help="stage names; default is the whole ablation. The "
+                         "holdout-en and holdout-ru stages are never in the "
+                         "default and have to be named")
     ap.add_argument("--concurrency", type=int, default=None,
                     help="examples processed in parallel; overrides config")
     ap.add_argument("--emb-top-k", type=int, default=5,
@@ -62,7 +118,9 @@ def main() -> None:
         max_retries=m.get("max_retries", cfg.get("max_retries", 2)),
     )
 
-    stages = [s for s in ABLATION if args.stages is None or s[0] in args.stages]
+    stages = pick_stages(args.stages)
+    if any(f.get("dataset") == "holdout" for _, f in stages):
+        require_recorded_run(args.model)
     for name, flags in stages:
         out = os.path.join(out_dir, f"{args.model}.{name}.jsonl")
         run_flags = dict(flags)

@@ -222,3 +222,126 @@ def paired_difference(a, b, *, resamples: int = RESAMPLES, seed: int = SEED,
         raise ValueError(f"выборки не спарены: {len(xs)} против {len(ys)}")
     return bootstrap_mean([x - y for x, y in zip(xs, ys, strict=False)],
                           resamples=resamples, seed=seed, level=level)
+
+
+# ---- the held-out set: clusters, because a task has four wordings ------------
+#
+# HOLDOUT.md fixes this before the run: "The resampling unit is the task, not
+# the wording. The four wordings of a task share a schema and a gold query, so
+# they are not independent, and resampling them separately would narrow every
+# interval in the direction that flatters us. Per-language accuracy therefore
+# has n = 48, not 96."
+#
+# These are that rule in code. Calling bootstrap_mean on 96 wordings would
+# produce an interval about √2 too narrow and would be the published figure.
+
+
+def bootstrap_mean_clustered(groups, *, resamples: int = RESAMPLES, seed: int = SEED,
+                             level: float = LEVEL) -> Interval:
+    """Percentile bootstrap for the mean, resampling whole clusters.
+
+    `groups` holds one list per task: that task's wording scores. Tasks are
+    drawn with replacement and every wording of a drawn task comes with it, so
+    the interval accounts for the fact that two wordings of one question tend
+    to be right or wrong together.
+
+    The point estimate is still the mean over all wordings, because that is the
+    accuracy on the set as published. Only the uncertainty changes, and `n` is
+    reported as the number of tasks so that the figure cannot be read as if it
+    came from 96 independent questions.
+    """
+    clusters = [[float(v) for v in g] for g in groups if len(g)]
+    if not clusters:
+        raise ValueError("нечего считать: ни одной задачи")
+    flat = [v for g in clusters for v in g]
+    point = sum(flat) / len(flat)
+    k = len(clusters)
+    if k == 1:
+        return Interval(point, point, point, 1, resamples, seed, level)
+
+    sums = [sum(g) for g in clusters]
+    sizes = [len(g) for g in clusters]
+    rng = random.Random(seed)
+    means: list[float] = []
+    for _ in range(resamples):
+        total = 0.0
+        count = 0
+        for _ in range(k):
+            j = rng.randrange(k)
+            total += sums[j]
+            count += sizes[j]
+        means.append(total / count)
+    means.sort()
+    tail = (1.0 - level) / 2.0
+    return Interval(
+        point=point,
+        low=_percentile(means, tail),
+        high=_percentile(means, 1.0 - tail),
+        n=k, resamples=resamples, seed=seed, level=level,
+    )
+
+
+def paired_difference_clustered(a_groups, b_groups, *, resamples: int = RESAMPLES,
+                                seed: int = SEED, level: float = LEVEL) -> Interval:
+    """Interval for a difference of means when both sides share the clusters.
+
+    For the language gap, П3а: the same 48 tasks are answered in English and in
+    Russian, so the task is drawn once and both languages' wordings for it come
+    along. Resampling the two sides independently would throw the pairing away
+    and widen the interval for no reason, which here is the direction that
+    hides a gap rather than inventing one.
+
+    The two lists are aligned by position: `a_groups[i]` and `b_groups[i]` must
+    be the same task.
+    """
+    if len(a_groups) != len(b_groups):
+        raise ValueError(f"выборки не спарены: {len(a_groups)} против {len(b_groups)}")
+    pairs = [([float(v) for v in a], [float(v) for v in b])
+             for a, b in zip(a_groups, b_groups, strict=True) if len(a) and len(b)]
+    if not pairs:
+        raise ValueError("нечего считать: ни одной задачи с обеими сторонами")
+
+    def pooled(chosen) -> float:
+        a_total = sum(sum(a) for a, _ in chosen)
+        a_n = sum(len(a) for a, _ in chosen)
+        b_total = sum(sum(b) for _, b in chosen)
+        b_n = sum(len(b) for _, b in chosen)
+        return a_total / a_n - b_total / b_n
+
+    point = pooled(pairs)
+    k = len(pairs)
+    if k == 1:
+        return Interval(point, point, point, 1, resamples, seed, level)
+
+    rng = random.Random(seed)
+    draws = [pooled([pairs[rng.randrange(k)] for _ in range(k)]) for _ in range(resamples)]
+    draws.sort()
+    tail = (1.0 - level) / 2.0
+    return Interval(point, _percentile(draws, tail), _percentile(draws, 1.0 - tail),
+                    k, resamples, seed, level)
+
+
+def wording_agreement(pairs) -> tuple[float, int]:
+    """П6: the share of wording pairs of one task that get the same verdict.
+
+    `pairs` is (task key, correct) once per wording. Every two wordings of the
+    same task form a pair, and a pair agrees when both are right or both are
+    wrong. The threshold fixed before the run is "not below 80% of wording
+    pairs give the same verdict": a model that answers the same question
+    correctly only when it is phrased one particular way is not at the accuracy
+    its score claims, and this is the number that says so.
+
+    Returns (share, number of pairs). With no pair at all the share is 0.0,
+    which is reported next to a count of 0 rather than hidden as a None: this
+    statistic was promised in advance and its absence has to be visible.
+    """
+    by_task: dict[str, list[bool]] = {}
+    for task, correct in pairs:
+        by_task.setdefault(task, []).append(bool(correct))
+    agree = total = 0
+    for verdicts in by_task.values():
+        for i in range(len(verdicts)):
+            for j in range(i + 1, len(verdicts)):
+                total += 1
+                agree += int(verdicts[i] == verdicts[j])
+    return (agree / total if total else 0.0), total

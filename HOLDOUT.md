@@ -164,12 +164,24 @@ evaluator as much as about the model.
    not committed, and a repeat without a reason.
 2. All participants over the same interface, ours among them with no
    privileges: Arctic-Text2SQL-R1-7B, XiYanSQL-QwenCoder 7B and 14B,
-   Qwen2.5-Coder 7B and 14B, and our engine.
+   Qwen2.5-Coder 7B and 14B, and our engine. Per participant:
+
+   ```
+   python scripts/run_bench.py --config configs/holdout.yaml \
+       --model <tool> --stages holdout-en holdout-ru
+   ```
+
+   The two stages are not part of the default ablation and have to be named,
+   so that a sweep typed out of habit cannot spend the set. The runner refuses
+   a run whose journal entry from step 1 is missing, a set whose digests have
+   moved, `--sample` and `--limit`, and a concurrency above 1.
 3. Closed models over an API on this synthetic set only, never on anyone's
    data. They are a reference point for П3 and nothing else.
 4. Temperature 0, one request at a time, the timeout and retry count recorded
    in the summary. A run in which more than half the requests fail is refused
-   by the runner rather than written out.
+   by the runner rather than written out. Latency is recorded per question, not
+   as a stage average, because П5 is a threshold on p95 and a mean cannot be
+   turned back into one.
 5. Per-question predictions are published with every run, failures included.
 
 ### After the run
