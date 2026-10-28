@@ -293,3 +293,41 @@ def test_the_verifier_still_refuses_from_the_command_line(frozen_holdout):
     )
     assert r.returncode == 0, r.stderr
     assert "совпало доменов: 6 из 6" in r.stdout
+
+
+# ---- the queue script -------------------------------------------------------
+#
+# A shell script is where the protocol quietly stops being followed, because
+# nothing type-checks it. Two things in it can drift away from the rest of the
+# project without any error anywhere, so both are pinned here.
+
+QUEUE = ROOT / "scripts" / "holdout_queue.sh"
+
+
+def test_the_queue_runs_every_model_in_the_config_and_no_others():
+    import yaml
+
+    cfg = yaml.safe_load((ROOT / "configs" / "holdout.yaml").read_text(encoding="utf-8"))
+    line = next(ln for ln in QUEUE.read_text(encoding="utf-8").splitlines()
+                if ln.startswith("MODELS="))
+    listed = line.split('"')[1].split()
+    assert sorted(listed) == sorted(cfg["models"]), (
+        "список в очереди разошёлся с configs/holdout.yaml: "
+        f"{sorted(set(listed) ^ set(cfg['models']))}"
+    )
+
+
+def test_the_queue_writes_the_journal_before_it_measures():
+    # Step 1 then step 2, per model. The stand refuses the other order, so
+    # getting it wrong here would stop the queue on its first model rather than
+    # corrupt anything. It is pinned because a queue that cannot complete is
+    # discovered hours later, usually overnight.
+    text = QUEUE.read_text(encoding="utf-8")
+    assert text.index("--record") < text.index("run_bench.py")
+    assert "--stages holdout-en holdout-ru" in text
+    # The set is run whole. Either flag would be refused by the stand; neither
+    # belongs in the script that is meant to be run unattended.
+    assert "--sample" not in text and "--limit" not in text
+    # A failed run is not a result, and the queue must not walk past one onto
+    # the next model.
+    assert text.count("exit 1") >= 5

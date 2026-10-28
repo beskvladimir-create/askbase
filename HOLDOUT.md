@@ -175,6 +175,10 @@ evaluator as much as about the model.
    so that a sweep typed out of habit cannot spend the set. The runner refuses
    a run whose journal entry from step 1 is missing, a set whose digests have
    moved, `--sample` and `--limit`, and a concurrency above 1.
+
+   `scripts/holdout_queue.sh` walks the participants in this order, both steps
+   per model, and stops on the first failure instead of going on to the next
+   one. Expect hours: 192 wordings per model, one request at a time.
 3. Closed models over an API on this synthetic set only, never on anyone's
    data. They are a reference point for П3 and nothing else.
 4. Temperature 0, one request at a time, the timeout and retry count recorded
