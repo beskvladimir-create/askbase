@@ -61,9 +61,9 @@
       <h2>What privacy costs here, stated plainly</h2>
       <p>Keeping everything on the machine is not free of consequences, and I would rather name them than let them be discovered.</p>
       <ul>
-        <li><strong>The model is slower than a cloud model</strong>, because it runs on your hardware rather than on an accelerator in a data centre. The figures will be published with the ranking, measured on named hardware.</li>
+        <li><strong>The model is slower than a cloud model</strong>, because it runs on your hardware rather than on an accelerator in a data centre. The figures are published with the <a href="/model-ranking/">ranking</a>, measured on named hardware.</li>
         <li><strong>The model is smaller than a cloud model</strong>, and on the hardest questions that shows. This is why accuracy is measured and published rather than asserted.</li>
-        <li><strong>There is no telemetry, so I learn nothing about usage.</strong> That is the cost of the promise, and it cannot be bought back with anonymous statistics without breaking the promise. Feedback happens when you choose to send it.</li>
+        <li><strong>The application sends no telemetry, so I learn nothing about how it is used.</strong> That is the cost of the promise and it cannot be bought back with anonymous statistics from inside the application without breaking it. This website is a different thing: it counts visits with <a href="/privacy/">Google Analytics</a> if you agree to that, which tells me which pages are read and nothing whatever about your database. Feedback about the application happens when you choose to send it.</li>
         <li><strong>A read-only database role is still your responsibility.</strong> The application runs only SELECT, parses every query before executing it, and adds a row limit, but a role with write permissions is a risk the application cannot remove for you.</li>
       </ul>
 

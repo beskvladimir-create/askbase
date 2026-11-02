@@ -305,6 +305,31 @@ def resolve(body: str, results: dict, page: str) -> str:
     return text
 
 
+# Google Analytics 4 with Consent Mode v2. Order is the whole point: the
+# consent defaults have to run before gtag.js is fetched, or the first page
+# view is sent before anybody has been asked. Measurement is denied until the
+# visitor says otherwise, and advertising storage is denied permanently
+# because this site does not advertise and has no reason to be able to.
+#
+# The privacy page was rewritten in the same commit. It used to say the site
+# loads no analytics and sets no cookies, and it said that every statement on
+# it can be checked in the source. Shipping this tag while that sentence
+# stood would have made the page a lie about itself.
+GA_ID = "G-WP6XGLYB21"
+CONSENT_KEY = "askbase-cookie-consent"
+GA = f"""<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){{dataLayer.push(arguments);}}
+var _c = null; try {{ _c = localStorage.getItem('{CONSENT_KEY}'); }} catch(e){{}}
+gtag('consent','default',{{ad_storage:'denied',ad_user_data:'denied',
+  ad_personalization:'denied',
+  analytics_storage:_c==='accepted'?'granted':'denied',wait_for_update:500}});
+gtag('js', new Date());
+gtag('config','{GA_ID}');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>"""
+
+
 def url_of(route: Route) -> str:
     """Site path for a route, with the leading and trailing slash.
 
@@ -342,6 +367,7 @@ def head(route: Route) -> str:
 <html lang="{lang}">
 <head>
 <meta charset="utf-8">
+{GA}
 <script>document.documentElement.classList.add("js")</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
@@ -534,6 +560,32 @@ FOOT = {
 """,
 }
 
+# The banner. Two buttons and no dark pattern: refusing is the same size and
+# the same prominence as accepting, because a choice that is harder to refuse
+# than to accept is not consent. It renders only when no choice is stored, so
+# a visitor is asked once, and the stored choice is what the consent default
+# above reads on the next page.
+BANNER = {
+    "en": """
+<div class="consent" id="consent" hidden>
+  <p>This site measures visits with Google Analytics, and only if you agree. Nothing is measured until you choose, and the application itself sends nothing anywhere whatever you pick. <a href="/privacy/">What is recorded</a>.</p>
+  <div class="consent-buttons">
+    <button type="button" class="btn small" data-consent="denied">Decline</button>
+    <button type="button" class="btn primary small" data-consent="accepted">Accept</button>
+  </div>
+</div>
+""",
+    "ru": """
+<div class="consent" id="consent" hidden>
+  <p>Сайт считает посещения через Google Analytics, и только с вашего согласия. До вашего выбора не считается ничего, а само приложение не отправляет никуда ничего при любом выборе. <a href="/ru/konfidentsialnost/">Что записывается</a>.</p>
+  <div class="consent-buttons">
+    <button type="button" class="btn small" data-consent="denied">Отказаться</button>
+    <button type="button" class="btn primary small" data-consent="accepted">Принять</button>
+  </div>
+</div>
+""",
+}
+
 TAIL = """<script src="/assets/app.js" defer></script>
 </body>
 </html>
@@ -626,7 +678,8 @@ def build(check_only: bool) -> int:
                    .replace("{self_home}", url_of(home))
                    .replace("{twin}", url_of(ROUTES[route.twin]))
                    .replace("{self}", url_of(route)))
-            page = with_prefix(head(route) + nav + body + FOOT[route.lang] + TAIL)
+            page = with_prefix(head(route) + nav + body + FOOT[route.lang]
+                              + BANNER[route.lang] + TAIL)
             out.write_text(page, encoding="utf-8")
             if name == "notfound":
                 # The host serves the not-found page from /404.html at the root.

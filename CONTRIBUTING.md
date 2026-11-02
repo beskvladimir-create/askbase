@@ -32,7 +32,7 @@ cd desktop && .venv/bin/python -m askbase
 ## Checks
 
 ```bash
-./scripts/test_all.sh          # 757 tests, no model needed
+./scripts/test_all.sh          # 764 tests, no model needed
 .venv/bin/python -m ruff check .
 python scripts/build_site.py --check
 ```

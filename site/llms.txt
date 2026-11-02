@@ -1,7 +1,8 @@
 # Askbase
 
 > A desktop application that answers questions about your own database in plain
-> language, with the model running on your machine. Free, no account, no telemetry.
+> language, with the model running on your machine. Free, no account, and the
+> application itself sends nothing anywhere.
 > Built and measured by Vladimir Beskorovainyi, Besk Tech.
 
 Updated: 2026-11-02
@@ -56,8 +57,10 @@ Updated: 2026-11-02
 - /install/ : the macOS build, and why release 0.1.0 should not be used.
 - /read-only-access/ : for database administrators, what the application executes
   and the SQL for a role that can do nothing else.
-- /privacy/ : what the application and the site record. No account, no telemetry,
-  no cookies, no analytics, and what the host logs regardless.
+- /privacy/ : what the application and the site record. No account, no telemetry
+  from the application,
+  measurement on the site by Google Analytics 4 under Consent Mode v2,
+  denied until the visitor accepts, and what the host logs regardless.
 - Russian versions at /ru/sravnenie/, /ru/kuda-uhodyat-dannye/, /ru/avtor/,
   /ru/ustanovka/, /ru/dostup-tolko-chtenie/, /ru/konfidentsialnost/
 

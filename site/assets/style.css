@@ -641,3 +641,21 @@ footer a { color: var(--text); }
 }
 .bars { margin-top: 32px; }
 .bar-row .name small { color: var(--muted); font-size: 13px; }
+
+/* Cookie consent. Fixed to the bottom, never over the primary action, and the
+   two buttons are the same size: a decline that is harder to find than an
+   accept is not a choice. */
+.consent { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50;
+  display: flex; gap: 20px; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; max-width: 920px; margin: 0 auto;
+  background: var(--card); border: 1px solid var(--hair-2); border-radius: var(--r2);
+  padding: 16px 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.45); }
+.consent[hidden] { display: none; }
+.consent p { margin: 0; flex: 1 1 320px; font-size: 14px; color: var(--text); }
+.consent a { color: var(--white); }
+.consent-buttons { display: flex; gap: 10px; flex-shrink: 0; }
+@media (max-width: 560px) {
+  .consent { flex-direction: column; align-items: stretch; }
+  .consent-buttons { justify-content: stretch; }
+  .consent-buttons .btn { flex: 1; }
+}

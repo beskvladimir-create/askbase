@@ -486,3 +486,59 @@ def test_no_link_in_any_head_has_a_double_slash():
         html = build_site.head(route)
         for link in re.findall(r'href="(https://[^"]+)"', html):
             assert "//" not in link[len("https://"):], f"{route.path or 'главная'}: {link}"
+
+
+@pytest.mark.parametrize("page", ["index.html", "privacy/index.html",
+                                  "ru/index.html", "ru/konfidentsialnost/index.html"])
+def test_consent_defaults_run_before_the_tag_loads(page):
+    """The order is the whole feature, and it is one edit away from breaking.
+
+    Google's tag sends a page view as soon as it loads. If the consent
+    defaults have not run by then, the first visit of every session is
+    measured before anybody was asked, which is the thing the banner exists
+    to prevent and the thing nobody notices is broken, because the banner
+    still appears and the buttons still work.
+    """
+    html = (pathlib.Path(build_site.SITE) / page).read_text(encoding="utf-8")
+    default = html.index("gtag('consent','default'")
+    loader = html.index("googletagmanager.com/gtag/js")
+    assert default < loader, f"{page}: тег грузится раньше, чем задан consent"
+    assert build_site.GA_ID in html
+
+
+@pytest.mark.parametrize("page", ["index.html", "ru/index.html"])
+def test_measurement_starts_denied_and_advertising_stays_denied(page):
+    """Denied by default, and the advertising keys are not the banner's to grant.
+
+    This site does not advertise, so ad_storage and its two companions are
+    denied in the defaults and the Accept button never touches them: accepting
+    measurement is not accepting advertising, and a banner that quietly
+    bundles the two is not asking an honest question.
+    """
+    html = (pathlib.Path(build_site.SITE) / page).read_text(encoding="utf-8")
+    block = html[html.index("gtag('consent','default'"):html.index("gtag('js'")]
+    for key in ("ad_storage", "ad_user_data", "ad_personalization"):
+        assert f"{key}:'denied'" in block, f"{page}: {key} не запрещён по умолчанию"
+    assert "analytics_storage:_c==='accepted'?'granted':'denied'" in block
+
+    app = (pathlib.Path(build_site.SITE) / "assets" / "app.js").read_text(encoding="utf-8")
+    update = app[app.index('gtag("consent", "update"'):]
+    assert "analytics_storage" in update[:200]
+    for key in ("ad_storage", "ad_user_data", "ad_personalization"):
+        assert key not in update[:200], f"кнопка согласия трогает {key}"
+
+
+def test_the_privacy_page_does_not_claim_there_is_no_analytics():
+    """The page says every statement on it can be checked in the source.
+
+    It used to say the site loads no analytics product and sets no cookies.
+    Both became false the moment the tag was added, and a privacy notice that
+    is wrong about the site it describes is worse than none, because it is
+    the page a reader trusts instead of checking.
+    """
+    for page in ("privacy/index.html", "ru/konfidentsialnost/index.html"):
+        html = (pathlib.Path(build_site.SITE) / page).read_text(encoding="utf-8")
+        for claim in ("No analytics product is loaded", "no analytics",
+                      "Аналитика не подключена", "ни аналитики"):
+            assert claim not in html, f"{page}: осталось обещание «{claim}»"
+        assert build_site.GA_ID in html

@@ -2,6 +2,17 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+var _c = null; try { _c = localStorage.getItem('askbase-cookie-consent'); } catch(e){}
+gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',
+  ad_personalization:'denied',
+  analytics_storage:_c==='accepted'?'granted':'denied',wait_for_update:500});
+gtag('js', new Date());
+gtag('config','G-WP6XGLYB21');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WP6XGLYB21"></script>
 <script>document.documentElement.classList.add("js")</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Askbase: доступ только на чтение</title>
@@ -145,6 +156,14 @@ chmod 444 /путь/к/analytics-ro.sqlite</code></pre>
     <span><a href="/ru/ustanovka/">Установка</a> · <a href="/ru/reyting-modeley/">Рейтинг моделей</a> · <a href="/ru/dostup-tolko-chtenie/">Только чтение</a> · <a href="/ru/konfidentsialnost/">Приватность</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Написать</a> · <a href="/ru/avtor/">Автор</a> · <a href="https://arxiv.org/abs/2606.29733">Статья</a></span>
   </div>
 </footer>
+
+<div class="consent" id="consent" hidden>
+  <p>Сайт считает посещения через Google Analytics, и только с вашего согласия. До вашего выбора не считается ничего, а само приложение не отправляет никуда ничего при любом выборе. <a href="/ru/konfidentsialnost/">Что записывается</a>.</p>
+  <div class="consent-buttons">
+    <button type="button" class="btn small" data-consent="denied">Отказаться</button>
+    <button type="button" class="btn primary small" data-consent="accepted">Принять</button>
+  </div>
+</div>
 <script src="/assets/app.js" defer></script>
 </body>
 </html>

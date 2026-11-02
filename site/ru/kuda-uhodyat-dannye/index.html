@@ -2,6 +2,17 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+var _c = null; try { _c = localStorage.getItem('askbase-cookie-consent'); } catch(e){}
+gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',
+  ad_personalization:'denied',
+  analytics_storage:_c==='accepted'?'granted':'denied',wait_for_update:500});
+gtag('js', new Date());
+gtag('config','G-WP6XGLYB21');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WP6XGLYB21"></script>
 <script>document.documentElement.classList.add("js")</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Askbase: куда уходят данные</title>
@@ -106,9 +117,9 @@
       <h2>Чего стоит приватность, без прикрас</h2>
       <p>Держать всё на машине не бесплатно по последствиям, и я лучше назову их сам, чем дам их обнаружить.</p>
       <ul>
-        <li><strong>Модель медленнее облачной</strong>, потому что работает на вашем железе, а не на ускорителе в центре обработки данных. Цифры будут опубликованы вместе с рейтингом, с указанием железа.</li>
+        <li><strong>Модель медленнее облачной</strong>, потому что работает на вашем железе, а не на ускорителе в центре обработки данных. Цифры опубликованы вместе с <a href="/ru/reyting-modeley/">рейтингом</a>, с указанием железа.</li>
         <li><strong>Модель меньше облачной</strong>, и на самых трудных вопросах это видно. Поэтому точность измеряется и публикуется, а не утверждается.</li>
-        <li><strong>Телеметрии нет, поэтому я ничего не узнаю о том, как продуктом пользуются.</strong> Это цена обещания, и её нельзя выкупить обратно анонимной статистикой, не нарушив само обещание. Обратная связь приходит тогда, когда вы решите её отправить.</li>
+        <li><strong>Приложение не шлёт телеметрию, поэтому я ничего не узнаю о том, как им пользуются.</strong> Это цена обещания, и её нельзя выкупить анонимной статистикой изнутри приложения, не нарушив само обещание. Сайт это другое: он считает посещения через <a href="/ru/konfidentsialnost/">Google Analytics</a>, если вы на это согласитесь, и это говорит мне, какие страницы читают, и ровно ничего о вашей базе. Обратная связь о приложении приходит тогда, когда вы решите её отправить.</li>
         <li><strong>Роль только для чтения остаётся на вас.</strong> Приложение выполняет только SELECT, разбирает каждый запрос до исполнения и добавляет ограничение на число строк, но роль с правом записи это риск, который приложение за вас убрать не может.</li>
       </ul>
 
@@ -133,6 +144,14 @@
     <span><a href="/ru/ustanovka/">Установка</a> · <a href="/ru/reyting-modeley/">Рейтинг моделей</a> · <a href="/ru/dostup-tolko-chtenie/">Только чтение</a> · <a href="/ru/konfidentsialnost/">Приватность</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Написать</a> · <a href="/ru/avtor/">Автор</a> · <a href="https://arxiv.org/abs/2606.29733">Статья</a></span>
   </div>
 </footer>
+
+<div class="consent" id="consent" hidden>
+  <p>Сайт считает посещения через Google Analytics, и только с вашего согласия. До вашего выбора не считается ничего, а само приложение не отправляет никуда ничего при любом выборе. <a href="/ru/konfidentsialnost/">Что записывается</a>.</p>
+  <div class="consent-buttons">
+    <button type="button" class="btn small" data-consent="denied">Отказаться</button>
+    <button type="button" class="btn primary small" data-consent="accepted">Принять</button>
+  </div>
+</div>
 <script src="/assets/app.js" defer></script>
 </body>
 </html>

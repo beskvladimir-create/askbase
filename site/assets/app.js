@@ -195,3 +195,30 @@
     requestAnimationFrame(step);
   }
 })();
+
+/* Cookie consent. The banner shows only when nothing has been chosen, and the
+   choice reaches the tag rather than only the browser: a banner that writes
+   to localStorage and leaves the tag alone is theatre, and on the next page
+   load the consent default would read the stored value and contradict what
+   the visitor saw happen. So both are done, in that order. */
+(function () {
+  var KEY = "askbase-cookie-consent";
+  var box = document.getElementById("consent");
+  if (!box) return;
+  var stored = null;
+  try { stored = localStorage.getItem(KEY); } catch (e) { /* private window */ }
+  if (stored === "accepted" || stored === "denied") return;
+  box.hidden = false;
+  box.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-consent]");
+    if (!btn) return;
+    var choice = btn.dataset.consent;
+    try { localStorage.setItem(KEY, choice); } catch (err) { /* nothing to do */ }
+    if (typeof gtag === "function") {
+      gtag("consent", "update", {
+        analytics_storage: choice === "accepted" ? "granted" : "denied"
+      });
+    }
+    box.hidden = true;
+  });
+})();

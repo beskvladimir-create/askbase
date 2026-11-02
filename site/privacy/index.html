@@ -2,6 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+var _c = null; try { _c = localStorage.getItem('askbase-cookie-consent'); } catch(e){}
+gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',
+  ad_personalization:'denied',
+  analytics_storage:_c==='accepted'?'granted':'denied',wait_for_update:500});
+gtag('js', new Date());
+gtag('config','G-WP6XGLYB21');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WP6XGLYB21"></script>
 <script>document.documentElement.classList.add("js")</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Askbase: privacy notice</title>
@@ -50,11 +61,11 @@
     <div class="eyebrow">Privacy notice &middot; 27 October 2026</div>
     <h1>What this site and this application know about you</h1>
     <div class="prose">
-      <p class="lead">Short version: the application sends nothing anywhere, and this site has no cookies, no analytics and no third-party scripts. The long version below says what is written where, who holds it, and how to have it removed. Every statement here is something you can check in the source.</p>
+      <p class="lead">Short version: the application sends nothing anywhere. This site measures visits with Google Analytics, and only after you agree to it: until you do, and if you decline, nothing is measured and nothing is stored in your browser. The long version below says what is written where, who holds it, and how to have it removed. Every statement here is something you can check in the source.</p>
 
       <div class="stats">
         <div><b>0</b><span>accounts. There is no registration, no sign-in and no licence key.</span></div>
-        <div><b>0</b><span>cookies on this site, and no analytics, no tracking pixel, no third-party script.</span></div>
+        <div><b>0</b><span>cookies or measurement on this site until you agree to them, and none ever if you decline.</span></div>
         <div><b>0</b><span>network connections out of the application. It is blocked in the program, and you can test the block yourself.</span></div>
       </div>
 
@@ -62,7 +73,7 @@
       <p>Askbase runs on your computer and the model runs on your computer. Your question, your schema and your answers are not sent anywhere, because the application closes outbound connections at startup and reaches the model over the loopback address of your own machine.</p>
       <p>That is a claim you can test rather than believe:</p>
       <pre><code>Askbase.app/Contents/MacOS/Askbase --selftest</code></pre>
-      <p>There is no telemetry, no crash reporting, no usage counter and no update check. Nothing is collected, so nothing has to be anonymised, retained or deleted on our side.</p>
+      <p>In the application there is no telemetry, no crash reporting, no usage counter and no update check. Nothing is collected from it, so nothing has to be anonymised, retained or deleted on our side. What follows is about this website, which is a different thing and is now measured.</p>
 
       <h3>What it writes to your own disk</h3>
       <ul>
@@ -73,7 +84,8 @@
       <p>All three live on your machine. We never see them, and there is nowhere for them to be sent.</p>
 
       <h2>This site</h2>
-      <p>No cookies are set. No analytics product is loaded. Nothing is stored in your browser. The fonts are served from this site rather than from a font CDN, because a request to a CDN would tell a third party which page you opened.</p>
+      <p>This site uses Google Analytics 4, property G-WP6XGLYB21, to count visits and see which pages are read. It runs under Consent Mode v2 and starts denied: the tag loads with measurement switched off, no cookie is set and no page view is sent, until you press Accept on the banner. Press Decline and it stays off, and the choice is remembered in your browser so you are asked once. Advertising storage, advertising user data and ad personalisation are denied permanently and are not switched on by accepting, because this site does not advertise. Google is the processor of what is collected and its own <a href="https://policies.google.com/privacy">privacy policy</a> applies to it. The fonts are served from this site rather than from a font CDN, because a request to a CDN would tell a third party which page you opened.</p>
+      <p>To change your mind, clear this site's data in your browser and the banner returns.</p>
       <p>The site is hosted by <a href="https://vercel.com/legal/privacy-policy">Vercel</a>. Like any web host it receives your request in order to answer it, and records it in server logs: the IP address, the time, the page and the browser string. Those logs belong to the hosting layer, are kept for a limited period for operating the site and preventing abuse, and are not joined to anything else or used to build a profile.</p>
       <p>Pages link out to GitHub, Hugging Face, arXiv and a few others. Following a link takes you to a site with its own rules, and those rules are not ours.</p>
 
@@ -101,6 +113,14 @@
     <span><a href="/install/">Install</a> · <a href="/model-ranking/">Model ranking</a> · <a href="/read-only-access/">Read-only access</a> · <a href="/privacy/">Privacy</a> · <a href="https://github.com/beskvladimir-create/askbase">GitHub</a> · <a href="mailto:admin@besk.tech?subject=Askbase">Contact us</a> · <a href="/author/">Author</a> · <a href="https://arxiv.org/abs/2606.29733">Paper</a></span>
   </div>
 </footer>
+
+<div class="consent" id="consent" hidden>
+  <p>This site measures visits with Google Analytics, and only if you agree. Nothing is measured until you choose, and the application itself sends nothing anywhere whatever you pick. <a href="/privacy/">What is recorded</a>.</p>
+  <div class="consent-buttons">
+    <button type="button" class="btn small" data-consent="denied">Decline</button>
+    <button type="button" class="btn primary small" data-consent="accepted">Accept</button>
+  </div>
+</div>
 <script src="/assets/app.js" defer></script>
 </body>
 </html>
