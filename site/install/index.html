@@ -34,7 +34,7 @@
     Askbase
   </a>
   <ul>
-    <li><a href="/#questions">What you can ask</a></li>
+    <li><a href="/model-ranking/">Accuracy</a></li>
     <li><a href="/comparison/">Other tools</a></li>
     <li><a href="/where-your-data-goes/">Your data</a></li>
     <li><a href="/install/">Install</a></li>
@@ -58,12 +58,12 @@
       </div>
 
       <div class="callout">
-        <p><strong>Take 0.1.1, not 0.1.0.</strong> The button above gives you 0.1.1. Release 0.1.0, which was the one here until today, does not answer questions at all: the answer never reached the window from the thread computing it, so the clock ran and nothing arrived. It was a defect in the application, not in your database or your model. It is fixed, and it is left on the releases page rather than deleted, because withdrawing a bad release quietly is how nobody learns it was bad.</p>
+        <p><strong>Take 0.1.1, not 0.1.0.</strong> The button above gives you 0.1.1. Release 0.1.0, published on 23 October and superseded on 27 October, does not answer questions at all: the answer never reached the window from the thread computing it, so the clock ran and nothing arrived. It was a defect in the application, not in your database or your model. It is fixed, and it is left on the releases page rather than deleted, because withdrawing a bad release quietly is how nobody learns it was bad.</p>
         <p>The disk image is not signed, so check it before you open it: <code>shasum -a 256 Askbase-0.1.1-macos-arm64.dmg</code> must print <code>4fe81fe133911482436f4ede8e122230951bac62de5593df0fb34933034656f7</code>.</p>
       </div>
       <h2>Before it can answer anything</h2>
       <p>Askbase does not download a model and does not use a hosted one. It talks to a model already on your machine, over the loopback address, which is why it works with the network switched off. Install one with <a href="https://ollama.com">Ollama</a>:</p>
-      <pre><code>ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M</code></pre>
+      <pre><code>ollama pull qwen2.5-coder:7b</code></pre>
       <p>About 4.7 GB on disk. The first question after a launch takes around a minute while the model loads into memory, and the ones after it take a few seconds.</p>
 
       <h2>Opening it the first time</h2>

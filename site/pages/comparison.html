@@ -30,10 +30,10 @@
         <tbody>
           <tr>
             <td><strong>Askbase</strong></td>
-            <td>closed, free to use</td>
+            <td>MIT, free to use</td>
             <td>in development</td>
             <td><strong>on the user&rsquo;s machine</strong></td>
-            <td>not yet published</td>
+            <td><span data-when="results">{=qwen25-coder-14b|holdout-en|ex_accuracy}% on my frozen set, 95% interval {=qwen25-coder-14b|holdout-en|ex_ci.low}&ndash;{=qwen25-coder-14b|holdout-en|ex_ci.high}</span><span data-when="pending">measured under a protocol fixed before the run</span></td>
           </tr>
           <tr>
             <td><a href="https://www.askyourdatabase.com/pricing">AskYourDatabase</a></td>
@@ -106,7 +106,7 @@
 
       <h2>The column that is empty for everyone</h2>
       <p>I could not find a published execution accuracy on a public benchmark, measured under a stated protocol, for any of the eight tools above. Several publish demonstrations. Several are built on models whose authors publish benchmark figures, which is a different claim: a figure for a model is not a figure for the tool wrapped around it.</p>
-      <p>Askbase does not fill that column either, and will not until the measurement exists. The protocol is fixed in advance, the questions are frozen with a SHA-256 digest before any tool runs on them, and the figures on this site are substituted from the results files by the build, not typed into the page. Until there is a run, the cell reads <em>not yet published</em>.</p>
+      <p>Askbase fills it. The protocol was fixed in advance, the questions were frozen with a SHA-256 digest before any tool ran on them, and the figures on this site are substituted from the results files by the build rather than typed into the page. The figure is not flattering and the <a href="/model-ranking/">ranking page</a> says why: the set was written to find the places where a model is confidently wrong. Every prediction behind it is published, the wrong ones included.</p>
 
       <div class="callout">
         <p><strong>Why a frozen set, rather than a public benchmark alone.</strong> A CIDR 2026 study by Jin, Choi, Zhu and Kang found annotation errors in 52.8% of BIRD Mini-Dev problems and 66.1% of the Spider 2.0-Snow problems with open gold queries. Correcting them moved leading systems by up to 19 points and by as much as three places in the ranking. An absolute score on a public benchmark is therefore not a promise about anyone&rsquo;s data, including ours.</p>

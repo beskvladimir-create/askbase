@@ -222,6 +222,26 @@ def load_results() -> dict:
             out[key] = json.loads(path.read_text())
         except json.JSONDecodeError as e:
             raise Unbacked(f"{path}: нечитаемый JSON: {e}") from e
+
+    # The hand review of each run lives beside its summary, and the ranking
+    # page promises to print the share of the evaluator's own false alarms
+    # next to the accuracy. Merged under a prefix rather than loaded as its
+    # own key, so a page writes {=model|holdout-en|review.false_alarm_share}
+    # and the file it comes from is not something the page has to know.
+    for path in sorted(RESULTS.glob("*.review.json")):
+        key = path.name[: -len(".review.json")]
+        if key not in out:
+            continue
+        try:
+            review = json.loads(path.read_text())
+        except json.JSONDecodeError as e:
+            raise Unbacked(f"{path}: нечитаемый JSON: {e}") from e
+        # Nested, not a dotted key: the lookup splits a metric on dots and
+        # walks, so a flat key named "review.x" is never found by a page
+        # asking for review.x, and the region silently falls back to saying
+        # the run has not happened.
+        out[key]["review"] = {k: v for k, v in review.items()
+                              if not isinstance(v, (list, dict))}
     return out
 
 
@@ -234,13 +254,24 @@ def split_regions(body: str, results: dict) -> tuple[str, bool]:
         raise Unbacked("регионы data-when должны идти парой: results и pending")
 
     filled = all(
-        (results.get(f"{m.group(1).strip()}.{m.group(2).strip()}") or {}).get(m.group(3).strip()) is not None
+        dig(results.get(f"{m.group(1).strip()}.{m.group(2).strip()}"),
+            m.group(3).strip()) is not None
         for m in REF.finditer(regions["results"].group(3))
     ) and REF.search(regions["results"].group(3)) is not None
 
     drop = regions["pending" if filled else "results"]
     body = body[: drop.start()] + body[drop.end():]
     return body, filled
+
+
+def dig(summary: dict | None, metric: str):
+    """A field of a summary, or one inside it: "ex_ci.low"."""
+    node = summary
+    for part in metric.split("."):
+        if not isinstance(node, dict) or part not in node:
+            return None
+        node = node[part]
+    return node
 
 
 def resolve(body: str, results: dict, page: str) -> str:
@@ -250,12 +281,18 @@ def resolve(body: str, results: dict, page: str) -> str:
     def one(m: re.Match) -> str:
         model, dataset, metric = (g.strip() for g in m.groups())
         key = f"{model}.{dataset}"
-        summary = results.get(key)
-        if summary is None or metric not in summary:
+        value = dig(results.get(key), metric)
+        if value is None:
             missing.append(f"{{={model}|{dataset}|{metric}}}")
             return m.group(0)
-        value = summary[metric]
-        if metric.startswith("ex") and isinstance(value, (int, float)):
+        # Accuracies and shares are stored as fractions and read as percent.
+        # The interval bounds live inside ex_ci, which is why a metric can be
+        # a path: a page that had to quote the point without its interval
+        # would quote the point without its interval.
+        if isinstance(value, (int, float)) and (
+                metric.startswith(("ex", "by_trap."))
+                or metric.endswith("_share")
+                or metric == "wording_agreement"):
             return f"{value * 100:.1f}"
         return str(value)
 
@@ -448,7 +485,7 @@ NAV = {
     Askbase
   </a>
   <ul>
-    <li><a href="/#questions">What you can ask</a></li>
+    <li><a href="/model-ranking/">Accuracy</a></li>
     <li><a href="/comparison/">Other tools</a></li>
     <li><a href="/where-your-data-goes/">Your data</a></li>
     <li><a href="/install/">Install</a></li>
@@ -465,7 +502,7 @@ NAV = {
     Askbase
   </a>
   <ul>
-    <li><a href="/ru/#questions">О чём спросить</a></li>
+    <li><a href="/ru/reyting-modeley/">Точность</a></li>
     <li><a href="/ru/sravnenie/">Другие инструменты</a></li>
     <li><a href="/ru/kuda-uhodyat-dannye/">Ваши данные</a></li>
     <li><a href="/ru/ustanovka/">Установка</a></li>

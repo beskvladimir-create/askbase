@@ -331,3 +331,47 @@ def test_the_queue_writes_the_journal_before_it_measures():
     # A failed run is not a result, and the queue must not walk past one onto
     # the next model.
     assert text.count("exit 1") >= 5
+
+
+# ---- the review of failures, added after the first held-out run -------------
+
+def test_prepare_refuses_to_overwrite_a_review_that_has_verdicts(tmp_path, monkeypatch):
+    """Reproduced by destroying a finished review with a careless re-run.
+
+    The sample is deterministic, so a second prepare writes a file that differs
+    from the first only in having no verdicts in it. Nothing else holds that
+    reading, and the overwrite was silent.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "review_failures", ROOT / "scripts" / "review_failures.py")
+    rf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rf)
+
+    review = tmp_path / "x.holdout-en.review.md"
+    review.write_text("## 1. banking/bank-001 en/0\n\nвердикт: model\nзаметка: читал\n",
+                      encoding="utf-8")
+    assert rf.VERDICT_FILLED.search(review.read_text(encoding="utf-8"))
+
+    results = tmp_path / "x.holdout-en.jsonl"
+    results.write_text("", encoding="utf-8")
+    monkeypatch.setattr(rf, "load", lambda p: [
+        {"correct": False, "task": "banking/bank-001", "lang": "en", "wording": 0,
+         "db_id": "banking", "gold_sql": "SELECT 1", "pred_sql": "SELECT 2",
+         "traps": (), "error": None}])
+    with pytest.raises(SystemExit) as e:
+        rf.prepare(results, 20, 0)
+    assert "уже есть заполненные вердикты" in str(e.value)
+    # and the verdict is still there
+    assert "вердикт: model" in review.read_text(encoding="utf-8")
+
+
+def test_an_empty_verdict_line_does_not_count_as_filled():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "review_failures", ROOT / "scripts" / "review_failures.py")
+    rf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rf)
+    assert not rf.VERDICT_FILLED.search("вердикт: \nзаметка: \n")
+    assert not rf.VERDICT_FILLED.search("вердикт:\n")
+    assert rf.VERDICT_FILLED.search("вердикт: evaluator\n")

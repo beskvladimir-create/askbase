@@ -1,0 +1,31 @@
+{
+  "model": "hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M",
+  "n": 500,
+  "ex_accuracy": 0.5,
+  "config": {
+    "schema_link": false,
+    "schema_link_emb": false,
+    "emb_top_k": 5,
+    "self_correct": false,
+    "self_consistency": false
+  },
+  "sample": 500,
+  "sample_seed": 0,
+  "wall_s": 2552.2,
+  "queries_per_s": 0.196,
+  "s_per_query": 5.1,
+  "mean_table_recall": null,
+  "concurrency": 3,
+  "results_file": "results/xiyan-7b-q4.base.jsonl",
+  "ex_accuracy_before_rescore": 0.446,
+  "rescored": true,
+  "ex_ci": {
+    "point": 0.5,
+    "low": 0.456,
+    "high": 0.544,
+    "n": 500,
+    "resamples": 2000,
+    "seed": 0,
+    "level": 0.95
+  }
+}

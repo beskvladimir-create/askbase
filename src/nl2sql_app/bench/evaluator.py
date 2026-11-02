@@ -41,8 +41,16 @@ def result_set_match(pred_rows: list[tuple], gold_rows: list[tuple]) -> bool:
     stricter than the benchmark it claims to implement, and it cost 5.4 points
     on a 500-question sample. Any figure meant to sit next to a published BIRD
     number has to use the published semantics, whatever one thinks of them.
+
+    The rows themselves, not their repr. The multiset version had to sort, and
+    sorting mixed types needs a string key, so it compared repr; the set
+    version kept the repr by inheritance and nobody noticed. It is not the same
+    comparison: 10996 and 10996.0 are one value and two strings, so a model
+    writing amount / 100 where the gold writes amount / 100.0 scored zero for
+    a correct answer. Found by the hand review of failures that HOLDOUT.md
+    requires, on the held-out set, where it changed one record of 1152.
     """
-    return {repr(r) for r in pred_rows} == {repr(r) for r in gold_rows}
+    return set(pred_rows) == set(gold_rows)
 
 
 def execution_accuracy(

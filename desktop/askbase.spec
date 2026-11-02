@@ -4,12 +4,23 @@
 # Qt modules that are not used are dropped on purpose. Qt Virtual Keyboard in
 # particular is GPL-only and must not ship inside an MIT-licensed application.
 
+# Two modules of the research package travel with the application, and only
+# two. `safety` is the check that runs before any generated query, and
+# `bench.annotate` holds the schema-note detectors. Both are imported rather
+# than copied so that what ships is what was measured, and `test_packaging.py`
+# fails if a new import of that package is not listed here, because the
+# consequence otherwise appears only in the built application and only on a
+# machine with no source tree.
 datas = [
     ("askbase/fonts", "askbase/fonts"),
     ("askbase/icon.svg", "askbase"),
     ("../src/nl2sql_app/safety.py", "nl2sql_app"),
+    ("../src/nl2sql_app/bench/annotate.py", "nl2sql_app/bench"),
+    ("../src/nl2sql_app/bench/schema.py", "nl2sql_app/bench"),
 ]
-hiddenimports = ["sqlglot", "sqlglot.dialects", "nl2sql_app", "nl2sql_app.safety"]
+hiddenimports = ["sqlglot", "sqlglot.dialects", "nl2sql_app", "nl2sql_app.safety",
+                 "nl2sql_app.bench", "nl2sql_app.bench.annotate",
+                 "nl2sql_app.bench.schema"]
 
 a = Analysis(
     ["askbase/__main__.py"],

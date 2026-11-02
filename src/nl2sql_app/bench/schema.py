@@ -12,8 +12,22 @@ import re
 import sqlite3
 
 
-def _tables(conn: sqlite3.Connection) -> dict[str, list[str]]:
-    cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+def _tables(conn: sqlite3.Connection, views: bool = False,
+            order: str = "create") -> dict[str, list[str]]:
+    """Table names and their columns.
+
+    Views are included only on request: in a database somebody else designed
+    the readable part is often a set of views, and leaving them out hides them
+    from the model. Order is the order of creation unless asked for by name,
+    and the two are kept apart from each other and from the rendering because
+    bundling them made a measured difference impossible to attribute. Creation
+    order puts a table next to the dictionary that decodes it; by name it does
+    not.
+    """
+    kinds = "('table', 'view')" if views else "('table')"
+    sort = " ORDER BY name" if order == "name" else ""
+    cur = conn.execute(
+        f"SELECT name FROM sqlite_master WHERE type IN {kinds}{sort}")
     names = [r[0] for r in cur.fetchall() if not r[0].startswith("sqlite_")]
     schema: dict[str, list[str]] = {}
     for t in names:
@@ -22,18 +36,89 @@ def _tables(conn: sqlite3.Connection) -> dict[str, list[str]]:
     return schema
 
 
-def serialize_schema(db_path: str, tables: list[str] | None = None) -> str:
+def _quoted(name: str) -> str:
+    """A SQLite identifier, safe to paste into SQL whatever it is called."""
+    return '"' + name.replace('"', '""') + '"'
+
+
+def render_schema(tables: dict[str, list[str]],
+                  samples: dict[str, list[str]] | None = None,
+                  ddl: bool = False) -> str:
+    """The schema block of the prompt, from data rather than from a path.
+
+    One renderer for the harness and for the desktop application, which take
+    their input from different places: the harness opens the file, the
+    application already holds a bounded snapshot that its safety check works
+    off and must not re-read. Two renderers is how the number stops describing
+    the product: the published figure was measured on `t(a, b)` while the
+    application was shipping quoted CREATE TABLE statements with example
+    values attached, and nobody had measured that prompt at all.
+    """
+    lines = []
+    for t, cols in tables.items():
+        if ddl:
+            body = ", ".join(_quoted(c) for c in cols)
+            lines.append(f"CREATE TABLE {_quoted(t)} ({body});")
+        else:
+            lines.append(f"{t}({', '.join(cols)})")
+        hints = [h for h in (samples or {}).get(t, []) if h]
+        if hints:
+            lines.append(f"-- example values in {_quoted(t)}: {'; '.join(hints)}")
+    return "\n".join(lines)
+
+
+def sample_values(conn: sqlite3.Connection, table: str, cols: list[str],
+                  n: int) -> list[str]:
+    """Example values for the columns that hold only a handful of them.
+
+    A column holding 1 and 2 instead of 'male' and 'female' is a common reason
+    a generated filter is wrong, and the name does not give the encoding away.
+    A column of unique names teaches the model nothing, so only low-cardinality
+    columns are quoted.
+    """
+    out = []
+    for c in cols:
+        try:
+            vals = [r[0] for r in conn.execute(
+                f'SELECT DISTINCT {_quoted(c)} FROM {_quoted(table)} '
+                f'WHERE {_quoted(c)} IS NOT NULL LIMIT {n + 1}')]
+        except sqlite3.Error:
+            continue
+        if 0 < len(vals) <= n:
+            out.append(f"{c} is one of {', '.join(repr(v) for v in vals)}")
+    return out
+
+
+def serialize_schema(db_path: str, tables: list[str] | None = None, *,
+                     ddl: bool = False, samples: int = 0,
+                     views: bool | None = None,
+                     order: str | None = None) -> str:
+    """The schema block for the prompt, read from the database.
+
+    `ddl` and `samples` together reproduce what the desktop application puts
+    in front of the model, which is why they exist: so that one measurement
+    can describe the shipped prompt instead of a near relative of it. `views`
+    and `order` follow `ddl` unless given, so that the application's rendering
+    stays one argument away while an experiment can still vary one thing.
+    """
+    if views is None:
+        views = ddl
+    if order is None:
+        order = "name" if ddl else "create"
     conn = sqlite3.connect(db_path)
     try:
-        schema = _tables(conn)
+        schema = _tables(conn, views=views, order=order)
+        if tables is not None:
+            schema = {t: c for t, c in schema.items() if t in tables}
+        hints = {}
+        if samples:
+            for t, cols in schema.items():
+                got = sample_values(conn, t, cols, samples)
+                if got:
+                    hints[t] = got
     finally:
         conn.close()
-    if tables is not None:
-        schema = {t: c for t, c in schema.items() if t in tables}
-    lines = []
-    for t, cols in schema.items():
-        lines.append(f"{t}({', '.join(cols)})")
-    return "\n".join(lines)
+    return render_schema(schema, hints, ddl=ddl)
 
 
 def _subtokens(s: str) -> set[str]:

@@ -100,10 +100,23 @@ def test_anything_still_blocked_says_why():
     assert bad == ["some-page"], "правило «у блокировки есть причина» не работает"
 
 
-def test_the_home_page_quotes_no_measurement(results):
-    # It is built before any run exists, so it must not reference one.
-    body = (pathlib.Path(build_site.PAGES) / "index.html").read_text(encoding="utf-8")
-    assert not build_site.REF.search(body)
+@pytest.mark.parametrize("page,stage", [("index.html", "holdout-en"),
+                                        ("ru-index.html", "holdout-ru")])
+def test_the_home_page_states_the_measured_accuracy(page, stage):
+    """It used to be forbidden to, and the reason has expired.
+
+    The rule was "the home page is built before any run exists, so it must
+    not reference one". The runs exist, their figures are on the ranking
+    page, and a home page that boasts about publishing a protocol while
+    naming no number is selling the method instead of the product. What has
+    to stay true is that the figure degrades honestly, so the reference lives
+    in a results region with a pending twin that says the same thing without
+    a number.
+    """
+    body = (pathlib.Path(build_site.PAGES) / page).read_text(encoding="utf-8")
+    refs = {m.group(0) for m in build_site.REF.finditer(body)}
+    assert f"{{=qwen25-coder-14b|{stage}|ex_accuracy}}" in refs
+    assert 'data-when="results"' in body and 'data-when="pending"' in body
 
 
 def test_every_route_is_paired_both_ways():

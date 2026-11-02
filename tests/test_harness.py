@@ -103,3 +103,27 @@ def test_different_contents_still_fail():
 def test_a_missing_value_is_not_the_same_as_an_empty_string():
     # The kind of near-match that an evaluator must not wave through.
     assert not result_set_match([(None,)], [("",)])
+
+
+def test_an_integer_and_the_same_number_as_a_float_are_one_answer():
+    """SELECT amount / 100 against a gold of amount / 100.0.
+
+    The comparison was on repr, inherited from an older version that had to
+    sort and therefore needed a string key. Under repr these are two different
+    answers, and a model that divided correctly but landed on an integer
+    scored zero. The official BIRD script compares the tuples, where 10996 and
+    10996.0 are equal, so this is what our own docstring already claimed.
+    """
+    assert result_set_match([("Irina", 10996)], [("Irina", 10996.0)])
+    assert result_set_match([(0,)], [(0.0,)])
+    # and the tolerance is nil: a difference in value is still a difference
+    assert not result_set_match([(10996.5,)], [(10996.0,)])
+
+
+def test_bytes_and_none_still_compare_as_themselves():
+    # sqlite3 hands back bytes for BLOB columns and None for NULL. Both are
+    # hashable, which is why the set comparison needs no repr at all.
+    assert result_set_match([(b"\x00",)], [(b"\x00",)])
+    assert not result_set_match([(b"\x00",)], [(b"\x01",)])
+    assert result_set_match([(None, 1)], [(None, 1)])
+    assert not result_set_match([(None,)], [(0,)])

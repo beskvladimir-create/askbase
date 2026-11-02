@@ -1,0 +1,154 @@
+{
+  "review_file": "results/xiyan-14b-q4.holdout-ru.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 19,
+    "evaluator": 1,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.05,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank-004",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "banking/bank-005",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "banking/bank-007",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пустой ответ там, где эталон даёт строки"
+    },
+    {
+      "task": "hr/hr-002",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "hr/hr-003",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "hr/hr-004",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "пустой ответ там, где эталон даёт строки"
+    },
+    {
+      "task": "hr/hr-005",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "hr/hr-007",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "logistics/log-002",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "запрос не исполнился"
+    },
+    {
+      "task": "logistics/log-005",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "logistics/log-006",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "logistics/log-006",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "manufacturing/mfg-002",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "medicine/med-001",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "medicine/med-001",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "medicine/med-003",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "public_services/gov-001",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "public_services/gov-004",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "public_services/gov-006",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "запрос не исполнился"
+    },
+    {
+      "task": "public_services/gov-008",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "вопрос не просил столбец, который возвращает эталон, ответ по сути верен"
+    }
+  ]
+}

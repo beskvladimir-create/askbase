@@ -1,0 +1,154 @@
+{
+  "review_file": "results/qwen25-coder-7b.holdout-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 15,
+    "evaluator": 5,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.25,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank-002",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "banking/bank-005",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "все запрошенные столбцы на месте плюс лишние, ответ по сути верен"
+    },
+    {
+      "task": "banking/bank-006",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "banking/bank-007",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пустой ответ там, где эталон даёт строки"
+    },
+    {
+      "task": "hr/hr-002",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "hr/hr-003",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "hr/hr-004",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "пустой ответ там, где эталон даёт строки"
+    },
+    {
+      "task": "hr/hr-005",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "все запрошенные столбцы на месте плюс лишние, ответ по сути верен"
+    },
+    {
+      "task": "logistics/log-002",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "logistics/log-006",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "logistics/log-007",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "logistics/log-007",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "запрос не исполнился"
+    },
+    {
+      "task": "manufacturing/mfg-003",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "manufacturing/mfg-003",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "manufacturing/mfg-004",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "manufacturing/mfg-007",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    },
+    {
+      "task": "manufacturing/mfg-008",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "вопрос не просил столбец, который возвращает эталон, ответ по сути верен"
+    },
+    {
+      "task": "medicine/med-008",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "вопрос не просил столбец, который возвращает эталон, ответ по сути верен"
+    },
+    {
+      "task": "medicine/med-008",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "все запрошенные столбцы на месте плюс лишние, ответ по сути верен"
+    },
+    {
+      "task": "public_services/gov-004",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "результат расходится с эталоном по значениям"
+    }
+  ]
+}

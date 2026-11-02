@@ -34,7 +34,7 @@
     Askbase
   </a>
   <ul>
-    <li><a href="/#questions">What you can ask</a></li>
+    <li><a href="/model-ranking/">Accuracy</a></li>
     <li><a href="/comparison/">Other tools</a></li>
     <li><a href="/where-your-data-goes/">Your data</a></li>
     <li><a href="/install/">Install</a></li>
@@ -67,9 +67,9 @@
           <tr class="out"><td class="pos">1</td><td class="name">Arctic-Text2SQL-R1-32B<small>32B · Snowflake</small></td><td class="score">70.47</td><td><span class="flag no">not published</span></td><td class="note"><a href="https://arxiv.org/abs/2505.20315">paper</a></td></tr>
           <tr><td class="pos">2</td><td class="name">Arctic-Text2SQL-R1-7B<small>7B · Apache-2.0 · Snowflake</small></td><td class="score">68.9</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/Snowflake/Arctic-Text2SQL-R1-7B">model card</a></td></tr>
           <tr><td class="pos">3</td><td class="name">XiYanSQL-QwenCoder-32B<small>32B · Apache-2.0 · XGenerationLab</small></td><td class="score">67.14</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">model card</a></td></tr>
-          <tr><td class="pos">4</td><td class="name">XiYanSQL-QwenCoder-14B<small>14B · Apache-2.0 · XGenerationLab</small></td><td class="score">65.32</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">model card</a></td></tr>
-          <tr><td class="pos">5</td><td class="name">OmniSQL-32B<small>32B · Apache-2.0 · RUC</small></td><td class="score">64.5</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/Snowflake/Arctic-Text2SQL-R1-7B">model card</a></td></tr>
-          <tr><td class="pos">6</td><td class="name">XiYanSQL-QwenCoder-7B<small>7B · Apache-2.0 · XGenerationLab</small></td><td class="score">62.13</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">model card</a></td></tr>
+          <tr><td class="pos">4</td><td class="name">XiYanSQL-QwenCoder-14B<small>14B · Apache-2.0 · XGenerationLab</small></td><td class="score">65.32</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-14B-2504">model card</a></td></tr>
+          <tr><td class="pos">5</td><td class="name">OmniSQL-32B<small>32B · Apache-2.0 · RUC</small></td><td class="score">64.5</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/seeklhy/OmniSQL-32B">model card</a></td></tr>
+          <tr><td class="pos">6</td><td class="name">XiYanSQL-QwenCoder-7B<small>7B · Apache-2.0 · XGenerationLab</small></td><td class="score">62.13</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-7B-2504">model card</a></td></tr>
           <tr><td class="pos">7</td><td class="name">XiYanSQL-QwenCoder-32B<small>32B, the same model, schema written as DDL</small></td><td class="score">62.26</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://huggingface.co/XGenerationLab/XiYanSQL-QwenCoder-32B-2504">model card</a></td></tr>
           <tr><td class="pos">8</td><td class="name">Qwen2.5-Coder-32B<small>32B · Apache-2.0 · general purpose, with self-correction</small></td><td class="score">51.63</td><td><span class="flag">downloadable</span></td><td class="note"><a href="https://arxiv.org/abs/2606.29733">my measurement</a></td></tr>
         </tbody>
@@ -88,14 +88,48 @@
       <p>Nothing in it is comparable. Each number comes from its authors under their own prompt, their own schema format and their own decoding, on a benchmark whose annotations are wrong in half the cases. A five point swing from the schema format alone is larger than the gap between most of these rows. That is the entire reason for the measurement below.</p>
 
       <h2>Results</h2>
-      <div data-when="pending">
-        <div class="callout">
-          <p><strong>The run has not happened yet.</strong> This table is filled by the build from the results files, and the build refuses to publish a figure that no results file backs. Until a run exists, there is nothing here, and that is deliberate rather than an omission.</p>
-          <p>Participants in the first wave: Arctic-Text2SQL-R1-7B, XiYanSQL-QwenCoder at 7B, 14B and 32B, OmniSQL-32B, Qwen2.5-Coder at 7B, 14B and 32B as the baseline that ties these numbers to arXiv:2606.29733, and Qwen3-Coder-30B-A3B. Arctic-Text2SQL-R1-32B is excluded: its weights are not published, so its reported figure can be neither reproduced nor deployed.</p>
-        </div>
-      </div>
       
       </div>
+      <div data-when="results">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Model</th><th class="num">BIRD dev</th><th class="num">Ours, English<small>95% interval</small></th><th class="num">Ours, Russian<small>95% interval</small></th><th class="num">p95 latency</th><th class="num">Evaluator false alarms</th></tr></thead>
+          <tbody>
+            <tr><td>Qwen2.5-Coder-14B<small>general purpose</small></td><td class="num">49.2</td><td class="num">49.0<small>36.5&ndash;61.5</small></td><td class="num">50.0<small>38.5&ndash;62.5</small></td><td class="num">11.58 s</td><td class="num">45.0</td></tr>
+            <tr><td>Qwen2.5-Coder-7B<small>general purpose</small></td><td class="num">40.8</td><td class="num">46.9<small>34.4&ndash;59.4</small></td><td class="num">40.6<small>29.2&ndash;53.1</small></td><td class="num">6.22 s</td><td class="num">25.0</td></tr>
+            <tr><td>Arctic-Text2SQL-R1-7B<small>Q8_0, text-to-SQL</small></td><td class="num">50.4</td><td class="num">42.7<small>31.2&ndash;54.2</small></td><td class="num">37.5<small>26.0&ndash;49.0</small></td><td class="num">52.87 s</td><td class="num">25.0</td></tr>
+            <tr><td>Arctic-Text2SQL-R1-7B<small>Q4_K_M, text-to-SQL</small></td><td class="num">51.2</td><td class="num">44.8<small>32.3&ndash;57.3</small></td><td class="num">39.6<small>29.2&ndash;52.1</small></td><td class="num">37.2 s</td><td class="num">25.0</td></tr>
+            <tr><td>XiYanSQL-QwenCoder-14B<small>text-to-SQL</small></td><td class="num">51.0</td><td class="num">24.0<small>13.5&ndash;35.4</small></td><td class="num">31.2<small>19.8&ndash;42.7</small></td><td class="num">7.53 s</td><td class="num">15.0</td></tr>
+            <tr><td>XiYanSQL-QwenCoder-7B<small>text-to-SQL</small></td><td class="num">50.0</td><td class="num">26.0<small>15.6&ndash;36.5</small></td><td class="num">30.2<small>18.8&ndash;42.7</small></td><td class="num">5.25 s</td><td class="num">15.0</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+
+
+        <p class="note">Six models ran. XiYanSQL at 32B and Qwen2.5-Coder at 32B did not: a 32B at Q4_K_M needs about 20 GB and the reference machine for the latency threshold has 24 GB in total, so neither can be a product on it. OmniSQL-32B and Qwen3-Coder-30B are not run for the same reason.</p>
+
+        <h2>What this says, and what to install</h2>
+        <p><strong>Install Qwen2.5-Coder-14B.</strong> It is first on both languages here and it is a general-purpose model, not a text-to-SQL one. Qwen2.5-Coder-7B is half the size and roughly twice as fast, and the difference between them is +2.1 points on English with the interval crossing zero, so on English wordings there is nothing to choose; on Russian the 14B is 9.4 points ahead and the interval touches zero. If the machine is tight or the questions are English, the 7B is a fair trade.</p>
+        <p><strong>The specialised models lose on an unseen set.</strong> XiYanSQL sits third on the published BIRD table above and comes last here, at 24.0% against the 49.0% of a general model of the same size. Both were measured under one protocol, in the same quantisation, on a set neither had seen. Whatever their BIRD figure is measuring, it does not survive contact with six schemas written after the model was trained.</p>
+
+        <h2>Read the headline figure correctly</h2>
+        <p>49% is not what a straightforward question gets. The set is built out of traps: a column of cents named for the amount, a status held as a number, a date left in two columns by a migration. On the tasks that carry no such trap the same model answers 68.8 correctly, and on the tasks whose only difficulty is of that kind it answers 31.6, both on the same strict measure as the headline figure. The number is low because the set was written to find the places where a model is confidently wrong, which is the only kind of number worth publishing before someone connects their own database.</p>
+        <p>A fifth of the failures are not failures. The hand review of twenty failures from each run found that the evaluator itself was wrong in 45% of them for the model above, and between 15% and 45% across the twelve runs, mostly by demanding a column the question never asked for. That share is in the table, per run, and the corrected figures are published beside the pre-registered ones as a sensitivity rather than instead of them.</p>
+        <p>This is why the application shows you the query and the rows rather than a sentence. A wrong answer that announces itself costs a minute. The ones that matter are the queries that run and return plausible rows, and no confidence score catches those. A person who can read the query can.</p>
+
+
+        <h2>The verdicts</h2>
+        <p>Publishing a threshold, then publishing a measurement, and then not saying which way it went, is the thing this page accuses everyone else of. So, by the rule above, in words.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Threshold</th><th class="num">Measured</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>Not below 65% on BIRD dev</td><td class="num">51.2%, interval 46.8&ndash;55.6, the best of the six</td><td><strong>Not met.</strong> The whole interval is on the wrong side, by about ten points, for every model that ran.</td></tr>
+            <tr><td>p95 latency not above 20 s</td><td class="num">11.58 s for the recommended model; 52.87 s for Arctic-7B at Q8</td><td><strong>Met</strong> by the four models at or under the ceiling, <strong>not met</strong> by both Arctic builds, which are two to three times over it. This set was fixed as the one that calibrates this threshold.</td></tr>
+            <tr><td>Russian not more than 10 points behind English</td><td class="num">50.0% against 49.0% for the recommended model</td><td><strong>Undetermined.</strong> The interval on the gap crosses ten points for five models of six, which is what 48 tasks buys and the reason set 2 exists.</td></tr>
+            <tr><td>Not below 80% of wording pairs agreeing</td><td class="num">72.9 for the recommended model, 85.4 at best</td><td><strong>Not met</strong> by four models of six on the point estimate, and undetermined at this n. Two wordings of one question disagree about a quarter of the time, which is a finding about the product and not only about the measurement.</td></tr>
+            <tr><td>100% of attempts to leave SELECT blocked</td><td class="num">every attempt</td><td><strong>Met.</strong> Absolute, no interval: the check is in <code>src/nl2sql_app/safety.py</code> and its tests.</td></tr>
+          </tbody>
+        </table></div>
+        <p>Two of these are uncomfortable and both are published for the same reason the failures are. 65% on BIRD was fixed before anything was run, no model reached it under this protocol, and the honest reading is that a figure from a model card does not survive being measured by someone else. The agreement threshold is the one that matters most to somebody deciding whether to install this: ask the same question twice in different words and the answers differ more often than they should.</p>
 
       <h2>The protocol, fixed before the run</h2>
       <p>Everything here was written down before any model was measured, and it is in the repository with the commit that fixed it. If any of it changes, the run is repeated, not edited.</p>
@@ -104,7 +138,7 @@
         <li>One prompt, greedy decoding, a single call, no examples in the context, unless the thing being measured is one of those.</li>
         <li>The same context budget and the same execution timeout for everyone.</li>
         <li>Our own engine runs through the same interface as everyone else, with no privileges.</li>
-        <li>Per-question predictions are published alongside every run that is published, including the wrong ones. No run is published yet, so neither are any predictions.</li>
+        <li>Per-question predictions are published alongside every run that is published, including the wrong ones. They are in <a href="https://github.com/beskvladimir-create/askbase/tree/main/results">results/</a>, one line per question with the generated query and the gold, together with the hand review of each run and the runs that were withdrawn.</li>
         <li>Confidence intervals by bootstrap over questions, 2000 resamples, seed 0. A verdict that moves between seeds 0 and 5 is recorded as undetermined.</li>
       </ul>
 
@@ -115,7 +149,7 @@
           <tr><td>BIRD dev</td><td>the public English standard</td><td class="num">1534</td><td>comparability with the published literature</td></tr>
           <tr><td>BIRD dev, cleaned</td><td>the same set after the authors' quality pass</td><td class="num">1534</td><td>how much of our own result is annotation noise</td></tr>
           <tr><td>RedSQL</td><td>public Russian, domain-specific</td><td class="num">409</td><td>an outside reference point in a second language</td></tr>
-          <tr><td><strong>Our held-out set, set 1</strong></td><td>frozen 27.10.2026 with a SHA-256 per domain, before any tool saw it. Six domains of six. Calibration set: at this size it can fix the open thresholds and measure the gap between languages, and it cannot separate models whose accuracy differs by less than about 28 points. Set 2, at 600 tasks, is the deciding one and is not generated yet. <a href="https://github.com/beskvladimir-create/askbase/blob/main/HOLDOUT.md">The freeze</a></td><td class="num">48 of 600</td><td>the open thresholds, and the gap between languages</td></tr>
+          <tr><td><strong>Our held-out set, set 1</strong></td><td>frozen 27.10.2026 with a SHA-256 per domain, before any tool saw it. Six domains, eight tasks each. Calibration set: at this size it can fix the open thresholds and measure the gap between languages, and it cannot separate models whose accuracy differs by less than about 28 points. Set 2, at 600 tasks, is the deciding one and is not generated yet. <a href="https://github.com/beskvladimir-create/askbase/blob/main/HOLDOUT.md">The freeze</a></td><td class="num">48 of 600</td><td>the open thresholds, and the gap between languages</td></tr>
         </tbody>
       </table></div>
       <p>The held-out set is one set of schemas and one gold query per task, with four wordings of the question: two English, two Russian. That is what makes the gap between languages measurable on an identical target, which no published set offers. The Russian wordings are written from the meaning, never translated from the English, or the measurement collapses into a test of translation quality.</p>
@@ -133,6 +167,8 @@
           <tr><td>English, public set</td><td>not below 65% on BIRD dev</td></tr>
           <tr><td>English, our set</td><td>not below the best closed model under the same protocol on the same set</td></tr>
           <tr><td>The second language works</td><td>Russian no more than 10 points behind English</td></tr>
+          <tr><td>Latency</td><td>p95 not above 20 s on an Apple M4 with 24 GB, on a schema of up to 30 tables</td></tr>
+          <tr><td>The same question, asked twice</td><td>not below 80% of wording pairs give the same verdict</td></tr>
           <tr><td>Safety</td><td>100% of attempts to go beyond SELECT blocked, 0 queries executed without a row limit and a timeout</td></tr>
         </tbody>
       </table></div>

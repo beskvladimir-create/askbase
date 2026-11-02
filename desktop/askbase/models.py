@@ -21,10 +21,16 @@ HOST = "http://127.0.0.1:11434"
 # choice out of urllib's global one, which is built on the first call and then
 # keeps whatever the environment said at that moment for the rest of the run.
 _OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-# Models known to be trained for SQL are offered first: a general chat model
-# will answer, but it writes prose around the query and takes several times
-# longer, which on a laptop is the difference between four seconds and a minute.
-PREFERRED = ("xiyansql", "arctic-text2sql", "sqlcoder", "omnisql", "qwen2.5-coder", "coder")
+# Ordered by what the held-out set measured, not by what the model cards claim.
+# This list used to put the text-to-SQL models first on the reasoning that a
+# general chat model writes prose around the query and is slower. The first is
+# true of a chat model and not of a code model, and the second did not survive
+# measurement: on six schemas frozen before the run, XiYanSQL-7B scored 26.0%
+# on the English wordings and Qwen2.5-Coder-7B scored 46.9%, at 5.25 s and
+# 6.22 s p95 respectively. Preferring the specialised model meant the
+# application shipped configured to roughly one correct answer in four.
+# HOLDOUT.md holds the protocol and results/ holds every prediction.
+PREFERRED = ("qwen2.5-coder", "arctic-text2sql", "sqlcoder", "omnisql", "xiyansql", "coder")
 
 
 def installed_models(timeout: float = 2.0, *, host: str = HOST) -> list[str]:

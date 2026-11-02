@@ -3,6 +3,8 @@ its contribution:
 
     base               single greedy generation
     +schema_link       restrict prompt schema to linked tables
+    +schema_keys       print the foreign keys the DDL already declares
+    +schema_notes      add the mechanical column notes (see annotate.py)
     +self_correct      execute; on error, feed the error back and revise (<=k)
     +self_consistency  sample m candidates, keep the majority by result set
 
@@ -17,6 +19,7 @@ from dataclasses import dataclass, field
 
 from func_timeout import FunctionTimedOut, func_timeout
 
+from .annotate import annotate_schema
 from .evaluator import _exec
 from .model_client import ModelClient
 from .schema import link_schema, link_schema_emb, serialize_schema
@@ -75,6 +78,18 @@ class Recipe:
     client: ModelClient
     schema_link: bool = False
     schema_link_emb: bool = False
+    schema_keys: bool = False
+    schema_notes: bool = False
+    # The two that make the harness render what the application renders:
+    # quoted CREATE TABLE statements, and example values for the columns that
+    # hold only a handful. Default off, so every figure measured before this
+    # existed still means what it meant.
+    schema_ddl: bool = False
+    schema_samples: int = 0
+    # Kept apart from schema_ddl so a measured difference can be
+    # attributed to one of them. None means follow schema_ddl.
+    schema_views: bool | None = None
+    schema_order: str | None = None
     emb_top_k: int = 5
     emb_model: str = "all-MiniLM-L6-v2"
     self_correct: bool = False
@@ -88,16 +103,25 @@ class Recipe:
 
     def _schema_text(self, db_path: str, question: str, evidence: str) -> str:
         # embedding linker takes precedence over the lexical one when both set
+        tables: list[str] | None = None
         if self.schema_link_emb:
             tables = link_schema_emb(db_path, question, evidence,
                                      k=self.emb_top_k, model_name=self.emb_model)
             self.linked_tables = tables
-            return serialize_schema(db_path, tables)
-        if self.schema_link:
+        elif self.schema_link:
             tables = link_schema(db_path, question, evidence)
             self.linked_tables = tables
-            return serialize_schema(db_path, tables)
-        return serialize_schema(db_path)
+        text = serialize_schema(db_path, tables, ddl=self.schema_ddl,
+                                samples=self.schema_samples,
+                                views=self.schema_views,
+                                order=self.schema_order)
+        if self.schema_keys or self.schema_notes:
+            extra = annotate_schema(db_path, tables,
+                                    notes=self.schema_notes,
+                                    keys=self.schema_keys)
+            if extra:
+                text = f"{text}\n\n{extra}"
+        return text
 
     def _error_of(self, db_path: str, sql: str) -> str | None:
         """Return an error string if the SQL fails to execute, else None.

@@ -15,9 +15,12 @@ What is deliberately kept private, and why:
                    working document that changes weekly.
   docs/roles.md    which users are served and which are deliberately not. Same
                    reason.
-  results/         measurement output. It is published with the run it belongs
-                   to, once the protocol has been followed end to end, never
-                   as a loose file with no provenance.
+(results/ used to be on this list. It is not any more: the six held-out runs
+have been through the protocol end to end, including the hand review of
+twenty failures each, their figures are on the site, and the ranking page
+promises that the per-question predictions are published alongside every run
+that is published, wrong ones included. A promise of verifiability that is
+kept only for the numbers that flatter us is not one.)
 
 What goes out: the code, the held-out set generator, the benchmark harness, the
 site, the market review and the administrator's documentation. All of it is
@@ -55,6 +58,11 @@ INCLUDE: tuple[str, ...] = (
     "CONTRIBUTING.ru.md",
     "HOLDOUT.md",
     "HOLDOUT.ru.md",
+    # Every prediction of every published run, including the subdirectories
+    # for the smoke test and for the runs withdrawn with a written reason.
+    # Hiding a withdrawn run is how a withdrawal becomes indistinguishable
+    # from a result that never existed.
+    "results",
     ".gitignore.public",
 )
 
@@ -70,13 +78,18 @@ EXCLUDE_NAMES = {
     # a built application does not belong in a source repository anyway.
     "build", "dist",
 }
+# .jsonl is excluded everywhere except under results/, where it IS the
+# per-question prediction file the protocol promises to publish.
 EXCLUDE_SUFFIX = {".pyc", ".jsonl"}
+JSONL_ALLOWED_UNDER = "results"
 # icon.icns is binary and belongs in the package, so it is not excluded
 
 
 def keep(path: Path) -> bool:
     if any(part in EXCLUDE_NAMES for part in path.parts):
         return False
+    if path.suffix == ".jsonl":
+        return JSONL_ALLOWED_UNDER in path.parts
     return path.suffix not in EXCLUDE_SUFFIX
 
 
@@ -156,7 +169,6 @@ def main() -> None:
     print("\nне выгружается намеренно:")
     print("  docs/design.md   проект продукта: план, цены, открытые вопросы")
     print("  docs/roles.md    кого обслуживаем и кого нет")
-    print("  results/         замеры публикуются вместе со своим прогоном")
 
     if problems:
         print("\nПРОВЕРКА НЕ ПРОЙДЕНА:")

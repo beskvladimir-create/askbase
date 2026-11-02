@@ -57,6 +57,7 @@ from PySide6.QtWidgets import (
 from . import i18n, journal, offline, recent, suggest, theme
 from .engine import AskError, Engine, export_csv
 from .models import Cancelled, ModelClient, installed_models
+from .notes import for_person, outline_text
 from .widgets import BrandMark, DropZone, Ground, LangSwitch, ProgressLine, Segmented, glow, keycap
 
 ICON = Path(__file__).with_name("icon.svg")
@@ -787,7 +788,11 @@ class Window(QMainWindow):
         s = self.engine.schema
         self.where_full = f"{Path(path).name}  ·  " + self._size(s)
         self._fit_bar()
-        self.outline.setPlainText(s.outline())
+        self.outline.setPlainText(outline_text(s, self.t))
+        n = len(for_person(s.notes, self.t))
+        self.in_base_label.setText(
+            self.t["in_base"] + (self.t["read_count"].format(n=n) if n else "")
+        )
         while self.example_row.count() > 1:     # everything after the "for example" label
             old = self.example_row.takeAt(1).widget()
             if old is not None:                 # the stretch at the end has no widget
@@ -872,7 +877,13 @@ class Window(QMainWindow):
         self.outline.setFont(theme.mono())
         self.outline.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.outline.setMinimumHeight(64)   # it gives way when an alert needs the room
-        v.addWidget(card(label(self.t["in_base"], "micro"), self.outline, spacing=10), 1)
+        # The label counts what was read, because the notes sit under the
+        # table list and a database of nine tables already puts them below the
+        # fold. A person who never scrolls never sees them, and then the one
+        # thing they were there for, catching a wrong reading before it
+        # becomes a wrong answer, does not happen at all.
+        self.in_base_label = label(self.t["in_base"], "micro")
+        v.addWidget(card(self.in_base_label, self.outline, spacing=10), 1)
 
         # docs/roles.md, role 1: "a journal of one's own questions with
         # one-click repeat", because monthly reporting is the same question

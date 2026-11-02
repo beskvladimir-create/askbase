@@ -639,3 +639,64 @@ def test_the_answer_is_titled_with_the_question_that_was_asked(app, tmp_path, mo
     _pump(app, w, want_page=2)
     assert w.asked.text() == "какие регионы есть"
     w.close()
+
+
+def test_the_panel_shows_what_was_read_and_says_so_in_its_label(app, tmp_path):
+    """The asymmetry the panel exists to remove, checked in the real window.
+
+    The notes are what the model is told about the meaning of the columns.
+    Before this they went into the prompt and nowhere else, so a note that was
+    wrong about somebody's database produced a confident wrong answer with
+    nothing on screen to question. They sit under the table list, below the
+    fold on any real schema, which is why the card's own label carries the
+    count: a person who never scrolls would otherwise never learn they exist.
+    """
+    import sqlite3
+
+    from askbase.app import Window
+
+    db = tmp_path / "shop.sqlite"
+    con = sqlite3.connect(db)
+    con.executescript(
+        """
+        CREATE TABLE status_ref (cd INTEGER PRIMARY KEY, title TEXT);
+        INSERT INTO status_ref VALUES (1, 'оплачен'), (2, 'возвращён');
+        CREATE TABLE sale (id INTEGER PRIMARY KEY, total_cents INTEGER,
+                           status_cd INTEGER REFERENCES status_ref(cd));
+        INSERT INTO sale VALUES (1, 1990, 1);
+        """
+    )
+    con.commit()
+    con.close()
+
+    w = Window("ru")
+    w.path.setText(str(db))
+    w._open_typed()
+    assert w.engine is not None, "база не открылась"
+    panel = w.outline.toPlainText()
+    assert w.t["understood"] in panel
+    assert "sale.total_cents: копейки" in panel
+    assert "sale.status_cd: код из status_ref: 1=оплачен, 2=возвращён" in panel
+    # Two notes were read, and the label says so without anyone scrolling.
+    assert w.t["read_count"].format(n=2) in w.in_base_label.text()
+    w.close()
+
+
+def test_a_database_with_nothing_to_read_gets_no_count_in_the_label(app, tmp_path):
+    import sqlite3
+
+    from askbase.app import Window
+
+    db = tmp_path / "plain.sqlite"
+    con = sqlite3.connect(db)
+    con.executescript("CREATE TABLE a (id INTEGER PRIMARY KEY, nm TEXT);")
+    con.commit()
+    con.close()
+
+    w = Window("ru")
+    w.path.setText(str(db))
+    w._open_typed()
+    assert w.engine is not None, "база не открылась"
+    assert w.t["understood"] not in w.outline.toPlainText()
+    assert w.in_base_label.text() == w.t["in_base"]
+    w.close()

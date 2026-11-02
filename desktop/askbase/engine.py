@@ -24,9 +24,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 import sqlglot
 from sqlglot import exp
 
+from nl2sql_app.bench.annotate import Note
+from nl2sql_app.bench.schema import render_schema
 from nl2sql_app.safety import check
 
 from .explain import explain
+from .notes import BUDGET as NOTES_BUDGET
+from .notes import collect as collect_notes
+from .notes import render as render_notes
 
 PROMPT = """You are an expert SQLite analyst. Given the schema, write ONE SQLite \
 query that answers the question. Return only the query in a ```sql block.
@@ -71,6 +76,11 @@ class Schema:
     # called "total" works until it meets a column called "total_status".
     # Only the suggestions use this; the safety check still works off names.
     types: dict[str, dict[str, str]] = field(default_factory=dict)
+    # The declared foreign keys, rendered, and what the columns mean. Both are
+    # for the model and neither is used by the safety check, which works off
+    # names and must not depend on a detector having found anything.
+    foreign_keys: list[str] = field(default_factory=list)
+    notes: list[Note] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, set[str]]:
         return {t: set(c) for t, c in self.tables.items()}
@@ -80,13 +90,16 @@ class Schema:
         # "order" produced a schema that is not valid SQL, and the model then
         # wrote the name back unquoted, which fails to parse and burns the one
         # repair attempt on a mistake the application handed it.
-        out: list[str] = []
-        for table, cols in self.tables.items():
-            columns = ", ".join(_quoted(c) for c in cols)
-            out.append(f"CREATE TABLE {_quoted(table)} ({columns});")
-            hints = [s for s in self.samples.get(table, []) if s]
-            if hints:
-                out.append(f"-- example values in {_quoted(table)}: {'; '.join(hints)}")
+        # One renderer, shared with the harness, so that what is measured is
+        # what is shipped. They used to be two, and the published figure was
+        # measured on a compact `t(a, b)` form while this window sent quoted
+        # CREATE TABLE statements with example values attached.
+        out = [render_schema(self.tables, self.samples, ddl=True)]
+        # The example values say a column holds 1 and 2. The notes say which
+        # of them means active, which is the half the model was missing.
+        extra = render_notes(self.foreign_keys, self.notes)
+        if extra:
+            out += ["", extra]
         return "\n".join(out)
 
     @property
@@ -337,6 +350,15 @@ def snapshot(db_path: str, value_samples: int = 3, timeout: float = 30.0) -> Sch
                     hints.append(f"{c} is one of {', '.join(repr(v) for v in vals)}")
             if hints:
                 schema.samples[t] = hints
+        # On a connection of its own, with its own short budget. Sharing this
+        # one would let a detector's scan spend the time the snapshot itself
+        # needs, and the snapshot is what the safety check validates against:
+        # notes are the part that may be given up, never the structure.
+        notes_con = _connect(db_path, min(timeout, NOTES_BUDGET))
+        try:
+            schema.foreign_keys, schema.notes = collect_notes(notes_con, names)
+        finally:
+            notes_con.close()
         return schema
     finally:
         con.close()

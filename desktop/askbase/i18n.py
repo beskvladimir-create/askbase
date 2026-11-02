@@ -26,7 +26,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "model_label": "Модель на этом компьютере",
         "no_model_short": "модель не найдена",
         "no_model": "Модель не найдена. Askbase работает с моделью, установленной локально: "
-                    "ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M",
+                    "ollama pull qwen2.5-coder:7b",
         "readonly_note": "Подключение только на чтение. Приложению не нужна сеть.",
         # ask
         "question": "ВОПРОС",
@@ -38,6 +38,29 @@ TEXTS: dict[str, dict[str, str]] = {
         "ex_ranking": "десять {table} с наибольшим {column}",
         "ex_period": "сколько {table} за сентябрь по {column}",
         "in_base": "В ЭТОЙ БАЗЕ",
+        # What the application read out of the database, in the words of the
+        # person rather than of the prompt. One key per note kind, and a test
+        # fails if a new detector arrives without its pair here, because an
+        # untranslated note is how a half-Russian window ships. The sentence
+        # states the fact and leaves out the instruction to the model: the
+        # person is checking whether this is true of their database, and
+        # "use COALESCE" is not something they can confirm or deny.
+        "read_count": "  ·  прочитано фактов: {n}, ниже",
+        "understood": "ЧТО ПРИЛОЖЕНИЕ ПРОЧИТАЛО. Если здесь ошибка, ответ тоже "
+                      "будет неверным",
+        "note_minor_units": "{table}.{column}: копейки, сотые доли денежной "
+                            "единицы",
+        "note_basis_points": "{table}.{column}: базисные пункты, сотые доли "
+                             "процента",
+        "note_code": "{table}.{column}: код из {ref}: {rows}",
+        "note_code_opaque": "{table}.{column}: код, расшифровка в {ref}",
+        "note_date_pair": "{table}: {a} и {b} это одно поле, разъехавшееся при "
+                          "переносе, в каждой строке заполнено ровно одно",
+        "note_history_range": "{table}: строки действуют по датам, для каждого "
+                              "{key} свой период с {start} по {end}, пустой "
+                              "{end} значит действует сейчас",
+        "note_history_latest": "{table}: история по каждому {key}, текущая "
+                               "строка это последняя по {start}",
         "ask": "Спросить",
         "ask_key": "⌘↩",
         "stop": "Остановить",
@@ -143,7 +166,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "model_label": "Model on this computer",
         "no_model_short": "no model found",
         "no_model": "No model found. Askbase uses a model installed locally: "
-                    "ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M",
+                    "ollama pull qwen2.5-coder:7b",
         "readonly_note": "The connection is read-only. The application does not need a network.",
         "question": "QUESTION",
         "placeholder": "How many new customers came from each region in September",
@@ -154,6 +177,22 @@ TEXTS: dict[str, dict[str, str]] = {
         "ex_ranking": "the ten {table} with the largest {column}",
         "ex_period": "how many {table} in September, by {column}",
         "in_base": "IN THIS DATABASE",
+        "read_count": "  ·  {n} facts read, below",
+        "understood": "WHAT THE APPLICATION READ. A mistake here is a wrong "
+                      "answer later",
+        "note_minor_units": "{table}.{column}: minor units, hundredths of a "
+                            "currency unit",
+        "note_basis_points": "{table}.{column}: basis points, hundredths of a "
+                             "percent",
+        "note_code": "{table}.{column}: a code from {ref}: {rows}",
+        "note_code_opaque": "{table}.{column}: a code, decoded in {ref}",
+        "note_date_pair": "{table}: {a} and {b} are one field split by a "
+                          "migration, exactly one is filled in each row",
+        "note_history_range": "{table}: rows are dated, each {key} has its own "
+                              "period from {start} to {end}, an empty {end} "
+                              "means it holds now",
+        "note_history_latest": "{table}: history per {key}, the current row is "
+                               "the latest {start}",
         "ask": "Ask",
         "ask_key": "⌘↩",
         "stop": "Stop",

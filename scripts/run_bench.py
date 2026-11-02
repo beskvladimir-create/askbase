@@ -48,7 +48,89 @@ HOLDOUT_STAGES = [
     ("holdout-ru", {"dataset": "holdout", "lang": "ru",
                     "schema_link": False, "self_correct": False, "self_consistency": False}),
 ]
-BY_NAME = dict(ABLATION + HOLDOUT_STAGES)
+
+# The schema-metadata arms. These are development runs on set 1, NOT held-out
+# measurements: HOLDOUT.md spends a set the moment its failures are read, and
+# they were read on 29 October 2026. Their stage names say so, so a figure
+# taken from one of these files cannot be mistaken for a holdout number later.
+# What they are for is deciding whether the product should carry a schema
+# annotation step at all, which is a question about engineering and not about
+# a threshold. Confirmation belongs on set 2.
+NOTES_STAGES = [
+    (f"dev-notes{suffix}-{lang}",
+     {"dataset": "holdout", "lang": lang, "schema_link": False,
+      "self_correct": False, "self_consistency": False,
+      "schema_keys": keys, "schema_notes": notes})
+    # `-gen` carries the same flags as `-both`. What differs is the detector:
+    # lookup tables are found by size and by declared key rather than by a
+    # name ending in `_ref`, which was a convention of `data/holdout` and of
+    # nothing a user will open. The prompt text therefore differs, so the
+    # earlier file does not measure this code and the stage gets its own name
+    # instead of overwriting it.
+    for suffix, keys, notes in (("-keys", True, False),
+                                ("", False, True),
+                                ("-both", True, True),
+                                ("-gen", True, True))
+    for lang in ("en", "ru")
+]
+# The shipped arm plus self-correction, aimed at the one bucket the notes
+# left untouched: tasks that need no schema fact and only better SQL. The
+# prediction recorded in HOLDOUT.md before the run is that it does almost
+# nothing, because those failures are queries that execute successfully and a
+# repair loop driven by an error message cannot see them.
+CORRECT_STAGES = [
+    (f"dev-notes-correct-{lang}",
+     {"dataset": "holdout", "lang": lang, "schema_link": False,
+      "self_correct": True, "self_consistency": False,
+      "schema_keys": True, "schema_notes": True})
+    for lang in ("en", "ru")
+]
+
+# The prompt the application actually sends. The harness rendered the schema
+# as `t(a, b)` and the window rendered quoted CREATE TABLE statements with
+# example values attached, in a different table order and with views included,
+# and nobody had measured the second one. `dev-samples` adds the example
+# values alone so the two parts can be told apart, `dev-app` is the shipped
+# prompt entire.
+APP_STAGES = [
+    (f"dev-{name}-{lang}",
+     {"dataset": "holdout", "lang": lang, "schema_link": False,
+      "self_correct": False, "self_consistency": False,
+      "schema_keys": True, "schema_notes": True,
+      "schema_ddl": ddl, "schema_samples": 3})
+    for name, ddl in (("samples", False), ("app", True))
+    for lang in ("en", "ru")
+]
+
+# The shipped prompt with one word of the unit note changed: 100.0 instead of
+# 100, with the reason attached. Its own stage because a one-word change that
+# is expected to move four records has to be attributable to that word.
+DIVISOR_STAGES = [
+    (f"dev-app2-{lang}",
+     {"dataset": "holdout", "lang": lang, "schema_link": False,
+      "self_correct": False, "self_consistency": False,
+      "schema_keys": True, "schema_notes": True,
+      "schema_ddl": True, "schema_samples": 3})
+    for lang in ("en", "ru")
+]
+
+# `dev-app` moved two things at once: quoted CREATE TABLE statements, and the
+# tables sorted by name instead of left in creation order. On Russian it cost
+# 7.3 points, whole interval below zero and stable across seeds, and there was
+# no way to say which of the two did it. Creation order puts a table next to
+# the dictionary that decodes it, which is a plausible enough mechanism to be
+# worth one arm rather than a paragraph of speculation.
+ORDER_STAGES = [
+    (f"dev-app-ord-{lang}",
+     {"dataset": "holdout", "lang": lang, "schema_link": False,
+      "self_correct": False, "self_consistency": False,
+      "schema_keys": True, "schema_notes": True,
+      "schema_ddl": True, "schema_samples": 3, "schema_order": "create"})
+    for lang in ("en", "ru")
+]
+
+BY_NAME = dict(ABLATION + HOLDOUT_STAGES + NOTES_STAGES + CORRECT_STAGES
+               + APP_STAGES + DIVISOR_STAGES + ORDER_STAGES)
 
 
 def pick_stages(names: list[str] | None) -> list[tuple[str, dict]]:

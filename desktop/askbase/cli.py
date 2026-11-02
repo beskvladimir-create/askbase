@@ -173,7 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     model = args.model or (models[0] if models else "")
     if not model:
         print("askbase: no local model found. Install one, for example:\n"
-              "  ollama pull hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M",
+              "  ollama pull qwen2.5-coder:7b",
               file=err)
         return USAGE
 

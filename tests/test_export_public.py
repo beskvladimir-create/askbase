@@ -24,9 +24,6 @@ import export_public
     # readonly-role.md are meant to be read by anyone.
     "docs/design.md",
     "docs/roles.md",
-    # Measurements, raw predictions and the voided runs.
-    "results/xiyan-7b-q4.base.jsonl",
-    "results/void/arctic-7b-q4.base.summary.json",
     # Anything to do with keys.
     ".secrets/token",
     ".env",
@@ -36,6 +33,25 @@ def test_private_paths_are_not_in_the_whitelist(private):
     assert private not in export_public.INCLUDE
     if top not in ("docs",):
         assert top not in export_public.INCLUDE, f"{top} открыт целиком"
+
+
+def test_the_predictions_of_every_published_run_are_exported():
+    """The ranking page promises them, so the export has to carry them.
+
+    They were private while no run was published. The six held-out runs have
+    since been through the protocol end to end, their figures are on the
+    site, and the page says the per-question predictions are published
+    alongside every published run, the wrong ones included. A promise of
+    verifiability kept only for the numbers that flatter us is not one.
+
+    The withdrawn runs under results/void/ travel too. Hiding a withdrawal is
+    how it stops being distinguishable from a result that never existed.
+    """
+    assert "results" in export_public.INCLUDE
+    assert export_public.keep(pathlib.Path("results/m.holdout-en.jsonl"))
+    assert export_public.keep(pathlib.Path("results/m.holdout-en.review.md"))
+    assert export_public.keep(pathlib.Path("results/void/README.md"))
+    assert "results/" not in pathlib.Path(".gitignore.public").read_text()
 
 
 def test_docs_are_listed_file_by_file_not_as_a_directory():
@@ -54,7 +70,11 @@ def test_docs_are_listed_file_by_file_not_as_a_directory():
     ("desktop/.venv/lib/thing.py", False),
     ("desktop/dist/Askbase.app/x", False),
     ("desktop/build/x", False),
-    ("results/run.jsonl", False),
+    # A prediction file is the one .jsonl that travels, because the ranking
+    # page promises the per-question predictions of every published run.
+    ("results/run.jsonl", True),
+    ("results/void/withdrawn.jsonl", True),
+    ("logs/anything.jsonl", False),
     ("site/_mobile.html", False),
     ("src/.DS_Store", False),
 ])

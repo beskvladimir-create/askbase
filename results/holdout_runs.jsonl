@@ -1,0 +1,6 @@
+{"at": "2026-10-28T16:56:39+00:00", "tool": "arctic-7b-q4", "set": 1, "commit": "164454e5233842df98cf16fea9c639f4c28b68fd", "repeat": 0, "reason": ""}
+{"at": "2026-10-28T18:25:54+00:00", "tool": "arctic-7b-q8", "set": 1, "commit": "164454e5233842df98cf16fea9c639f4c28b68fd", "repeat": 0, "reason": ""}
+{"at": "2026-10-28T20:27:25+00:00", "tool": "xiyan-7b-q4", "set": 1, "commit": "164454e5233842df98cf16fea9c639f4c28b68fd", "repeat": 0, "reason": ""}
+{"at": "2026-10-28T20:35:53+00:00", "tool": "xiyan-14b-q4", "set": 1, "commit": "164454e5233842df98cf16fea9c639f4c28b68fd", "repeat": 0, "reason": ""}
+{"at": "2026-10-28T20:50:55+00:00", "tool": "qwen25-coder-7b", "set": 1, "commit": "164454e5233842df98cf16fea9c639f4c28b68fd", "repeat": 0, "reason": ""}
+{"at": "2026-10-28T21:02:00+00:00", "tool": "qwen25-coder-14b", "set": 1, "commit": "164454e5233842df98cf16fea9c639f4c28b68fd", "repeat": 0, "reason": ""}

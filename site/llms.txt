@@ -4,7 +4,7 @@
 > language, with the model running on your machine. Free, no account, no telemetry.
 > Built and measured by Vladimir Beskorovainyi, Besk Tech.
 
-Updated: 2026-10-27
+Updated: 2026-11-02
 
 ## What makes it different
 
@@ -13,10 +13,15 @@ Updated: 2026-10-27
   Sonnet 5, Claude Haiku 4.5 and GPT-4.1 in a desktop seat, and its pricing page
   states that desktop connections running from your device does not mean the AI
   processing is offline.
-- Accuracy will be measured under a protocol fixed before the run, on a
-  held-out set frozen with a SHA-256 digest, and published with confidence
-  intervals and failures included. Part of that is done and part is not. The
-  protocol is written and in the repository. The interval code exists
+- Accuracy is measured under a protocol fixed before the run, on a held-out
+  set frozen with a SHA-256 digest, and published with confidence intervals
+  and failures included. Six models have been run. The best of them answers
+  49.0% of the English wordings and 50.0% of the Russian ones exactly right,
+  95% interval 36.5 to 61.5, and every per-question prediction is published
+  including the wrong ones. Of the pre-registered thresholds, the one that
+  asked for 65% on BIRD dev was not met by any model, the latency ceiling was
+  met by four of six, and the rest are undetermined at 48 tasks. The interval
+  code exists
   (percentile bootstrap over questions, 2000 resamples, seed 0, and one
   verdict rule that is allowed to return "undetermined"). Set 1 of the
   held-out set was frozen on 27.10.2026 with a SHA-256 per domain, published
@@ -37,6 +42,11 @@ Updated: 2026-10-27
 
 ## Pages
 
+- /model-ranking/ : the measurement itself. Six open models under one protocol
+  fixed before the run, with 95% intervals, p95 latency, the share of the
+  evaluator's own false alarms, and the verdict against every pre-registered
+  threshold including the two that were not met. The Russian twin is
+  /ru/reyting-modeley/.
 - /comparison/ : every tool that answers questions about a database, with licence,
   last commit, where its model runs, and published accuracy. Checked against
   repositories and vendor pricing pages, with the check date on the page.
@@ -59,8 +69,12 @@ Updated: 2026-10-27
   with self-correction; schema linking significantly hurt accuracy; self-consistency
   gained 0.13 points for about five times the tokens.
 
-## Not yet published
+## What is still missing
 
-The model ranking and the product's own accuracy are not published until
-measured. The pages that will carry those numbers are built and say so in
-place of a figure, rather than being withheld.
+Set 2 of the held-out set, 600 tasks, is not generated. Until it exists every
+figure here comes from a 48 task calibration set whose failures have been read
+by hand, which makes it development data: it fixes the open thresholds and it
+cannot settle a difference of less than about 28 points between two models.
+The schema-annotation step that raises accuracy on that set is in the
+application but its gain is a development number and is not published as a
+held-out one.

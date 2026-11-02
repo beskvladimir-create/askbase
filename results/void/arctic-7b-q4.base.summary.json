@@ -1,0 +1,20 @@
+{
+  "model": "hf.co/mradermacher/Arctic-Text2SQL-R1-7B-GGUF:Q4_K_M",
+  "n": 500,
+  "ex_accuracy": 0.456,
+  "config": {
+    "schema_link": false,
+    "schema_link_emb": false,
+    "emb_top_k": 5,
+    "self_correct": false,
+    "self_consistency": false
+  },
+  "sample": 500,
+  "sample_seed": 0,
+  "wall_s": 21515.28,
+  "queries_per_s": 0.023,
+  "s_per_query": 43.03,
+  "mean_table_recall": null,
+  "concurrency": 3,
+  "results_file": "results/arctic-7b-q4.base.jsonl"
+}

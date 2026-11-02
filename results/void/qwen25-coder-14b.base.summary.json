@@ -1,0 +1,32 @@
+{
+  "model": "qwen2.5-coder:14b",
+  "n": 500,
+  "ex_accuracy": 0.0,
+  "ex_ci": {
+    "point": 0.0,
+    "low": 0.0,
+    "high": 0.0,
+    "n": 500,
+    "resamples": 2000,
+    "seed": 0,
+    "level": 0.95
+  },
+  "config": {
+    "schema_link": false,
+    "schema_link_emb": false,
+    "emb_top_k": 5,
+    "self_correct": false,
+    "self_consistency": false
+  },
+  "sample": 500,
+  "sample_seed": 0,
+  "wall_s": 0.58,
+  "queries_per_s": 855.722,
+  "s_per_query": 0.0,
+  "mean_table_recall": null,
+  "concurrency": 3,
+  "request_timeout_s": 600,
+  "max_retries": 2,
+  "timed_out": 0,
+  "results_file": "results/qwen25-coder-14b.base.jsonl"
+}
