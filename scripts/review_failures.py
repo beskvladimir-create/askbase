@@ -97,7 +97,27 @@ def questions(data_root: Path) -> dict[tuple[str, str, int], str]:
     return out
 
 
-def prepare(results: Path, sample: int, seed: int) -> Path:
+def prepare(results: Path, sample: int, seed: int, set_no: int = 1) -> Path:
+    # Not with_suffix: the stage is part of the stem, not a suffix, so
+    # with_suffix("").with_suffix(".review.md") turned
+    # "qwen.holdout-en.jsonl" into "qwen.review.md" and the English and
+    # Russian reviews of one model overwrote each other in silence.
+    out = Path(str(results).removesuffix(".jsonl") + ".review.md")
+    # Never over an answered review. Re-running prepare to check that prepare
+    # works overwrote a finished file and threw twenty verdicts away; the
+    # sample is deterministic, so the rewrite looked identical apart from the
+    # verdicts being gone. Hours of reading sit in these files and nothing
+    # else holds them.
+    #
+    # First, before the set is read. The refusal is about a file on disk and
+    # has nothing to do with the set, and checking it last meant that in a
+    # copy without data/ the set check failed first and the guard never ran.
+    if out.is_file() and VERDICT_FILLED.search(out.read_text(encoding="utf-8")):
+        raise SystemExit(
+            f"ОТКАЗ: в {out.name} уже есть заполненные вердикты. "
+            "Удалите файл сами, если разбор правда надо начать заново."
+        )
+
     records = load(results)
     failures = [r for r in records if not r.get("correct")]
     if not failures:
@@ -111,12 +131,15 @@ def prepare(results: Path, sample: int, seed: int) -> Path:
     chosen = sorted(rng.sample(failures, take),
                     key=lambda r: (r.get("task", ""), r.get("wording", 0)))
 
-    data_root = ROOT / "data" / "holdout"
+    # Набор 2 лежит рядом с первым и проверяется своей заморозкой. Разбор
+    # прогона по набору 2 против набора 1 сверил бы предсказание с чужим
+    # вопросом, поэтому номер набора задаётся явно, а не угадывается.
+    data_root = ROOT / "data" / ("holdout" if set_no == 1 else f"holdout{set_no}")
     # The same check the runner makes. A review read against a set that has
     # moved since the run would classify failures by comparing a prediction
     # with a question nobody was asked.
     from nl2sql_app.holdout.verify import check_set
-    check_set(data_root)
+    check_set(data_root, set_no)
     texts = questions(data_root)
 
     lines = [
@@ -161,21 +184,6 @@ def prepare(results: Path, sample: int, seed: int) -> Path:
             "вердикт: ",
             "заметка: ",
         ]
-    # Not with_suffix: the stage is part of the stem, not a suffix, so
-    # with_suffix("").with_suffix(".review.md") turned
-    # "qwen.holdout-en.jsonl" into "qwen.review.md" and the English and
-    # Russian reviews of one model overwrote each other in silence.
-    out = Path(str(results).removesuffix(".jsonl") + ".review.md")
-    # Never over an answered review. Re-running prepare to check that prepare
-    # works overwrote a finished file and threw twenty verdicts away; the
-    # sample is deterministic, so the rewrite looked identical apart from the
-    # verdicts being gone. Hours of reading sit in these files and nothing
-    # else holds them.
-    if out.is_file() and VERDICT_FILLED.search(out.read_text(encoding="utf-8")):
-        raise SystemExit(
-            f"ОТКАЗ: в {out.name} уже есть заполненные вердикты. "
-            "Удалите файл сами, если разбор правда надо начать заново."
-        )
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out
 
@@ -242,6 +250,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("results", type=Path)
     p.add_argument("--sample", type=int, default=MIN_SAMPLE)
     p.add_argument("--seed", type=int, default=SEED)
+    p.add_argument("--set", dest="set_no", type=int, default=1, choices=(1, 2),
+                   help="номер отложенного набора, по которому шёл прогон")
     s = sub.add_parser("summarise", help="посчитать доли по заполненному файлу")
     s.add_argument("review", type=Path)
     args = ap.parse_args(argv)
@@ -252,7 +262,7 @@ def main(argv: list[str] | None = None) -> int:
                 f"ОТКАЗ: протокол требует не меньше {MIN_SAMPLE} провалов в выборке, "
                 f"запрошено {args.sample}"
             )
-        out = prepare(args.results, args.sample, args.seed)
+        out = prepare(args.results, args.sample, args.seed, args.set_no)
         print(f"файл для разбора: {out}")
         print("заполните строки «вердикт» и запустите summarise")
         return 0

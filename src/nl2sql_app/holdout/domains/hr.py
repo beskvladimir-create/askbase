@@ -284,10 +284,28 @@ ORDER BY people DESC, c.title
     ),
 )
 
+# Set 2 for hr. Set 1 touched the effective-dated salary once and the
+# self-references once each. This domain's whole reason for existing is the
+# latest-row-per-person shape, so these 24 work it properly: the salary in
+# force now, the salary in force on a past date, the per-department maximum of
+# the current salary, and the pay history read as a history rather than as a
+# table of salaries.
+#
+# The other three veins are the department tree read through parent_id, the
+# manager self-reference with a condition on both aliases, and the standing
+# disagreement between `status_cd` and `left_at`, which here is asked from the
+# side set 1 does not ask: the people where the two readings differ.
+# Набор 2 действующий отложенный набор: формулировки вопросов не публикуются,
+# чтобы модель, которую на нём меряют, его не читала. Хеш заморозки лежит в
+# DIGESTS2.json, а предсказание, эталонный запрос и вердикт по каждой задаче
+# в results/. См. HOLDOUT.md, раздел про закрытые формулировки.
+TASKS_2: tuple = ()
+
 DOMAIN = Domain(
     name="hr",
     tables=TABLES,
     tasks=TASKS,
+    tasks_2=TASKS_2,
     row_counts={"emp": 260, "pay_hist": 700, "absence": 420},
 )
 

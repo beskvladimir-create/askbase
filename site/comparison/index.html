@@ -45,7 +45,7 @@ gtag('config','G-WP6XGLYB21');
     Askbase
   </a>
   <ul>
-    <li><a href="/model-ranking/">Accuracy</a></li>
+    <li><a href="/model-ranking/">Model ranking</a></li>
     <li><a href="/comparison/">Other tools</a></li>
     <li><a href="/where-your-data-goes/">Your data</a></li>
     <li><a href="/install/">Install</a></li>
@@ -58,20 +58,20 @@ gtag('config','G-WP6XGLYB21');
 <article class="page">
   <div class="wrap">
     <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Askbase</a> / Comparison</nav>
-    <div class="eyebrow">Comparison &middot; checked 21 October 2026</div>
+    <div class="eyebrow">Comparison &middot; checked 4 November 2026</div>
     <h1>Where each of these tools sends your schema</h1>
     <div class="byline"><span>Vladimir Beskorovainyi, Enterprise AI Architect &amp; CTO, author of the Amazon bestseller &ldquo;Enterprise AI: The KATA Way&rdquo;, founder of Besk Tech (<a href="https://besk.tech">besk.tech</a>)</span></div>
     <div class="prose">
       <p class="lead">Eight tools are commonly recommended for asking a database questions in plain language, and Askbase is the ninth row below. I checked each one against its own repository, licence file and pricing page rather than against a review. Here is what that turned up.</p>
 
       <div class="stats">
-        <div><b>2</b><span>projects are no longer maintained: Vanna was archived on 2 February 2026 with 23,811 stars, Dataherald has had no commit since 24 July 2024</span></div>
+        <div><b>2</b><span>projects are no longer maintained: Vanna was archived on 2 February 2026 with 23,804 stars, Dataherald has had no commit on its default branch since 11 July 2024</span></div>
         <div><b>1</b><span>has changed away from an open licence: Chat2DB from version 5.3.0 forbids providing the software to anyone outside your own organisation without written authorisation</span></div>
         <div><b>0</b><span>of the eight publish an execution accuracy on a public benchmark measured under a stated protocol</span></div>
       </div>
 
       <h2>What each tool is, on the record</h2>
-      <p>Licences and commit dates come from the GitHub API on 21 October 2026. Prices come from the vendor&rsquo;s own pricing page on the same day. Accuracy is listed only where the project publishes a figure on a public benchmark under a stated protocol.</p>
+      <p>Licences and commit dates come from the GitHub API on 4 November 2026. The date is the last commit on the default branch, which can be older than the last push to the repository. Prices come from the vendor&rsquo;s own pricing page on the same day. Accuracy is listed only where the project publishes a figure on a public benchmark under a stated protocol.</p>
 
       <div class="table-wrap"><table>
         <thead>
@@ -89,7 +89,7 @@ gtag('config','G-WP6XGLYB21');
             <td>MIT, free to use</td>
             <td>in development</td>
             <td><strong>on the user&rsquo;s machine</strong></td>
-            <td><span data-when="results">49.0% on my frozen set, 95% interval 36.5&ndash;61.5</span></td>
+            <td><span data-when="results">57.5% on my frozen set, 95% interval 52.4&ndash;62.3</span></td>
           </tr>
           <tr>
             <td><a href="https://www.askyourdatabase.com/pricing">AskYourDatabase</a></td>
@@ -101,7 +101,7 @@ gtag('config','G-WP6XGLYB21');
           <tr>
             <td><a href="https://github.com/RamiAwar/dataline">DataLine</a></td>
             <td>GPL-3.0</td>
-            <td>11 February 2026</td>
+            <td>29 May 2025</td>
             <td>a model you supply, with data hidden from it by default</td>
             <td>none found</td>
           </tr>
@@ -136,7 +136,7 @@ gtag('config','G-WP6XGLYB21');
           <tr>
             <td><a href="https://github.com/Dataherald/dataherald">Dataherald</a></td>
             <td>Apache-2.0</td>
-            <td>24 July 2024</td>
+            <td>11 July 2024</td>
             <td>a model you supply</td>
             <td>none found</td>
           </tr>
@@ -165,7 +165,7 @@ gtag('config','G-WP6XGLYB21');
       <p>Askbase fills it. The protocol was fixed in advance, the questions were frozen with a SHA-256 digest before any tool ran on them, and the figures on this site are substituted from the results files by the build rather than typed into the page. The figure is not flattering and the <a href="/model-ranking/">ranking page</a> says why: the set was written to find the places where a model is confidently wrong. Every prediction behind it is published, the wrong ones included.</p>
 
       <div class="callout">
-        <p><strong>Why a frozen set, rather than a public benchmark alone.</strong> A CIDR 2026 study by Jin, Choi, Zhu and Kang found annotation errors in 52.8% of BIRD Mini-Dev problems and 66.1% of the Spider 2.0-Snow problems with open gold queries. Correcting them moved leading systems by up to 19 points and by as much as three places in the ranking. An absolute score on a public benchmark is therefore not a promise about anyone&rsquo;s data, including ours.</p>
+        <p><strong>Why a frozen set, rather than a public benchmark alone.</strong> Jin, Choi, Zhu and Kang, writing in <a href="https://doi.org/10.14778/3796195.3796206">PVLDB 19(5)</a>, found annotation errors in 52.8% of BIRD Mini-Dev problems and 62.8% of the Spider 2.0-Snow problems with open gold queries. Correcting them moved leading systems by up to 19 points and by as much as nine places, five on average in the ranking. An absolute score on a public benchmark is therefore not a promise about anyone&rsquo;s data, including ours.</p>
       </div>
 
       <h2>How to check this page</h2>

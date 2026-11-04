@@ -1,0 +1,154 @@
+{
+  "review_file": "results/qwen25-coder-7b.set2-base-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 18,
+    "evaluator": 2,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.1,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-013",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "признак резидентства определяет по непустоте кода, одна строка вместо двух"
+    },
+    {
+      "task": "banking/bank2-035",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "умножает ещё на 365 и не делит копейки, 17 миллиардов вместо 476 тысяч"
+    },
+    {
+      "task": "hr/hr2-002",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "валюта ищется по названию Euro, которого в справочнике нет"
+    },
+    {
+      "task": "hr/hr2-029",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает с последней строкой, а не с соседней, 62 против 243"
+    },
+    {
+      "task": "hr/hr2-041",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "статус сравнивается с буквой A, выдача пустая"
+    },
+    {
+      "task": "hr/hr2-048",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "ищет отделы, у всех детей которых есть сотрудники, 126 против 65"
+    },
+    {
+      "task": "logistics/log2-011",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "статус ищется по названию Lost, выдача пустая"
+    },
+    {
+      "task": "logistics/log2-034",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает дату отправки вместо даты сдачи, ответ 0"
+    },
+    {
+      "task": "logistics/log2-044",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "та же перевозка 271, добавлены вес и отношение, которых вопрос не просил"
+    },
+    {
+      "task": "manufacturing/mfg2-002",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "ищет единицу с названием weight, результат None"
+    },
+    {
+      "task": "manufacturing/mfg2-006",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "те же четыре окна и та же дата по каждой детали, деталь названа id и названием вместо кода"
+    },
+    {
+      "task": "manufacturing/mfg2-023",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает движения и дефекты вместо поступлений и выдач"
+    },
+    {
+      "task": "manufacturing/mfg2-025",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "не считает сгруппированные строки повторно, вернул список"
+    },
+    {
+      "task": "manufacturing/mfg2-031",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вернул всю строку движения и выбрал не то движение, 155 против 209"
+    },
+    {
+      "task": "manufacturing/mfg2-033",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вычитает даты окон вместо цен"
+    },
+    {
+      "task": "medicine/med2-007",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает статус со словом discharged и вычитает текстовые даты, ответ 0"
+    },
+    {
+      "task": "public_services/gov2-023",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "ищет результат IN_PROGRESS, все доли нулевые"
+    },
+    {
+      "task": "public_services/gov2-026",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "перепутаны местами решённый и нерешённый этапы, 231 против 135"
+    },
+    {
+      "task": "public_services/gov2-032",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "ищет результат по названию Refused, выдача пустая"
+    },
+    {
+      "task": "public_services/gov2-046",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "INTERVAL ... DAY, синтаксиса нет в SQLite"
+    }
+  ]
+}

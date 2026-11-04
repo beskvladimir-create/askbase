@@ -278,10 +278,29 @@ ORDER BY encounters DESC, p.full_name
     ),
 )
 
+# Set 2 for medicine. Set 1 spent eight tasks on the lookups, the legacy pair
+# and HAVING. These 24 go after what set 1 left untouched: the deliberate
+# disagreement between `status_cd` and `discharged`, the second hop from a
+# diagnosis code to its chapter, the nullable city, ages computed from `dt_b`,
+# the same table joined to itself for readmission, and the migration pair read
+# as a fact about the data rather than worked around.
+#
+# Almost none of these take a top-N cut. That is not an oversight: on 900
+# encounters across 40 doctors the counts tie constantly, and a cut inside a
+# tie is the defect the linter exists to refuse. The one LIMIT here is over a
+# sum of ~190 random day counts, where a tie does not happen, and the linter
+# checks that claim rather than trusting it.
+# Набор 2 действующий отложенный набор: формулировки вопросов не публикуются,
+# чтобы модель, которую на нём меряют, его не читала. Хеш заморозки лежит в
+# DIGESTS2.json, а предсказание, эталонный запрос и вердикт по каждой задаче
+# в results/. См. HOLDOUT.md, раздел про закрытые формулировки.
+TASKS_2: tuple = ()
+
 DOMAIN = Domain(
     name="medicine",
     tables=TABLES,
     tasks=TASKS,
+    tasks_2=TASKS_2,
     row_counts={"pat": 400, "doc": 40, "enc": 900, "dx": 1200, "rx": 1500},
 )
 

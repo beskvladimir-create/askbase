@@ -321,6 +321,42 @@ def paired_difference_clustered(a_groups, b_groups, *, resamples: int = RESAMPLE
                     k, resamples, seed, level)
 
 
+def bootstrap_quantile_clustered(groups, q: float, *, resamples: int = RESAMPLES,
+                                 seed: int = SEED, level: float = LEVEL) -> Interval:
+    """Percentile bootstrap for a quantile, resampling whole clusters.
+
+    Threshold П5 is on p95 latency, and the latencies of one task's wordings
+    are no more independent than its verdicts: the same schema is pasted into
+    every one of them, so a task with a wide schema is slow in all four. The
+    plain `bootstrap_quantile` resamples single measurements and would report
+    a narrower interval than the design earns.
+
+    The point estimate is the quantile over every measurement, which is the
+    p95 the run summary publishes, so the two cannot disagree. Only the
+    interval comes from the clusters, and `n` counts tasks.
+    """
+    clusters = [[float(v) for v in g] for g in groups if len(g)]
+    if not clusters:
+        raise ValueError("нечего считать: ни одной задачи")
+    point = _percentile(sorted(v for g in clusters for v in g), q)
+    k = len(clusters)
+    if k == 1:
+        return Interval(point, point, point, 1, resamples, seed, level)
+
+    rng = random.Random(seed)
+    draws: list[float] = []
+    for _ in range(resamples):
+        pool: list[float] = []
+        for _ in range(k):
+            pool += clusters[rng.randrange(k)]
+        pool.sort()
+        draws.append(_percentile(pool, q))
+    draws.sort()
+    tail = (1.0 - level) / 2.0
+    return Interval(point, _percentile(draws, tail), _percentile(draws, 1.0 - tail),
+                    k, resamples, seed, level)
+
+
 def wording_agreement(pairs) -> tuple[float, int]:
     """П6: the share of wording pairs of one task that get the same verdict.
 

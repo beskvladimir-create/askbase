@@ -1,0 +1,46 @@
+{
+  "model": "hf.co/mradermacher/Arctic-Text2SQL-R1-7B-GGUF:Q8_0",
+  "n": 576,
+  "ex_accuracy": 0.3229,
+  "ex_ci": {
+    "point": 0.3229,
+    "low": 0.276,
+    "high": 0.3715,
+    "n": 288,
+    "resamples": 2000,
+    "seed": 0,
+    "level": 0.95
+  },
+  "config": {
+    "schema_link": false,
+    "schema_link_emb": false,
+    "emb_top_k": 5,
+    "self_correct": false,
+    "self_consistency": false
+  },
+  "sample": null,
+  "sample_seed": null,
+  "wall_s": 20876.55,
+  "queries_per_s": 0.028,
+  "s_per_query": 36.24,
+  "mean_table_recall": null,
+  "concurrency": 1,
+  "p95_s": 51.33,
+  "request_timeout_s": 600,
+  "max_retries": 2,
+  "timed_out": 0,
+  "results_file": "results/arctic-7b-q8.set2-base-en.jsonl",
+  "dataset": "holdout",
+  "holdout_set": 2,
+  "lang": "en",
+  "tasks": 288,
+  "wordings": 576,
+  "wording_agreement": 0.8264,
+  "wording_pairs": 288,
+  "by_trap": {
+    "no_schema": 0.6666666666666666,
+    "only_schema": 0.28398058252427183,
+    "only_skill": 0.6666666666666666,
+    "only_clarify": 1.0
+  }
+}

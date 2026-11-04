@@ -10,10 +10,13 @@ itself.
 from __future__ import annotations
 
 import sqlite3
+from pathlib import Path
 
 import pytest
 
-from nl2sql_app.holdout.lint import check_task, lint_set, report_row
+from nl2sql_app.holdout.lint import check_set_wide, check_task, lint_set, report_row
+
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def db(tmp_path, script):
@@ -158,6 +161,129 @@ def test_the_rules_find_what_the_hand_review_found(rule, tids):
     валюте?". `ambiguous_cut` is med-004, found on 2 November in the queries
     the model got wrong rather than in any score. Set 1 is frozen, so these
     stay; set 2 is what the checker is for.
+
+    Reads the generated set off disk, and `data/` is not published, so in the
+    public copy there is nothing to read. Skipped there rather than asserted
+    against an empty result, which is how this test used to fail on every
+    public run while saying nothing about the checker.
     """
+    if not (ROOT / "data/holdout").is_dir():
+        pytest.skip("data/holdout не сгенерирован, проверять нечего")
     findings, _ = lint_set("data/holdout")
     assert {f.tid for f in findings if f.rule == rule} == tids
+
+
+def test_a_tie_is_found_even_when_the_key_is_not_returned(tmp_path):
+    """"Name the customer who received the most" returns a name, not an amount.
+
+    The ordering key is then an aggregate that appears nowhere in the output,
+    and the first version of the rule gave up and said so. On 600 tasks that
+    would be a large and silent hole, because the questions shaped like this
+    are exactly the ones a tie ruins. The key is spliced into the select list
+    and read back instead.
+    """
+    conn = db(tmp_path, """
+        CREATE TABLE sale (person TEXT, amount INTEGER);
+        INSERT INTO sale VALUES ('a', 5), ('b', 3), ('c', 3);
+    """)
+    gold = ("SELECT person FROM sale GROUP BY person "
+            "ORDER BY SUM(amount) DESC, person LIMIT 2")
+    got = rules(check_task(conn, "t", gold, [], ["x"]))
+    assert "ambiguous_cut" in got
+    assert "cut_unchecked" not in got
+
+
+def test_the_same_shape_is_clean_when_the_cut_misses_the_tie(tmp_path):
+    conn = db(tmp_path, """
+        CREATE TABLE sale (person TEXT, amount INTEGER);
+        INSERT INTO sale VALUES ('a', 5), ('b', 3), ('c', 3);
+    """)
+    gold = ("SELECT person FROM sale GROUP BY person "
+            "ORDER BY SUM(amount) DESC, person LIMIT 1")
+    assert not rules(check_task(conn, "t", gold, [], ["x"]))
+
+
+def test_an_ordering_key_holding_a_comma_is_still_checked(tmp_path):
+    """Found while authoring med2-035, whose key is AVG of two julianday calls.
+
+    `ORDER BY AVG(julianday(a) - julianday(COALESCE(b, c)))` holds a comma
+    inside its brackets. The key list was split on every comma, so the rule
+    rewrote half an expression, the query failed to parse and the cut was
+    reported unchecked. That is a hole precisely where the hard tasks are, so
+    the split now tracks bracket depth and this pins it: a tie behind such a
+    key is found, not excused.
+    """
+    conn = db(tmp_path, """
+        CREATE TABLE stay (dept TEXT, a TEXT, b TEXT);
+        INSERT INTO stay VALUES
+          ('x', '2026-01-01', '2026-01-11'),
+          ('y', '2026-01-01', '2026-01-11'),
+          ('z', '2026-01-01', '2026-01-02');
+    """)
+    gold = ("SELECT dept FROM stay GROUP BY dept "
+            "ORDER BY AVG(julianday(b) - julianday(COALESCE(a, b))) DESC, dept "
+            "LIMIT 1")
+    got = rules(check_task(conn, "t", gold, [], ["x"]))
+    assert "cut_unchecked" not in got
+    assert "ambiguous_cut" in got
+
+
+def test_a_gold_ordering_by_nothing_real_fails_before_the_cut_is_judged(tmp_path):
+    """Written expecting cut_unchecked, and the code was right instead.
+
+    A gold that orders by a column which does not exist never runs, so it is
+    caught as a broken query rather than as an unverifiable cut. That is the
+    better finding of the two and it comes first, which is what this pins.
+    """
+    conn = db(tmp_path, "CREATE TABLE sale (person TEXT); INSERT INTO sale VALUES ('a'),('b');")
+    gold = "SELECT person FROM sale ORDER BY nonexistent DESC LIMIT 1"
+    assert rules(check_task(conn, "t", gold, [], ["x"])) == {"gold_fails"}
+
+
+# --- правила на весь набор, а не на одну задачу -----------------------------
+
+
+def task(tid, gold, texts=()):
+    return {"tid": tid, "gold_sql": gold,
+            "wordings": [{"lang": "en", "idx": i, "text": t}
+                         for i, t in enumerate(texts)],
+            "traps": ["x"]}
+
+
+def test_the_same_gold_twice_in_one_set_is_reported():
+    """The defect found by hand after both passes of set 2 were written.
+
+    bank2-024 and log2-024 held the same gold and the same English wording,
+    differing only in which database they ran against, because banking and
+    logistics both have a `cust` table with a nullable city. No per-task rule
+    can see this, and the effect is a set that asks 288 questions and measures
+    287.
+    """
+    got = check_set_wide([
+        task("bank2-024", "SELECT COUNT(*) AS n FROM cust WHERE city IS NULL"),
+        task("log2-024", "SELECT COUNT(*)  AS n FROM cust  WHERE city IS NULL"),
+    ])
+    assert [f.rule for f in got] == ["duplicate_gold"]
+    assert got[0].tid == "log2-024", "сообщать надо о позднейшей задаче"
+
+
+def test_the_same_wording_twice_is_reported_even_with_different_golds():
+    got = check_set_wide([
+        task("a-1", "SELECT 1", ["How many customers have no city?"]),
+        task("b-1", "SELECT 2", ["How many customers have no city?"]),
+    ])
+    assert [f.rule for f in got] == ["duplicate_wording"]
+
+
+def test_two_different_tasks_are_not_reported():
+    got = check_set_wide([
+        task("a-1", "SELECT COUNT(*) FROM cust WHERE city IS NULL", ["One?"]),
+        task("b-1", "SELECT COUNT(*) FROM shp WHERE weight_kg > 10", ["Two?"]),
+    ])
+    assert got == []
+
+
+def test_a_task_does_not_duplicate_itself():
+    """Two wordings of one task are the point, not a defect."""
+    t = task("a-1", "SELECT 1", ["How many?", "How many?"])
+    assert check_set_wide([t]) == []

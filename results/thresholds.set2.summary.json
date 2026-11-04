@@ -1,0 +1,149 @@
+{
+  "p1_en": {
+    "point": 20.66,
+    "low": 15.62,
+    "high": 25.69,
+    "bound": 0.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "met",
+    "stable_across_seeds": true,
+    "verdict": "выполнено"
+  },
+  "p1_ru": {
+    "point": 17.71,
+    "low": 12.85,
+    "high": 22.57,
+    "bound": 0.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "met",
+    "stable_across_seeds": true,
+    "verdict": "выполнено"
+  },
+  "p3a": {
+    "point": -8.85,
+    "low": -12.33,
+    "high": -5.56,
+    "bound": -10.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "undetermined",
+    "stable_across_seeds": true,
+    "verdict": "не определено"
+  },
+  "p5_set2_app_en": {
+    "point": 23.88,
+    "low": 20.66,
+    "high": 27.7,
+    "bound": 20.0,
+    "direction": "at_most",
+    "tasks": 288,
+    "outcome": "not_met",
+    "stable_across_seeds": true,
+    "verdict": "не выполнено"
+  },
+  "p6_set2_app_en": {
+    "point": 76.74,
+    "low": 71.87,
+    "high": 81.26,
+    "bound": 80.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "undetermined",
+    "stable_across_seeds": true,
+    "verdict": "не определено"
+  },
+  "p5_set2_app_ru": {
+    "point": 17.52,
+    "low": 16.55,
+    "high": 19.45,
+    "bound": 20.0,
+    "direction": "at_most",
+    "tasks": 288,
+    "outcome": "met",
+    "stable_across_seeds": true,
+    "verdict": "выполнено"
+  },
+  "p6_set2_app_ru": {
+    "point": 75.69,
+    "low": 70.82,
+    "high": 80.56,
+    "bound": 80.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "undetermined",
+    "stable_across_seeds": true,
+    "verdict": "не определено"
+  },
+  "p5_set2_base_en": {
+    "point": 16.34,
+    "low": 14.39,
+    "high": 18.01,
+    "bound": 20.0,
+    "direction": "at_most",
+    "tasks": 288,
+    "outcome": "met",
+    "stable_across_seeds": true,
+    "verdict": "выполнено"
+  },
+  "p6_set2_base_en": {
+    "point": 79.17,
+    "low": 74.65,
+    "high": 84.03,
+    "bound": 80.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "undetermined",
+    "stable_across_seeds": true,
+    "verdict": "не определено"
+  },
+  "p5_set2_base_ru": {
+    "point": 14.73,
+    "low": 13.82,
+    "high": 17.16,
+    "bound": 20.0,
+    "direction": "at_most",
+    "tasks": 288,
+    "outcome": "met",
+    "stable_across_seeds": true,
+    "verdict": "выполнено"
+  },
+  "p6_set2_base_ru": {
+    "point": 86.11,
+    "low": 81.94,
+    "high": 89.93,
+    "bound": 80.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "met",
+    "stable_across_seeds": true,
+    "verdict": "выполнено"
+  },
+  "ord_en": {
+    "point": -1.74,
+    "low": -4.34,
+    "high": 1.04,
+    "bound": 0.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "undetermined",
+    "stable_across_seeds": true,
+    "verdict": "не определено"
+  },
+  "ord_ru": {
+    "point": 1.22,
+    "low": -1.56,
+    "high": 3.82,
+    "bound": 0.0,
+    "direction": "at_least",
+    "tasks": 288,
+    "outcome": "undetermined",
+    "stable_across_seeds": true,
+    "verdict": "не определено"
+  },
+  "p3_en": {
+    "outcome": "not_measured",
+    "verdict": "не измерен: закрытых моделей на наборе 2 не было"
+  }
+}

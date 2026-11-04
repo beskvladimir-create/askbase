@@ -1,0 +1,154 @@
+{
+  "review_file": "results/xiyan-14b-q4.set2-base-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 19,
+    "evaluator": 1,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.05,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-013",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вернул коды резидентства вместо названий, по ответу не понять, где резиденты"
+    },
+    {
+      "task": "hr/hr2-022",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "нет отбора по действующей строке зарплаты, попали все, кому когда-либо платили в долларах"
+    },
+    {
+      "task": "hr/hr2-039",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "статус сравнивается с буквой U, вычитание ничего не убрало, вернулись все отделы"
+    },
+    {
+      "task": "logistics/log2-004",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "статус ищется по названию Lost, ответ 0"
+    },
+    {
+      "task": "logistics/log2-025",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "обращается к inc.ship_id, колонка называется иначе"
+    },
+    {
+      "task": "logistics/log2-032",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "соединяет справочник видов транспорта по коду с идентификатором перевозчика"
+    },
+    {
+      "task": "logistics/log2-038",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "выдумал страны USA и Canada, которых в данных нет"
+    },
+    {
+      "task": "logistics/log2-045",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "соединяет перевозчика со справочником мест по идентификатору"
+    },
+    {
+      "task": "manufacturing/mfg2-012",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "степень сравнивается со словом CRITICAL и дефект соединён с деталью напрямую"
+    },
+    {
+      "task": "manufacturing/mfg2-014",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "без COALESCE на дату движения, 150 против 155"
+    },
+    {
+      "task": "manufacturing/mfg2-019",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "соединение через несуществующую связь, во всех строках одна и та же сумма"
+    },
+    {
+      "task": "manufacturing/mfg2-021",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "дефект соединён с деталью по mov_id, выдача пустая"
+    },
+    {
+      "task": "manufacturing/mfg2-041",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "пара считается дважды и без COALESCE, 372 против 64"
+    },
+    {
+      "task": "medicine/med2-046",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "соединяет случай сам с собой по равенству идентификаторов, ответ 0"
+    },
+    {
+      "task": "public_services/gov2-008",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вычитает текстовые даты и берёт срок вместо даты закрытия, ответ 0"
+    },
+    {
+      "task": "public_services/gov2-023",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "те же пять долей, отличие только в отсутствии округления до одного знака"
+    },
+    {
+      "task": "public_services/gov2-029",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вычитает текстовые даты без julianday и выводит код региона вместо названия"
+    },
+    {
+      "task": "public_services/gov2-042",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "соединяет заявителя с отделением по идентификатору, все доли нулевые"
+    },
+    {
+      "task": "public_services/gov2-044",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "нет условия на решённость первого этапа, 208 против 169"
+    },
+    {
+      "task": "public_services/gov2-048",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "считает заявителей с незакрытым делом, а не тех, у кого незакрыты все"
+    }
+  ]
+}

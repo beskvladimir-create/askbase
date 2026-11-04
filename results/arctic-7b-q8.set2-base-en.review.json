@@ -1,0 +1,154 @@
+{
+  "review_file": "results/arctic-7b-q8.set2-base-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 18,
+    "evaluator": 2,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.1,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-017",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "пусто: strftime по dt_op, в котором часть дат NULL, нет COALESCE с posted_at"
+    },
+    {
+      "task": "banking/bank2-039",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "56 вместо 65: JOIN отбросил счёта без операций, нет COALESCE по паре дат"
+    },
+    {
+      "task": "hr/hr2-005",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "те же два числа, но колонки 'с датой' и 'без даты' в обратном порядке; вопрос порядок не задаёт, эталон его навязывает. Единственный такой случай на 300 разобранных"
+    },
+    {
+      "task": "hr/hr2-038",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пусто: cur_cd='EUR' вместо кода 1, нет отбора действующей ставки"
+    },
+    {
+      "task": "logistics/log2-002",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "соединение с cust вместо loc_ref: в ответе названия перевозчиков, а не городов"
+    },
+    {
+      "task": "logistics/log2-004",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "0 вместо 15: взята dt_disp вместо delivered_at и название статуса вместо кода 3"
+    },
+    {
+      "task": "logistics/log2-017",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пусто: соединение с cust по dst_cd и фильтр по названию статуса"
+    },
+    {
+      "task": "logistics/log2-025",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "17 вместо 136: нет COALESCE по паре дат отправки"
+    },
+    {
+      "task": "logistics/log2-044",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "перевозка та же, 271, но в ответе лишняя колонка с отношением; по правилу лишние колонки это ложное срабатывание. Логика ранжирования у модели другая, совпадение сущности проверено"
+    },
+    {
+      "task": "manufacturing/mfg2-003",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пусто: фильтр mov_kind_ref.title='SCRAP' вместо кода 3"
+    },
+    {
+      "task": "manufacturing/mfg2-008",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "значения другие и part_id вместо названия: BETWEEN не находит открытое окно с valid_to IS NULL"
+    },
+    {
+      "task": "manufacturing/mfg2-013",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "86 вместо 137: нет COALESCE по паре дат движения"
+    },
+    {
+      "task": "manufacturing/mfg2-031",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "движение 155 вместо 209: нет перевода в базовую единицу и открытое окно не найдено"
+    },
+    {
+      "task": "manufacturing/mfg2-033",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "SQL не исполняется: нет колонки fp.minor"
+    },
+    {
+      "task": "manufacturing/mfg2-040",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пусто: взяты defect и grade_cd='S' вместо движений брака"
+    },
+    {
+      "task": "manufacturing/mfg2-041",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "88 вместо 64: пара считается дважды, нет условия b.id > a.id"
+    },
+    {
+      "task": "medicine/med2-020",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "0 вместо 149: LIKE по dt_op, где часть дат NULL"
+    },
+    {
+      "task": "medicine/med2-034",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "77 вместо 81: возраст считается на сегодня, а не на дату поступления"
+    },
+    {
+      "task": "public_services/gov2-046",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "147 вместо 206: вычитание в обратную сторону и нет отбора закрытых дел"
+    },
+    {
+      "task": "public_services/gov2-048",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "62 вместо 4: условие на одно дело вместо отсутствия закрытых у заявителя"
+    }
+  ]
+}

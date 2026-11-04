@@ -185,8 +185,32 @@ REF = re.compile(r"\{=([^|}]+)\|([^|}]+)\|([^}]+)\}")
 # otherwise it is dropped and the data-when="pending" region is shown instead.
 # Partial data is treated as missing: half a results table is worse than none,
 # because a reader cannot tell which half is real.
-REGION = re.compile(
-    r'<(\w+)[^>]*\sdata-when="(results|pending)"[^>]*>(.*?)</\1>', re.S)
+REGION_OPEN = re.compile(r'<(\w+)[^>]*\sdata-when="(results|pending)"[^>]*>')
+
+
+def _region(body: str, m: re.Match) -> tuple[int, int, str]:
+    """Where the element opened at `m` ends, counting nested tags of its kind.
+
+    Matching the close with `.*?</\1>` stops at the first closing tag of that
+    name, and both regions hold a nested div. The results region survived it
+    because every reference sits inside the first nested element, but dropping
+    the pending region cut it in half and left its closing tag behind: the
+    built page carried a stray </div>, on every build, for as long as the
+    regions have existed.
+    """
+    tag = m.group(1)
+    opener = re.compile(rf"<{tag}\b", re.I)
+    closer = re.compile(rf"</{tag}\s*>", re.I)
+    depth, i = 1, m.end()
+    while depth:
+        o, c = opener.search(body, i), closer.search(body, i)
+        if c is None:
+            raise Unbacked(f'регион data-when="{m.group(2)}" не закрыт')
+        if o is not None and o.start() < c.start():
+            depth, i = depth + 1, o.end()
+        else:
+            depth, i = depth - 1, c.end()
+    return m.start(), i, body[m.end():i - len(f"</{tag}>")]
 
 
 class Unbacked(Exception):
@@ -247,21 +271,21 @@ def load_results() -> dict:
 
 def split_regions(body: str, results: dict) -> tuple[str, bool]:
     """Keep the results region or the pending one. Returns (body, filled)."""
-    regions = {m.group(2): m for m in REGION.finditer(body)}
+    regions = {m.group(2): _region(body, m) for m in REGION_OPEN.finditer(body)}
     if "results" not in regions and "pending" not in regions:
         return body, True
     if "results" not in regions or "pending" not in regions:
         raise Unbacked("регионы data-when должны идти парой: results и pending")
 
+    inner = regions["results"][2]
     filled = all(
         dig(results.get(f"{m.group(1).strip()}.{m.group(2).strip()}"),
             m.group(3).strip()) is not None
-        for m in REF.finditer(regions["results"].group(3))
-    ) and REF.search(regions["results"].group(3)) is not None
+        for m in REF.finditer(inner)
+    ) and REF.search(inner) is not None
 
-    drop = regions["pending" if filled else "results"]
-    body = body[: drop.start()] + body[drop.end():]
-    return body, filled
+    start, end, _ = regions["pending" if filled else "results"]
+    return body[:start] + body[end:], filled
 
 
 def dig(summary: dict | None, metric: str):
@@ -511,7 +535,7 @@ NAV = {
     Askbase
   </a>
   <ul>
-    <li><a href="/model-ranking/">Accuracy</a></li>
+    <li><a href="/model-ranking/">Model ranking</a></li>
     <li><a href="/comparison/">Other tools</a></li>
     <li><a href="/where-your-data-goes/">Your data</a></li>
     <li><a href="/install/">Install</a></li>
@@ -528,7 +552,7 @@ NAV = {
     Askbase
   </a>
   <ul>
-    <li><a href="/ru/reyting-modeley/">Точность</a></li>
+    <li><a href="/ru/reyting-modeley/">Рейтинг моделей</a></li>
     <li><a href="/ru/sravnenie/">Другие инструменты</a></li>
     <li><a href="/ru/kuda-uhodyat-dannye/">Ваши данные</a></li>
     <li><a href="/ru/ustanovka/">Установка</a></li>

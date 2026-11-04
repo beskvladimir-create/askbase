@@ -76,7 +76,7 @@ def write_sqlite(domain: Domain, rows: dict[str, list[tuple]], path: Path) -> No
         con.close()
 
 
-def tasks_payload(domain: Domain) -> list[dict]:
+def tasks_payload(domain: Domain, set_no: int = 1) -> list[dict]:
     """The task list as it is frozen and hashed."""
     return [
         {
@@ -89,7 +89,7 @@ def tasks_payload(domain: Domain) -> list[dict]:
             ],
             "traps": list(t.traps),
         }
-        for t in domain.tasks
+        for t in domain.task_list(set_no)
     ]
 
 
@@ -114,6 +114,10 @@ def main() -> None:
     ap.add_argument("--now", required=True,
                     help="frozen 'today' as YYYY-MM-DD; never the real current date")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--set", type=int, default=1, choices=(1, 2),
+                    dest="set_no",
+                    help="1 это калибровочный набор, замороженный 27.10.2026; "
+                         "2 это решающий")
     args = ap.parse_args()
 
     domain = DOMAINS[args.domain]
@@ -121,7 +125,7 @@ def main() -> None:
     out = Path(args.out) / domain.name
 
     rows = build_rows(domain, args.seed, now)
-    tasks = tasks_payload(domain)
+    tasks = tasks_payload(domain, args.set_no)
     write_sqlite(domain, rows, out / f"{domain.name}.sqlite")
     (out / "tasks.json").write_text(
         json.dumps(tasks, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -132,6 +136,7 @@ def main() -> None:
     (out / "SHA256").write_text(digest + "\n", encoding="utf-8")
 
     print(f"домен      {domain.name}")
+    print(f"набор      {args.set_no}")
     print(f"зерно      {args.seed}, дата {args.now}")
     print(f"таблиц     {len(domain.tables)}")
     print(f"строк      {sum(len(v) for v in rows.values())}")

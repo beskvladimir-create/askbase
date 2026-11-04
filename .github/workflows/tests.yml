@@ -68,8 +68,8 @@ jobs:
           QT_QPA_PLATFORM: offscreen
         run: ./scripts/test_all.sh
 
-      # Not a formality. The build refuses to publish a figure no results file
-      # backs, and results/ is not in this repository, so this also proves the
-      # pages say what they should when there is no measurement to show.
+      # Not a formality. The build refuses to publish a figure no results
+      # file backs, so this is the check that no number on the site was typed
+      # in by hand.
       - name: Site build
         run: .venv/bin/python scripts/build_site.py --check

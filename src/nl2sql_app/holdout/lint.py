@@ -61,11 +61,57 @@ def _strip_limit(sql: str) -> tuple[str, int | None]:
     return sql[: m.start()].rstrip(), int(m.group(1))
 
 
+def _split_top_level(text: str) -> list[str]:
+    """Split on commas that are not inside brackets.
+
+    Written because of med2-035, whose ordering key is
+    `AVG(julianday(a) - julianday(COALESCE(b, c)))`. A plain `split(",")` cut
+    that expression in half, the rewritten query failed to parse, and the rule
+    reported that the cut could not be checked. A tie check that gives up on
+    every key holding a function call with two arguments is a hole exactly
+    where the hard tasks are, so the depth is tracked.
+    """
+    out: list[str] = []
+    depth = 0
+    cur: list[str] = []
+    for ch in text:
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            out.append("".join(cur))
+            cur = []
+            continue
+        cur.append(ch)
+    out.append("".join(cur))
+    return [k.strip() for k in out if k.strip()]
+
+
 def _order_keys(sql: str) -> list[str]:
     m = ORDER_BY.search(sql)
     if not m:
         return []
-    return [k.strip() for k in m.group(1).split(",") if k.strip()]
+    return _split_top_level(m.group(1))
+
+
+def _order_expr(sql: str) -> str | None:
+    """The first ORDER BY expression, without its direction."""
+    keys = _order_keys(sql)
+    if not keys:
+        return None
+    return re.sub(r"\s+(asc|desc)\s*$", "", keys[0], flags=re.I).strip()
+
+
+def _with_key(body: str, expr: str | None) -> str | None:
+    """The query with the ordering expression added to what it returns."""
+    if not expr:
+        return None
+    m = re.search(r"\bfrom\b", body, re.I)
+    if not m:
+        return None
+    head, tail = body[: m.start()], body[m.start():]
+    return f"{head.rstrip()}, ({expr}) AS __lint_key {tail}"
 
 
 def _cut_findings(conn: sqlite3.Connection, tid: str, gold: str,
@@ -93,9 +139,33 @@ def _cut_findings(conn: sqlite3.Connection, tid: str, gold: str,
     if len(rows) <= limit:
         return []
     if primary not in names:
-        return [Finding(tid, "cut_unchecked",
-                        f"cannot find the ordering key {primary!r} among the "
-                        f"returned columns {names}, so the cut was not checked")]
+        # The ordering key is an expression the query does not return, which
+        # is the ordinary shape of "name the customer who received the most":
+        # the answer is a name and the amount deciding it is nowhere in the
+        # output. Rather than give up, ask for it: the key is spliced into the
+        # select list and the widened query is run. A gold whose select list
+        # cannot be found, or whose rewrite does not execute, still reports
+        # unchecked, because a cut nobody verified is the defect this rule is
+        # named after.
+        widened = _with_key(body, _order_expr(gold))
+        if widened is None:
+            return [Finding(tid, "cut_unchecked",
+                            f"cannot find the ordering key {primary!r} among "
+                            f"the returned columns {names}, so the cut was "
+                            "not checked")]
+        try:
+            rows = conn.execute(f"{widened} LIMIT {limit + 1}").fetchall()
+        except sqlite3.Error as e:
+            return [Finding(tid, "cut_unchecked",
+                            f"the ordering key could not be read back: {e}")]
+        if len(rows) <= limit:
+            return []
+        if rows[limit - 1][-1] == rows[limit][-1]:
+            return [Finding(tid, "ambiguous_cut",
+                            f"rows {limit} and {limit + 1} are equal on the "
+                            "key the question orders by, so the cut is "
+                            "arbitrary")]
+        return []
 
     # Every ordering key that can be found among the returned columns. Tied
     # on all of them and the gold itself is a coin flip, run to run, because
@@ -180,6 +250,37 @@ def report_row(tid: str, gold: str, wordings: list[dict]) -> str:
     return f"{tid}\n    спрашивают: {en}\n    возвращает: {' '.join(cols.split())}"
 
 
+def check_set_wide(tasks: list[dict]) -> list[Finding]:
+    """The rules that no single task can break on its own.
+
+    Found by hand on 2 November 2026, after both passes of set 2 were written:
+    `bank2-024` and `log2-024` held the same gold, word for word the same
+    English wording, and differed only in which database they ran against,
+    because banking and logistics both have a table called `cust` with a
+    nullable city. Two identical questions in one set are one question and a
+    padded count, and no per-task rule can see it. The later task is the one
+    reported, since the earlier one is usually the one worth keeping.
+    """
+    out: list[Finding] = []
+    seen_gold: dict[str, str] = {}
+    seen_text: dict[str, str] = {}
+    for t in tasks:
+        gold = " ".join(t["gold_sql"].split())
+        first = seen_gold.setdefault(gold, t["tid"])
+        if first != t["tid"]:
+            out.append(Finding(t["tid"], "duplicate_gold",
+                               f"the same gold as {first}, so the set asks one "
+                               "question twice and counts it twice"))
+        for w in t.get("wordings") or []:
+            text = " ".join(w["text"].split())
+            first = seen_text.setdefault(text, t["tid"])
+            if first != t["tid"]:
+                out.append(Finding(t["tid"], "duplicate_wording",
+                                   f"this wording is already {first}'s: "
+                                   f"{text!r}"))
+    return out
+
+
 def lint_set(data: str = "data/holdout") -> tuple[list[Finding], list[str]]:
     """Every task of every domain on disk, plus the rows for human judgement."""
     import json
@@ -187,6 +288,7 @@ def lint_set(data: str = "data/holdout") -> tuple[list[Finding], list[str]]:
 
     findings: list[Finding] = []
     rows: list[str] = []
+    everything: list[dict] = []
     for tasks_file in sorted(Path(data).glob("*/tasks.json")):
         dom = tasks_file.parent.name
         d = json.loads(tasks_file.read_text(encoding="utf-8"))
@@ -197,9 +299,10 @@ def lint_set(data: str = "data/holdout") -> tuple[list[Finding], list[str]]:
                 findings += check_task(conn, t["tid"], t["gold_sql"],
                                        t["wordings"], t.get("traps") or [])
                 rows.append(report_row(t["tid"], t["gold_sql"], t["wordings"]))
+                everything.append(t)
         finally:
             conn.close()
-    return findings, rows
+    return findings + check_set_wide(everything), rows
 
 
 def main(argv: list[str] | None = None) -> int:

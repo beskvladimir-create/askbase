@@ -1,0 +1,154 @@
+{
+  "review_file": "results/qwen25-coder-14b.set2-base-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 20,
+    "evaluator": 0,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.0,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-017",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "берёт только dt_op без COALESCE, у старых строк он пуст, выдача пустая"
+    },
+    {
+      "task": "banking/bank2-042",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает код направления со строкой OUT, выдача пустая"
+    },
+    {
+      "task": "hr/hr2-012",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "ищет статус с названием Active, которого в справочнике нет"
+    },
+    {
+      "task": "hr/hr2-044",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "ищет валюту с названием Euro, которого в справочнике нет"
+    },
+    {
+      "task": "logistics/log2-006",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "усредняет плечи вместо суммы по отправлению"
+    },
+    {
+      "task": "logistics/log2-013",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "среднее отношений вместо отношения сумм, и копейки не переведены"
+    },
+    {
+      "task": "logistics/log2-027",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "ищет коды по названиям, которых в справочниках нет, ответ 0"
+    },
+    {
+      "task": "logistics/log2-036",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает код пункта назначения с текстом города"
+    },
+    {
+      "task": "manufacturing/mfg2-008",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "строит ответ от таблицы дефектов, без суммы и без перевода единиц"
+    },
+    {
+      "task": "manufacturing/mfg2-015",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "без COALESCE на дату операции, среднее 429.8 против 404.3"
+    },
+    {
+      "task": "manufacturing/mfg2-022",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "целочисленное деление, 21 вместо 21.2, и лишние столбцы"
+    },
+    {
+      "task": "manufacturing/mfg2-027",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вызывает DATEDIFF, которой в SQLite нет"
+    },
+    {
+      "task": "manufacturing/mfg2-045",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "цена в копейках, 1486 вместо 14.86, и окно не привязано к первому движению"
+    },
+    {
+      "task": "manufacturing/mfg2-047",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "группирует ещё и по дате, вместо трёх строк сотни"
+    },
+    {
+      "task": "medicine/med2-007",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает discharged с единицей и считает от сегодняшнего дня"
+    },
+    {
+      "task": "medicine/med2-011",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает признак с буквой N, выдача пустая"
+    },
+    {
+      "task": "medicine/med2-020",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "берёт только dt_adm без COALESCE, ответ 0"
+    },
+    {
+      "task": "medicine/med2-039",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "не считает сгруппированные строки повторно, вернул по единице на пациента"
+    },
+    {
+      "task": "public_services/gov2-005",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "фильтрует по несуществующему названию результата, выдача пустая"
+    },
+    {
+      "task": "public_services/gov2-046",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "считает срок от подачи вместо недобега до срока, 74 против 206"
+    }
+  ]
+}

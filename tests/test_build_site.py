@@ -100,8 +100,8 @@ def test_anything_still_blocked_says_why():
     assert bad == ["some-page"], "правило «у блокировки есть причина» не работает"
 
 
-@pytest.mark.parametrize("page,stage", [("index.html", "holdout-en"),
-                                        ("ru-index.html", "holdout-ru")])
+@pytest.mark.parametrize("page,stage", [("index.html", "set2-app-en"),
+                                        ("ru-index.html", "set2-app-ru")])
 def test_the_home_page_states_the_measured_accuracy(page, stage):
     """It used to be forbidden to, and the reason has expired.
 
@@ -232,6 +232,44 @@ def test_partial_data_counts_as_no_data(results):
     body, filled = build_site.split_regions(PAGE, build_site.load_results())
     assert not filled
     assert "Прогона ещё не было" in body
+
+
+NESTED = (
+    '<div data-when="pending"><div class="callout"><p>Прогона ещё не было.</p></div></div>'
+    '<div data-when="results"><div class="table-wrap">'
+    '<p>A {=m1|base|ex_accuracy}</p></div><p class="note">сноска</p></div>'
+    '<p>после регионов</p>'
+)
+
+
+def test_a_region_ends_at_its_own_closing_tag_not_the_first_one(results):
+    """Both regions hold a nested div, and the first version stopped at it.
+
+    The results region survived by luck, because every reference sits inside
+    the first nested element. Dropping the pending region did not: it was cut
+    in half and its closing tag stayed on the page, so every build published a
+    stray </div>. The nesting here is exactly the ranking page's.
+    """
+    write_summary(results, "m1.base", {"ex_accuracy": 0.68})
+    body, filled = build_site.split_regions(NESTED, build_site.load_results())
+    assert filled
+    assert "Прогона ещё не было" not in body
+    assert "callout" not in body
+    # What the first version lost: the part of the kept region after its own
+    # nested element, and the balance of the tags around the dropped one.
+    assert "сноска" in body and "после регионов" in body
+    assert body.count("<div") == body.count("</div>")
+
+
+def test_dropping_the_results_region_leaves_the_tags_balanced():
+    # The mirror case: no data, so the nested results region is the one cut
+    # out. Both halves of the swap have to leave a well-formed page.
+    body, filled = build_site.split_regions(NESTED, {})
+    assert not filled
+    assert "Прогона ещё не было" in body
+    assert "{=m1" not in body and "сноска" not in body
+    assert "после регионов" in body
+    assert body.count("<div") == body.count("</div>")
 
 
 def test_a_lone_region_is_an_error(results):

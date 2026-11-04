@@ -21,6 +21,14 @@ The classification of a trap is the hand-audited one from the review of set 1,
 reproduced here rather than imported so that it is committed where it is used.
 A task counts in `no_schema` when none of its traps is a schema-semantics one,
 and in `only_schema` when all of them are.
+
+Both held-out sets are read, and a task is keyed by `domain/tid` rather than by
+`tid` alone, which is how a result record names it: the two sets number their
+tasks from one inside every domain, so a bare tid would collide across sets and
+quietly score set 2 by set 1's traps. The same keywords classify both sets, and
+on set 2 they reproduce the composition written down before the run: 206 tasks
+whose traps are all schema semantics, 51 schema together with skill, 15 pure
+skill and 16 carrying an ambiguity of the question.
 """
 from __future__ import annotations
 
@@ -52,10 +60,12 @@ def classify(trap: str) -> str:
 
 def trap_classes() -> dict[str, set[str]]:
     out: dict[str, set[str]] = {}
-    for f in sorted(glob.glob(str(ROOT / "data/holdout/*/tasks.json"))):
-        d = json.loads(pathlib.Path(f).read_text(encoding="utf-8"))
-        for t in (d if isinstance(d, list) else d["tasks"]):
-            out[t["tid"]] = {classify(x) for x in (t.get("traps") or [])}
+    for root in ("data/holdout", "data/holdout2"):
+        for f in sorted(glob.glob(str(ROOT / root / "*/tasks.json"))):
+            d = json.loads(pathlib.Path(f).read_text(encoding="utf-8"))
+            for t in (d if isinstance(d, list) else d["tasks"]):
+                out[f"{t['domain']}/{t['tid']}"] = {
+                    classify(x) for x in (t.get("traps") or [])}
     return out
 
 
@@ -65,7 +75,7 @@ def split(path: pathlib.Path, classes: dict[str, set[str]]) -> dict[str, float]:
     with path.open(encoding="utf-8") as fh:
         for line in fh:
             r = json.loads(line)
-            acc.setdefault(r["task"].split("/")[-1], []).append(bool(r["correct"]))
+            acc.setdefault(r["task"], []).append(bool(r["correct"]))
     score = {t: sum(v) / len(v) for t, v in acc.items()}
     buckets = {
         "no_schema": [t for t in score if "schema" not in classes.get(t, set())],
@@ -87,7 +97,12 @@ def main(argv: list[str] | None = None) -> int:
         print("нет data/holdout, задачи не прочитаны")
         return 1
     touched = 0
-    for jsonl in sorted((ROOT / "results").glob("*.holdout-??.jsonl")):
+    # Обе стадии набора 1 и все три плеча набора 2. Старый шаблон ловил
+    # только `holdout-en` и `holdout-ru`, поэтому разбивка по ловушкам не
+    # попадала в сводки набора 2 вовсе, а страница рейтинга читает её оттуда.
+    files = sorted(set((ROOT / "results").glob("*.holdout-??.jsonl"))
+                   | set((ROOT / "results").glob("*.set2-*.jsonl")))
+    for jsonl in files:
         summary = jsonl.with_name(jsonl.name[:-len(".jsonl")] + ".summary.json")
         if not summary.is_file():
             continue

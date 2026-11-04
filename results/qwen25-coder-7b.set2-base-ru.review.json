@@ -1,0 +1,154 @@
+{
+  "review_file": "results/qwen25-coder-7b.set2-base-ru.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 19,
+    "evaluator": 1,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.05,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-013",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "резидентство определяет по непустоте кода, одна строка вместо двух"
+    },
+    {
+      "task": "banking/bank2-048",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "обращается к txn.cust_id, которого нет"
+    },
+    {
+      "task": "hr/hr2-022",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "валюта ищется как US Dollar вместо USD, выдача пустая"
+    },
+    {
+      "task": "hr/hr2-035",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "считает руководителей сверху вниз вместо подчинённых, 13 против 110"
+    },
+    {
+      "task": "hr/hr2-042",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "статус сравнивается со строкой LEFT и дата ухода с началом строки зарплаты"
+    },
+    {
+      "task": "hr/hr2-048",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "считает сотрудников дочерних отделов вместо родительских, 126 против 65"
+    },
+    {
+      "task": "logistics/log2-023",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "статус сравнивается со словом dispatched, выдача пустая"
+    },
+    {
+      "task": "logistics/log2-032",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "те же четыре суммы, целочисленное деление срезало копейки, расхождение меньше денежной единицы на четыре миллиона"
+    },
+    {
+      "task": "logistics/log2-038",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает с числом строк справочника, а не стран, выдача пустая"
+    },
+    {
+      "task": "logistics/log2-045",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "обращается к leg.org_cd, которого нет"
+    },
+    {
+      "task": "manufacturing/mfg2-013",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "без COALESCE на дату движения, 51 против 137"
+    },
+    {
+      "task": "manufacturing/mfg2-015",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "обращается к d1.dt_op, такой колонки у дефекта нет"
+    },
+    {
+      "task": "manufacturing/mfg2-022",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнение с valid_to не находит открытое окно с NULL, выдача пустая"
+    },
+    {
+      "task": "manufacturing/mfg2-023",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает код вида движения со словами IN и OUT, все нули"
+    },
+    {
+      "task": "manufacturing/mfg2-043",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "ищет деталь с наибольшим количеством дефектов вместо наибольшей доли брака"
+    },
+    {
+      "task": "public_services/gov2-004",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "выдумал фильтр по названию результата из слов вопроса, результат None"
+    },
+    {
+      "task": "public_services/gov2-005",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "фильтрует этапы по слову closed, выдача пустая"
+    },
+    {
+      "task": "public_services/gov2-020",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "фильтрует этапы по слову accepted, выдача пустая"
+    },
+    {
+      "task": "public_services/gov2-035",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "ищет результаты COMPLETED_LATE и COMPLETED_ON_TIME, которых нет"
+    },
+    {
+      "task": "public_services/gov2-039",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "фильтрует по дате подачи вместо просрочки, выдача пустая"
+    }
+  ]
+}

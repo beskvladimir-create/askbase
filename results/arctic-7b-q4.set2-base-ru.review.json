@@ -1,0 +1,154 @@
+{
+  "review_file": "results/arctic-7b-q4.set2-base-ru.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 20,
+    "evaluator": 0,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.0,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-012",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "минорные единицы не переведены: 419371200 вместо 4193712.0"
+    },
+    {
+      "task": "banking/bank2-036",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "взята таблица acct вместо loan, нет округления"
+    },
+    {
+      "task": "hr/hr2-002",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пусто: фильтр по cur_ref.title и status_cd, группировка по dept_id, нет деления на 100"
+    },
+    {
+      "task": "hr/hr2-033",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "пусто: искала русское название статуса вместо кода 2"
+    },
+    {
+      "task": "hr/hr2-047",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "пусто: status_cd='active' и cr.cd='EUR', типы не те, плюс лишняя колонка"
+    },
+    {
+      "task": "logistics/log2-007",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "форма ответа другая: строки перевозчиков вместо группировки по виду, все виды 'Unknown'"
+    },
+    {
+      "task": "logistics/log2-018",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "20.5 вместо 20.0: нет COALESCE по паре дат и нет фильтра по статусу"
+    },
+    {
+      "task": "logistics/log2-036",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "9766 вместо 80: коррелированный подзапрос в ON дал декартово соединение"
+    },
+    {
+      "task": "logistics/log2-047",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "значения другие: нет фильтра по статусу, нет COALESCE, нет округления"
+    },
+    {
+      "task": "manufacturing/mfg2-005",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пусто: сравнение дат вместо valid_to IS NULL, умножение на to_base вместо деления на 100"
+    },
+    {
+      "task": "manufacturing/mfg2-009",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "(None,): суммировано qty вместо стоимости, valid_to > CURRENT_DATE не находит открытое окно"
+    },
+    {
+      "task": "manufacturing/mfg2-027",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "значения другие и part_id вместо title: нет COALESCE по паре дат, нет CAST"
+    },
+    {
+      "task": "manufacturing/mfg2-029",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "(None,): фильтр u.title='тонна', в справочнике 'tonne'"
+    },
+    {
+      "task": "manufacturing/mfg2-034",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "счётчики другие: нет COALESCE и нет условия valid_to IS NULL"
+    },
+    {
+      "task": "manufacturing/mfg2-036",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "коды степени вместо названий и значения другие: нет COALESCE по паре дат"
+    },
+    {
+      "task": "medicine/med2-013",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "LEFT JOIN с условием d.enc_id IS NULL включает пациентов, у которых есть диагноз в другом случае"
+    },
+    {
+      "task": "medicine/med2-025",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "модель выдала прозу вместо SQL, запрос не исполняется"
+    },
+    {
+      "task": "public_services/gov2-031",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "посчитаны заявители по каждой услуге вместо тех, кто воспользовался всеми"
+    },
+    {
+      "task": "public_services/gov2-032",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пусто: result_cd='REJECT' вместо кода 2"
+    },
+    {
+      "task": "public_services/gov2-042",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "пусто: сравнение a.city с o.title вместо названия региона"
+    }
+  ]
+}

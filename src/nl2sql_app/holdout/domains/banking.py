@@ -300,10 +300,30 @@ ORDER BY accounts DESC, c.full_name
     ),
 )
 
+
+# Set 2, the deciding set. A separate tuple because set 1's SHA-256 covers its
+# task list: adding a task to TASKS would change the hash of a set that has
+# already been run and published, and verify.py would then refuse every tool
+# on it. The schema and the data are shared; only the questions differ.
+#
+# Every task here is checked by `nl2sql_app.holdout.lint`, which is the set 1
+# review turned into rules: a gold that returns nothing, a gold that is a coin
+# flip at its LIMIT, a cut that falls inside a tie, a float tail no answer can
+# match, and a Russian wording that reads as a condition the gold does not
+# apply.
+
+# Набор 2 действующий отложенный набор: формулировки вопросов не публикуются,
+# чтобы модель, которую на нём меряют, его не читала. Хеш заморозки лежит в
+# DIGESTS2.json, а предсказание, эталонный запрос и вердикт по каждой задаче
+# в results/. См. HOLDOUT.md, раздел про закрытые формулировки.
+TASKS_2: tuple = ()
+
+
 DOMAIN = Domain(
     name="banking",
     tables=TABLES,
     tasks=TASKS,
+    tasks_2=TASKS_2,
     row_counts={"cust": 350, "acct": 620, "txn": 2400, "loan": 180},
 )
 

@@ -1,0 +1,154 @@
+{
+  "review_file": "results/xiyan-7b-q4.set2-base-ru.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 20,
+    "evaluator": 0,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.0,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-012",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "копейки не переведены, 419 миллионов вместо 4.19 миллиона"
+    },
+    {
+      "task": "hr/hr2-022",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "валюта ищется как US Dollars, выдача пустая"
+    },
+    {
+      "task": "hr/hr2-036",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "требует больше одного подчинённого и теряет часть людей"
+    },
+    {
+      "task": "hr/hr2-048",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает отдел сам с собой по parent_id, ответ 0"
+    },
+    {
+      "task": "logistics/log2-021",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает город клиента сам с собой, условие всегда истинно, 650 против 71"
+    },
+    {
+      "task": "logistics/log2-028",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "HAVING count(*) = 0 после внутреннего соединения недостижимо, выдача пустая"
+    },
+    {
+      "task": "logistics/log2-034",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает дату отправки вместо даты сдачи, ответ 0"
+    },
+    {
+      "task": "logistics/log2-038",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает с числом строк справочника вместо числа стран, выдача пустая"
+    },
+    {
+      "task": "manufacturing/mfg2-009",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает окно с сегодняшней датой, открытое окно с NULL не найдено"
+    },
+    {
+      "task": "manufacturing/mfg2-011",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "обращается к grade_ref.grade_cd и к mov.shift_cd, таких колонок нет"
+    },
+    {
+      "task": "manufacturing/mfg2-017",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "считает доли по числу строк соединения, а не по количеству в базовых единицах"
+    },
+    {
+      "task": "manufacturing/mfg2-036",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "без COALESCE на дату движения, 503.68 против 479.17"
+    },
+    {
+      "task": "medicine/med2-041",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "фильтрует по primary_flag = Y и группирует без случая, выдача пустая"
+    },
+    {
+      "task": "medicine/med2-048",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "путь введения ищется как Intravenous, выдача пустая"
+    },
+    {
+      "task": "public_services/gov2-019",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "результат сравнивается со словом REJECT, выдача пустая"
+    },
+    {
+      "task": "public_services/gov2-024",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "ссылка на несуществующий псевдоним T4"
+    },
+    {
+      "task": "public_services/gov2-037",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "делит число дел на число этапов, ответ 1.0 вместо 1.97"
+    },
+    {
+      "task": "public_services/gov2-038",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вычитает текстовые даты и берёт срок вместо даты закрытия"
+    },
+    {
+      "task": "public_services/gov2-044",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "нет условия на решённость первого этапа, 208 против 169"
+    },
+    {
+      "task": "public_services/gov2-047",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает людей по всем этапам, а не по последнему, числа выше"
+    }
+  ]
+}

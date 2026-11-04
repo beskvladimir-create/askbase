@@ -55,7 +55,7 @@
       <p>I also have not independently tested the privacy behaviour of AskYourDatabase or DataLine. The statements above are taken from the vendor&rsquo;s pricing page and the project&rsquo;s README respectively, which is the strongest evidence available without instrumenting the network, and weaker than a measurement.</p>
 
       <h2>Why a local model only became reasonable recently</h2>
-      <p>Until recently the honest answer to &ldquo;can this run on a laptop&rdquo; was that it could, badly. That changed because specialised models got good at a size that fits in memory. Snowflake&rsquo;s Arctic-Text2SQL-R1-7B reports 68.9% execution accuracy on BIRD dev at seven billion parameters, under Apache-2.0. For comparison, my own measurement of a general-purpose Qwen2.5-Coder-32B with self-correction on the same split was 51.63%, published in <a href="https://arxiv.org/abs/2606.29733">arXiv:2606.29733</a>.</p>
+      <p>Until recently the honest answer to &ldquo;can this run on a laptop&rdquo; was that it could, badly. That changed because specialised models got good at a size that fits in memory. Snowflake&rsquo;s Arctic-Text2SQL-R1-7B reports 68.9% execution accuracy on BIRD dev at seven billion parameters, under Apache-2.0. For comparison, my own measurement of a general-purpose Qwen2.5-Coder-32B with self-correction on the same split was 56.19%, published in <a href="https://arxiv.org/abs/2606.29733">arXiv:2606.29733</a>.</p>
       <p><em class="p">The useful model stopped being the large one.</em> A specialised model four and a half times smaller is the reason a product like this can exist without a cloud behind it, and the reason every product built a year ago has a cloud behind it.</p>
 
       <h2>What privacy costs here, stated plainly</h2>

@@ -1,0 +1,154 @@
+{
+  "review_file": "results/qwen25-coder-14b.set2-app-ord-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 19,
+    "evaluator": 1,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.05,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-034",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "NULL в дате закрытия не считается бесконечностью, часть перекрытий потеряна"
+    },
+    {
+      "task": "hr/hr2-040",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "делит на число отсутствовавших, а не на всех сотрудников, 22.0 против 18.15"
+    },
+    {
+      "task": "logistics/log2-006",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "делит сумму плеч на число строк соединения, 1328.9 против 3668.7"
+    },
+    {
+      "task": "logistics/log2-030",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает перевозки из одного плеча, то есть ровно исключённый случай"
+    },
+    {
+      "task": "logistics/log2-037",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "перевозки без плеч не попали в среднее, 2.76 против 2.57"
+    },
+    {
+      "task": "logistics/log2-041",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "группирует по городу назначения вместо состояния отправления"
+    },
+    {
+      "task": "logistics/log2-045",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "distinct внутри группы по стране всегда 1, ответ 0"
+    },
+    {
+      "task": "manufacturing/mfg2-008",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "нет перевода единиц и копеек, суммы на порядок больше"
+    },
+    {
+      "task": "manufacturing/mfg2-009",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "взял цену на дату движения, хотя вопрос просил текущую открытую"
+    },
+    {
+      "task": "manufacturing/mfg2-017",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "те же доли, отличие только в отсутствии округления до одного знака"
+    },
+    {
+      "task": "manufacturing/mfg2-032",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вернул построчную детализацию вместо двух итогов по сменам"
+    },
+    {
+      "task": "medicine/med2-032",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вернул число пациентов по каждому отделению вместо тех, кто был во всех"
+    },
+    {
+      "task": "medicine/med2-042",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "потерян COALESCE на дату поступления и отбор по выписанным"
+    },
+    {
+      "task": "public_services/gov2-004",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "подставляет сегодняшнюю дату незакрытым делам, 92.0 против 21.0"
+    },
+    {
+      "task": "public_services/gov2-007",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "определяет незавершённость по этапам, а не по дате закрытия, 155 против 73"
+    },
+    {
+      "task": "public_services/gov2-026",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает не те пары этапов, 51 против 135"
+    },
+    {
+      "task": "public_services/gov2-026",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "ищет нерешённый этап как result_cd = 0, а там NULL, ответ 0"
+    },
+    {
+      "task": "public_services/gov2-028",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "в знаменателе все дела, а не только закрытые"
+    },
+    {
+      "task": "public_services/gov2-030",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вернул разрез по регионам вместо числа заявителей, подавших во всех"
+    },
+    {
+      "task": "public_services/gov2-040",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "группирует по dt_sub без COALESCE и считает заявителей, а не пары дел"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "review_file": "results/arctic-7b-q8.set2-base-ru.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 16,
+    "evaluator": 4,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.2,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-015",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "dir_cd сравнивается со строкой 'D' вместо кода 1, категория ищется по LIKE '%Product%', сумма вышла пустой"
+    },
+    {
+      "task": "banking/bank2-037",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "выбраны клиенты, у которых есть хоть один закрытый счёт, а спрошены те, у кого закрыты все; множества разные"
+    },
+    {
+      "task": "hr/hr2-002",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "нет деления на 100 и нет отбора последней строки истории, результат пуст"
+    },
+    {
+      "task": "hr/hr2-033",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "статус ищется по русскому слову в справочнике, которого там нет, и без DISTINCT; 0 против 11"
+    },
+    {
+      "task": "hr/hr2-047",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "нет отбора действующей ставки и работающих сотрудников, лишняя колонка, результат пуст"
+    },
+    {
+      "task": "logistics/log2-006",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "усреднены плечи, а не отправления: 1328.89 против 3668.7"
+    },
+    {
+      "task": "logistics/log2-016",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "перевозчик тот же, Petran Freight, рядом выведен сам пробег, которого вопрос не просил; по правилу лишние колонки это ложное срабатывание"
+    },
+    {
+      "task": "logistics/log2-034",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "взята дата отправки dt_disp вместо даты сдачи delivered_at, 0 против 19"
+    },
+    {
+      "task": "logistics/log2-045",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "запрос не исполняется: в shp нет колонки carr_id"
+    },
+    {
+      "task": "manufacturing/mfg2-003",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "лишнее соединение с defect размножило строки, все шесть чисел другие"
+    },
+    {
+      "task": "manufacturing/mfg2-007",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "первое окно соединено само с собой вместо открытого, результат пуст"
+    },
+    {
+      "task": "manufacturing/mfg2-024",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "соединение по part_id без диапазона дат раздуло сумму в тринадцать раз, 372742658 против 28968594"
+    },
+    {
+      "task": "manufacturing/mfg2-027",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "дата движения взята только из recorded_at без COALESCE с dt_op, все шесть чисел другие"
+    },
+    {
+      "task": "manufacturing/mfg2-033",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "деталь та же, plate это PL-330, проверил по справочнику part; отличия только в названии вместо кода и в лишней колонке с приростом. Логика у модели другая, второе окно вместо открытого, но сущность совпала"
+    },
+    {
+      "task": "manufacturing/mfg2-035",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "те же четыре пары чисел, линия названа идентификатором вместо названия: 1 это Assembly A, 2 Assembly B, 3 Machining, 4 Finishing, проверил по таблице line"
+    },
+    {
+      "task": "medicine/med2-012",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "запрос не исполняется: в enc нет колонки enc_id"
+    },
+    {
+      "task": "medicine/med2-024",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "числа верные, но колонки переставлены местами, сначала новая, потом старая, а вопрос порядок задаёт прямо: сколько по старой колонке, а сколько по новой. Расширение правила про порядок колонок сюда не распространяется"
+    },
+    {
+      "task": "public_services/gov2-029",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "те же четыре средних, регион назван кодом вместо названия: 1 это Northport, 2 Eastvale, 3 Marden, 4 Thorne, проверил по region_ref"
+    },
+    {
+      "task": "public_services/gov2-030",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "посчитаны дела по регионам, а спрошено число людей, у которых дело есть в каждом регионе; 21 против четырёх строк"
+    },
+    {
+      "task": "public_services/gov2-039",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "доля не считается вовсе, вместо неё отбор по дате подачи, результат пуст"
+    }
+  ]
+}

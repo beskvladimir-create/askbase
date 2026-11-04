@@ -39,6 +39,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent.parent
 DIGESTS = HERE / "DIGESTS.json"
+# One registry per set. Set 2 was frozen on 2 November 2026 from its own seed,
+# and it gets its own file rather than a second block inside the first: the
+# freeze of set 1 is a published artefact and editing that file for any reason
+# is exactly what a freeze is supposed to prevent.
+REGISTRY = {1: DIGESTS, 2: HERE / "DIGESTS2.json"}
 JOURNAL = ROOT / "results" / "holdout_runs.jsonl"
 
 
@@ -46,17 +51,21 @@ class NotFrozen(Exception):
     """The set on disk is not the set that was frozen."""
 
 
-def expected() -> dict:
-    return json.loads(DIGESTS.read_text(encoding="utf-8"))
+def expected(set_no: int = 1) -> dict:
+    try:
+        path = REGISTRY[set_no]
+    except KeyError:
+        raise NotFrozen(f"нет замороженного набора {set_no}") from None
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def digest_of(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def check_set(data: Path) -> dict[str, str]:
+def check_set(data: Path, set_no: int = 1) -> dict[str, str]:
     """Hash every domain on disk and compare. Raises on the first difference."""
-    want = expected()["domains"]
+    want = expected(set_no)["domains"]
     problems: list[str] = []
     got: dict[str, str] = {}
     for name, digest in sorted(want.items()):
@@ -113,6 +122,16 @@ def previous_runs(tool: str, set_no: int) -> list[dict]:
 
 
 def record(tool: str, set_no: int, reason: str = "") -> dict:
+    # A set still being authored is not a held-out set. Set 2 is written down
+    # in passes, and between them its digests change by design, so the only
+    # thing standing between a half-written set and a published number is a
+    # refusal here. Set 1's registry predates the flag and is frozen, so a
+    # missing key means frozen.
+    if not expected(set_no).get("frozen", True):
+        raise NotFrozen(
+            f"набор {set_no} ещё не заморожен: {expected(set_no).get('note', '')} "
+            "Прогон отклонён."
+        )
     earlier = previous_runs(tool, set_no)
     if earlier and not reason:
         raise NotFrozen(
@@ -137,6 +156,8 @@ def record(tool: str, set_no: int, reason: str = "") -> dict:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default="data/holdout")
+    ap.add_argument("--set", type=int, choices=(1, 2), default=1, dest="set_no",
+                    help="какой замороженный набор проверять")
     ap.add_argument("--record", metavar="TOOL",
                     help="записать прогон этого инструмента в журнал")
     ap.add_argument("--reason", default="",
@@ -145,10 +166,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="только для отладки: прогон с незакоммиченного кода")
     args = ap.parse_args(argv)
 
-    meta = expected()
+    meta = expected(args.set_no)
     data = Path(args.data)
     try:
-        got = check_set(data)
+        got = check_set(data, args.set_no)
     except NotFrozen as e:
         print(f"ОТКАЗ: {e}", file=sys.stderr)
         return 1

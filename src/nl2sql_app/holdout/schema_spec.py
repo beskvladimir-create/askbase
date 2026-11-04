@@ -55,7 +55,23 @@ class Task:
 class Domain:
     name: str
     tables: tuple[Table, ...]
+    # Set 1, the calibration set, frozen on 27 October 2026. Its digest covers
+    # the task list, so this tuple can never change again: a task added here
+    # changes the hash of a set that has already been run and published, and
+    # `verify.py` would then refuse every tool on it, which would retire the
+    # measurement rather than extend it.
     tasks: tuple[Task, ...] = field(default=())
+    # Set 2, the deciding one. A separate tuple for the same reason: the two
+    # sets share the schema and the data and differ only in what is asked, so
+    # growing set 2 leaves set 1 byte for byte where it was.
+    tasks_2: tuple[Task, ...] = field(default=())
+
+    def task_list(self, set_no: int = 1) -> tuple[Task, ...]:
+        if set_no == 1:
+            return self.tasks
+        if set_no == 2:
+            return self.tasks_2
+        raise ValueError(f"нет набора {set_no}")
     # Rows per table, fixed so the data is reproducible and small enough that a
     # gold query's result set is stable and quick to compare.
     row_counts: dict[str, int] = field(default_factory=dict)

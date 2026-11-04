@@ -1,0 +1,154 @@
+{
+  "review_file": "results/xiyan-7b-q4.set2-base-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 19,
+    "evaluator": 1,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.05,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-015",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "ищет категорию в справочнике направлений, результат None"
+    },
+    {
+      "task": "hr/hr2-001",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "обращается к pay_hist.left_at, которой нет"
+    },
+    {
+      "task": "hr/hr2-027",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "ищет валюты US Dollars и Canadian Dollars, которых нет, ответ 0"
+    },
+    {
+      "task": "hr/hr2-041",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "обращается к dept.dept_id и берёт одну строку на всю таблицу"
+    },
+    {
+      "task": "hr/hr2-047",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "валюта ищется как Euro, выдача пустая"
+    },
+    {
+      "task": "logistics/log2-006",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "усредняет плечи вместо суммы по перевозке, 1328.9 против 3668.7"
+    },
+    {
+      "task": "logistics/log2-030",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "не исключил перевозки из одного плеча и не сравнил перевозчиков, 652 против 6"
+    },
+    {
+      "task": "logistics/log2-040",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "та же доля 21.571, отличие только в отсутствии округления до двух знаков"
+    },
+    {
+      "task": "logistics/log2-046",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "берёт город клиента вместо города отправления"
+    },
+    {
+      "task": "manufacturing/mfg2-002",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "взял только килограммы и не перевёл тонны"
+    },
+    {
+      "task": "manufacturing/mfg2-018",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает количество без перевода единиц, выдача пустая"
+    },
+    {
+      "task": "manufacturing/mfg2-020",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вернул идентификатор линии вместо названия"
+    },
+    {
+      "task": "manufacturing/mfg2-026",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает пары дефектов, а не движения, 176 против 46"
+    },
+    {
+      "task": "manufacturing/mfg2-028",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "единица сравнивается со строкой pc и нет группировки по линии"
+    },
+    {
+      "task": "manufacturing/mfg2-048",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "единица ищется как pz, ответ 0"
+    },
+    {
+      "task": "public_services/gov2-005",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вычитает текстовые даты и берёт срок вместо даты закрытия"
+    },
+    {
+      "task": "public_services/gov2-008",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает дату закрытия с числом дней, 94 против 115"
+    },
+    {
+      "task": "public_services/gov2-019",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "соединяет этап с услугой по идентификатору дела, выдача пустая"
+    },
+    {
+      "task": "public_services/gov2-036",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "перепутаны стороны сравнения дат и нет условия на просрочку предыдущего дела"
+    },
+    {
+      "task": "public_services/gov2-040",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "без COALESCE на дату подачи равенство не срабатывает, ответ 0"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "review_file": "results/arctic-7b-q4.set2-base-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 20,
+    "evaluator": 0,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.0,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-018",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "целочисленное деление базисных пунктов, 19 вместо 19.18, потеряны значащие знаки ставки"
+    },
+    {
+      "task": "banking/bank2-041",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "резидентство сравнивается со словом RESIDENT, осталась одна строка"
+    },
+    {
+      "task": "hr/hr2-006",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "рекурсия выдаёт по строке на каждый отдел ветки, шесть строк вместо трёх"
+    },
+    {
+      "task": "hr/hr2-040",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "усредняет строки отсутствий, а не людей, 10.1 против 18.15"
+    },
+    {
+      "task": "logistics/log2-004",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "статус сравнивается со словом LOST, ответ 0"
+    },
+    {
+      "task": "logistics/log2-006",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "усредняет плечи вместо суммы по перевозке, 1328.9 против 3668.7"
+    },
+    {
+      "task": "logistics/log2-018",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "статус сравнивается с буквой D, результат None"
+    },
+    {
+      "task": "logistics/log2-026",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает с датой отправки вместо даты сдачи, 65 против 80"
+    },
+    {
+      "task": "logistics/log2-048",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "без COALESCE на дату отправки, ответ 0"
+    },
+    {
+      "task": "manufacturing/mfg2-008",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вид движения ищется как Scrap и BETWEEN не находит открытое окно, выдача пустая"
+    },
+    {
+      "task": "manufacturing/mfg2-014",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "берёт recorded_at без COALESCE, 5 против 155"
+    },
+    {
+      "task": "manufacturing/mfg2-018",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает количество без перевода единиц, выдача пустая"
+    },
+    {
+      "task": "manufacturing/mfg2-036",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "берёт recorded_at без COALESCE, средние втрое меньше"
+    },
+    {
+      "task": "manufacturing/mfg2-039",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "обращается к mov.shift_cd, смена задана на линии"
+    },
+    {
+      "task": "manufacturing/mfg2-044",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вернул коды единиц вместо названий"
+    },
+    {
+      "task": "manufacturing/mfg2-046",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "нет перевода единиц и копеек, и BETWEEN теряет открытое окно"
+    },
+    {
+      "task": "medicine/med2-006",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "статус ищется как Discharged и нет COALESCE, результат None"
+    },
+    {
+      "task": "medicine/med2-026",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "статус сравнивается со словом cancelled, выдача пустая"
+    },
+    {
+      "task": "medicine/med2-036",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "обращается к enc.enc_id, такой колонки нет"
+    },
+    {
+      "task": "public_services/gov2-030",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вернул число дел по регионам вместо числа людей, подавших во всех"
+    }
+  ]
+}

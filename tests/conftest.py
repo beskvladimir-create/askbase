@@ -52,3 +52,45 @@ def frozen_holdout(tmp_path_factory):
         )
         assert r.returncode == 0, f"{name}: {r.stderr}"
     return out
+
+
+@pytest.fixture(scope="session")
+def frozen_holdout_2(tmp_path_factory):
+    """Set 2, regenerated from its own recorded seed and date.
+
+    A separate fixture rather than a parameter on the first one, because the
+    two sets are two pre-registrations: set 1's failures have been read and
+    every arm on it is a development number, while set 2 has never been run.
+    Mixing them in one fixture is one refactor away from mixing them in one
+    reported figure.
+
+    Skipped where set 2 has no tasks. The public export empties the `TASKS_2`
+    block of every domain module, because set 2 is live and publishing its
+    wordings would hand them to the next model measured on it. Every set-2
+    test depends on this fixture, so one skip here keeps the public CI green
+    without weakening a single assertion in the private repository, where the
+    tasks are present and the tests run in full. The skip is on the data being
+    absent by design, never on an assertion failing.
+    """
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    from nl2sql_app.holdout import verify
+    from nl2sql_app.holdout.generate import DOMAINS as _DOMAINS
+
+    if not any(d.tasks_2 for d in _DOMAINS.values()):
+        pytest.skip("набор 2 не публикуется: в этой копии его задач нет")
+
+    root = Path(__file__).resolve().parent.parent
+    out = tmp_path_factory.mktemp("holdout2")
+    meta = verify.expected(2)
+    for name in sorted(meta["domains"]):
+        r = subprocess.run(
+            [sys.executable, "-m", "nl2sql_app.holdout.generate",
+             "--domain", name, "--seed", str(meta["seed"]),
+             "--now", meta["now"], "--out", str(out), "--set", "2"],
+            cwd=root, capture_output=True, text=True, check=False,
+        )
+        assert r.returncode == 0, f"{name}: {r.stderr}"
+    return out

@@ -98,8 +98,9 @@ def test_a_task_missing_a_language_is_refused_rather_than_dropped(tmp_path, monk
         json.dumps(tasks, ensure_ascii=False), encoding="utf-8")
     (tmp_path / "medicine" / "medicine.sqlite").write_bytes(
         (frozen_holdout / "medicine" / "medicine.sqlite").read_bytes())
-    monkeypatch.setattr(verify, "check_set", lambda _p: {})
-    monkeypatch.setattr(verify, "expected", lambda: {"domains": {"medicine": "x"}})
+    monkeypatch.setattr(verify, "check_set", lambda _p, _s=1: {})
+    monkeypatch.setattr(verify, "expected",
+                        lambda _s=1: {"domains": {"medicine": "x"}})
     with pytest.raises(ValueError, match="нет формулировок"):
         data.load_holdout(str(tmp_path), "ru")
 
@@ -181,11 +182,21 @@ def test_a_bare_run_never_touches_the_held_out_set():
 
 
 def test_the_stage_names_are_the_ones_the_site_asks_for():
-    # The ranking page references {=<model>|holdout-en|ex_accuracy}, and the
-    # build refuses a figure with no results file behind it. A stage renamed
-    # here would leave the table permanently empty with no error anywhere.
+    # The ranking page references {=<model>|set2-base-en|ex_accuracy} and the
+    # two arms beside it, and the build refuses a figure with no results file
+    # behind it. A stage renamed here would leave the table permanently empty
+    # with no error anywhere. The page moved from set 1 to set 2 when set 2 was
+    # run, so these are the names it asks for now.
     page = (ROOT / "site" / "pages" / "model-ranking.html").read_text(encoding="utf-8")
-    assert "|holdout-en|" in page and "|holdout-ru|" in page
+    for stage in ("set2-base-en", "set2-base-ru", "set2-app-en", "set2-app-ru"):
+        assert f"|{stage}|" in page, stage
+    # And the runner still knows them, which is the half of the pairing a test
+    # against the page alone would miss.
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import run_bench
+    names = [f"{arm}-{lang}" for arm in ("set2-base", "set2-app", "set2-app-ord")
+             for lang in ("en", "ru")]
+    assert len(run_bench.pick_stages(names)) == len(names)
 
 
 def test_a_run_that_skipped_the_journal_is_refused(tmp_path, monkeypatch):
@@ -194,10 +205,10 @@ def test_a_run_that_skipped_the_journal_is_refused(tmp_path, monkeypatch):
 
     monkeypatch.setattr(verify, "JOURNAL", tmp_path / "holdout_runs.jsonl")
     with pytest.raises(SystemExit, match="не записан в журнал"):
-        run_bench.require_recorded_run("some-model")
+        run_bench.require_recorded_run("some-model", 1, "data/holdout")
 
     verify.record("some-model", verify.expected()["set"])
-    run_bench.require_recorded_run("some-model")          # now it may proceed
+    run_bench.require_recorded_run("some-model", 1, "data/holdout")          # now it may proceed
 
 
 @pytest.mark.parametrize("kwargs, message", [

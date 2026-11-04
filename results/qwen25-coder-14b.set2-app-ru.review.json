@@ -1,0 +1,154 @@
+{
+  "review_file": "results/qwen25-coder-14b.set2-app-ru.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 16,
+    "evaluator": 4,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.2,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-033",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вернул список счетов вместо их количества"
+    },
+    {
+      "task": "hr/hr2-008",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "подразделение зашито числом 2 и нет отбора по работающим"
+    },
+    {
+      "task": "hr/hr2-010",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "те же 41 сотрудник, проверил запросом; в эталоне лишний столбец с руководителем, которого вопрос не просил"
+    },
+    {
+      "task": "hr/hr2-030",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "MIN внутри MAX, misuse of aggregate"
+    },
+    {
+      "task": "hr/hr2-038",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "группирует по подчинённым отделам вместо верхних, суммы втрое больше"
+    },
+    {
+      "task": "logistics/log2-031",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает разных перевозчиков вместо видов транспорта, 502 против 434"
+    },
+    {
+      "task": "logistics/log2-044",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "та же перевозка 271, но рядом выведено само отношение, которого вопрос не просил"
+    },
+    {
+      "task": "manufacturing/mfg2-001",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "те же три итога по единицам, добавлен столбец с кодом единицы"
+    },
+    {
+      "task": "manufacturing/mfg2-008",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "обращается к несуществующей колонке d.qty"
+    },
+    {
+      "task": "manufacturing/mfg2-017",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает брак по наличию дефекта вместо вида движения, 31.6 против 15.2"
+    },
+    {
+      "task": "manufacturing/mfg2-018",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "нет отбора по весовым единицам, в выдачу попали штуки, и добавлен столбец с датой"
+    },
+    {
+      "task": "manufacturing/mfg2-036",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "без COALESCE на дату движения, 503.68 против 479.17"
+    },
+    {
+      "task": "manufacturing/mfg2-045",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вернул все ценовые окна, а не то, что накрывает первое движение, и цену в копейках"
+    },
+    {
+      "task": "medicine/med2-012",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "те же 189 случаев, проверил запросом; в эталоне лишний столбец с числом диагнозов"
+    },
+    {
+      "task": "medicine/med2-026",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "HAVING после отбора по отменённым всегда истинно, попали пациенты с любой отменой"
+    },
+    {
+      "task": "public_services/gov2-003",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "присоединяет этапы и считает долю не от завершённых дел"
+    },
+    {
+      "task": "public_services/gov2-005",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "отбирает по результату этапа вместо наличия даты закрытия"
+    },
+    {
+      "task": "public_services/gov2-019",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "группирует ещё и по делу, и берёт код 2 вместо результата refused"
+    },
+    {
+      "task": "public_services/gov2-026",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "считает пары этапов, а не дела, 268 против 135"
+    },
+    {
+      "task": "public_services/gov2-034",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "берёт любой нерешённый этап, а не последний, 390 против 116"
+    }
+  ]
+}

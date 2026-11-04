@@ -1,0 +1,154 @@
+{
+  "review_file": "results/xiyan-14b-q4.set2-base-ru.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 20,
+    "evaluator": 0,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.0,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-014",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "статус сравнивается со словом Closed и зашит 2022 год, ответ 0"
+    },
+    {
+      "task": "hr/hr2-023",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "NOT IN с NULL в подзапросе возвращает пусто"
+    },
+    {
+      "task": "hr/hr2-038",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "валюта сравнивается со строкой EUR вместо кода, выдача пустая"
+    },
+    {
+      "task": "logistics/log2-002",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "соединяет коды мест с таблицей клиентов, в ответе названия фирм"
+    },
+    {
+      "task": "logistics/log2-023",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "не исключил внутренние перевозки, появились пары страны с самой собой"
+    },
+    {
+      "task": "logistics/log2-031",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "считает пары плеч с разными перевозчиками, 4464 против 434"
+    },
+    {
+      "task": "logistics/log2-037",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "усредняет признак наличия плеча, 0.97 против 2.57"
+    },
+    {
+      "task": "logistics/log2-044",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вернул перевозчика и считает стоимость на километр вместо веса"
+    },
+    {
+      "task": "manufacturing/mfg2-010",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "без COALESCE на дату движения и без разреза по линиям, ответ 0"
+    },
+    {
+      "task": "manufacturing/mfg2-012",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "степень ищется по русскому названию и дефект соединён с деталью напрямую"
+    },
+    {
+      "task": "manufacturing/mfg2-019",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "множит сумму на коэффициент одной произвольной строки и группирует по линии вместо смены"
+    },
+    {
+      "task": "manufacturing/mfg2-038",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "внутреннее соединение отбрасывает движения без брака, выбрана другая линия"
+    },
+    {
+      "task": "medicine/med2-043",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "считает пациентов с поступлением не в 2022 году вместо тех, у кого годы разные"
+    },
+    {
+      "task": "public_services/gov2-003",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "в знаменателе все дела, а не только завершённые"
+    },
+    {
+      "task": "public_services/gov2-019",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает результат с иероглифами, выдача пустая"
+    },
+    {
+      "task": "public_services/gov2-024",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "соединяет отделение с услугой, обращается к несуществующей колонке"
+    },
+    {
+      "task": "public_services/gov2-037",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "COUNT внутри AVG, misuse of aggregate"
+    },
+    {
+      "task": "public_services/gov2-038",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вычитает текстовые даты и берёт срок вместо даты закрытия, все нули"
+    },
+    {
+      "task": "public_services/gov2-042",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "соединяет заявителя с отделением по идентификатору, все доли нулевые"
+    },
+    {
+      "task": "public_services/gov2-046",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "вычитает текстовые даты без julianday, ответ 0"
+    }
+  ]
+}

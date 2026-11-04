@@ -129,8 +129,46 @@ ORDER_STAGES = [
     for lang in ("en", "ru")
 ]
 
+# Set 2, frozen on 2 November 2026, and the only stages that read it. Three
+# arms and no more, because the set is run once and seven arms on one set is
+# how a development number becomes a published one:
+#
+#   `set2-base`     the bare protocol, identical to holdout-en/ru. Every
+#                   participant runs this, ours among them with no privileges,
+#                   which is what П1 and П3 compare.
+#   `set2-app`      the prompt the application actually sends, with the
+#                   divisor fix that shipped after set 1. This is our engine.
+#   `set2-app-ord`  the same prompt with the tables left in creation order.
+#                   Set 1 said +1.0 [-5.2, +7.3] on English and +4.2 [-1.0,
+#                   +10.4] on Russian, undetermined on both and consistent in
+#                   direction, and HOLDOUT.md named it before this set was
+#                   generated as the single candidate to confirm here.
+#
+# The data_root and the set number come from configs/holdout2.yaml, so these
+# names cannot be pointed at set 1 by accident.
+SET2_STAGES = [
+    (f"set2-base-{lang}",
+     {"dataset": "holdout", "lang": lang, "schema_link": False,
+      "self_correct": False, "self_consistency": False})
+    for lang in ("en", "ru")
+] + [
+    (f"set2-app-{lang}",
+     {"dataset": "holdout", "lang": lang, "schema_link": False,
+      "self_correct": False, "self_consistency": False,
+      "schema_keys": True, "schema_notes": True,
+      "schema_ddl": True, "schema_samples": 3})
+    for lang in ("en", "ru")
+] + [
+    (f"set2-app-ord-{lang}",
+     {"dataset": "holdout", "lang": lang, "schema_link": False,
+      "self_correct": False, "self_consistency": False,
+      "schema_keys": True, "schema_notes": True,
+      "schema_ddl": True, "schema_samples": 3, "schema_order": "create"})
+    for lang in ("en", "ru")
+]
+
 BY_NAME = dict(ABLATION + HOLDOUT_STAGES + NOTES_STAGES + CORRECT_STAGES
-               + APP_STAGES + DIVISOR_STAGES + ORDER_STAGES)
+               + APP_STAGES + DIVISOR_STAGES + ORDER_STAGES + SET2_STAGES)
 
 
 def pick_stages(names: list[str] | None) -> list[tuple[str, dict]]:
@@ -146,22 +184,27 @@ def pick_stages(names: list[str] | None) -> list[tuple[str, dict]]:
     return [(n, BY_NAME[n]) for n in names]
 
 
-def require_recorded_run(model: str) -> None:
+def require_recorded_run(model: str, set_no: int, data_root: str) -> None:
     """Refuse a held-out run that was never written into the journal.
 
     Step 1 of the run plan is `verify --record <tool>`, which is what makes a
     second run of the same tool visible and a repeat need a reason. A first
     step that the second step does not check is advice, not a protocol, so the
     check lives here.
-    """
-    from nl2sql_app.holdout.verify import expected, previous_runs
 
-    set_no = expected()["set"]
+    The set number comes from the config rather than from the registry, which
+    it used to: once there were two frozen sets, `expected()["set"]` was
+    always 1 and a set-2 run would have been waved through on set 1's journal
+    entry.
+    """
+    from nl2sql_app.holdout.verify import previous_runs
+
     if not previous_runs(model, set_no):
         raise SystemExit(
             f"ОТКАЗ: прогон {model} по набору {set_no} не записан в журнал.\n"
             f"Сначала шаг 1 плана прогона:\n"
-            f"  python -m nl2sql_app.holdout.verify --data data/holdout --record {model}"
+            f"  python -m nl2sql_app.holdout.verify --data {data_root} "
+            f"--set {set_no} --record {model}"
         )
 
 
@@ -200,9 +243,10 @@ def main() -> None:
         max_retries=m.get("max_retries", cfg.get("max_retries", 2)),
     )
 
+    holdout_set = int(cfg.get("holdout_set", 1))
     stages = pick_stages(args.stages)
     if any(f.get("dataset") == "holdout" for _, f in stages):
-        require_recorded_run(args.model)
+        require_recorded_run(args.model, holdout_set, data_root)
     for name, flags in stages:
         out = os.path.join(out_dir, f"{args.model}.{name}.jsonl")
         run_flags = dict(flags)
@@ -210,7 +254,8 @@ def main() -> None:
             run_flags["emb_top_k"] = args.emb_top_k
         summary = run(data_root, client, out, limit=args.limit,
                       sample=args.sample, sample_seed=args.sample_seed,
-                      concurrency=concurrency, **run_flags)
+                      concurrency=concurrency, holdout_set=holdout_set,
+                      **run_flags)
         print(json.dumps(summary, indent=2))
 
 

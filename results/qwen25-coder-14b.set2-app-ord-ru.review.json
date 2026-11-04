@@ -1,0 +1,154 @@
+{
+  "review_file": "results/qwen25-coder-14b.set2-app-ord-ru.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 18,
+    "evaluator": 2,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.1,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-037",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "берёт клиентов с любым закрытым счётом вместо тех, у кого закрыты все"
+    },
+    {
+      "task": "hr/hr2-011",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "те же 177 сотрудников, проверил запросом; добавлены руководитель и два отдела, которых вопрос не просил"
+    },
+    {
+      "task": "hr/hr2-012",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "тот же стаж 6.747, отличие только в отсутствии округления до одного знака"
+    },
+    {
+      "task": "hr/hr2-037",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "нет отбора по работающим и по наличию родителя, набор другой"
+    },
+    {
+      "task": "hr/hr2-039",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "условие в WHERE отсекает нужные строки до группировки, выдача пустая"
+    },
+    {
+      "task": "logistics/log2-034",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "сравнивает дату отправки вместо даты сдачи, ответ 0"
+    },
+    {
+      "task": "manufacturing/mfg2-002",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "исключил не штуки, а первую единицу по коду, сумма в десять раз меньше"
+    },
+    {
+      "task": "manufacturing/mfg2-004",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "исключает движения с дефектом вместо вида брака, числа другие"
+    },
+    {
+      "task": "manufacturing/mfg2-014",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "складывает 90 с текстовой датой без julianday, ответ 0"
+    },
+    {
+      "task": "manufacturing/mfg2-022",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "соединяет деталь с кодом единицы, осталась одна строка"
+    },
+    {
+      "task": "manufacturing/mfg2-024",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "копейки не переведены, сумма в сто раз больше"
+    },
+    {
+      "task": "manufacturing/mfg2-041",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает разные детали, а не пары движений, 5 против 64"
+    },
+    {
+      "task": "medicine/med2-007",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вычитает текстовые даты без julianday, ответ 0"
+    },
+    {
+      "task": "medicine/med2-026",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "HAVING после отбора по отменённым всегда ложно, выдача пустая"
+    },
+    {
+      "task": "medicine/med2-031",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "COUNT внутри AVG, misuse of aggregate"
+    },
+    {
+      "task": "public_services/gov2-006",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает этапы без решения вместо дел без даты закрытия"
+    },
+    {
+      "task": "public_services/gov2-009",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "группирует по имени, а не по заявителю; тёзки слиты, 196 пар против 162, проверил запросом"
+    },
+    {
+      "task": "public_services/gov2-028",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "в знаменателе все дела, а не только закрытые"
+    },
+    {
+      "task": "public_services/gov2-030",
+      "lang": "ru",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вернул разрез по регионам вместо числа подавших во всех"
+    },
+    {
+      "task": "public_services/gov2-037",
+      "lang": "ru",
+      "wording": 1,
+      "verdict": "model",
+      "note": "COUNT внутри AVG, misuse of aggregate"
+    }
+  ]
+}

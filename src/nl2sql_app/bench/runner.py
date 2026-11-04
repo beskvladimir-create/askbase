@@ -107,6 +107,7 @@ def run(
     sample_seed: int = 0,
     exec_timeout: float = 30.0,
     concurrency: int = 32,
+    holdout_set: int = 1,
 ) -> dict:
     if dataset == "bird":
         examples: list[Example] = load_bird_dev(data_root)
@@ -130,7 +131,7 @@ def run(
             # after the fact. It is 48 tasks; it is run whole.
             raise ValueError("отложенный набор прогоняется целиком, без --sample и --limit")
         # Refuses a set whose SHA-256 moved, before a single request is sent.
-        examples = load_holdout(data_root, lang)
+        examples = load_holdout(data_root, lang, holdout_set)
     else:
         raise ValueError(f"неизвестный набор: {dataset!r}")
     if limit:
@@ -259,6 +260,7 @@ def run(
         )
         summary.update({
             "dataset": "holdout",
+            "holdout_set": holdout_set,
             "lang": lang,
             "tasks": len({(r or {}).get("task") for r in records}),
             "wordings": n,

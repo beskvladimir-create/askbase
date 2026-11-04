@@ -13,11 +13,17 @@ import json
 import pathlib
 import sqlite3
 import subprocess
+import sys
 
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-PY = str(ROOT / ".venv" / "bin" / "python")
+# rescore.py runs as a subprocess and needs an interpreter with the project
+# installed. That is the venv in CI and on my machine. A fresh clone without
+# one still has the interpreter running the tests, and four red tests in a new
+# checkout read as a broken project rather than as a missing venv.
+_venv = ROOT / ".venv" / "bin" / "python"
+PY = str(_venv if _venv.exists() else sys.executable)
 
 
 @pytest.fixture

@@ -1,0 +1,61 @@
+# Прогон по отложенному набору 2. Правила зафиксированы до прогона: HOLDOUT.md.
+#
+# Набор 2 заморожен 2 ноября 2026 года: шесть областей, 288 задач, 1152
+# формулировки, по 576 на язык. SHA-256 на область лежит в
+# src/nl2sql_app/holdout/DIGESTS2.json, и стенд сверяет их в момент чтения
+# данных, а не только в CLI.
+#
+# Отличия от файла набора 1 ровно три, и все три существенные:
+#
+#   data_root     data/holdout2
+#   holdout_set   2. Отсюда стенд берёт, какую заморозку требовать и в каком
+#                 наборе искать запись о прогоне. Раньше номер набора брался
+#                 из реестра и всегда был единицей, то есть прогон по набору 2
+#                 прошёл бы по журнальной записи набора 1
+#   стадии        set2-base, set2-app и set2-app-ord, и ничего больше
+#
+# Всё остальное то же: жадное декодирование, один вызов, без примеров в
+# контексте, max_tokens 1024, concurrency 1 (П5 это порог на p95, три запроса
+# в полёте мерили бы очередь), таймаут исполнения SQL 30 с.
+#
+# Шаг 1 плана прогона обязателен и проверяется стендом:
+#   python -m nl2sql_app.holdout.verify --data data/holdout2 --set 2 --record <модель>
+
+data_root: data/holdout2
+holdout_set: 2
+out_dir: results
+concurrency: 1
+request_timeout_s: 600
+max_retries: 2
+
+models:
+  arctic-7b-q4:
+    model: hf.co/mradermacher/Arctic-Text2SQL-R1-7B-GGUF:Q4_K_M
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  arctic-7b-q8:
+    model: hf.co/mradermacher/Arctic-Text2SQL-R1-7B-GGUF:Q8_0
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  xiyan-7b-q4:
+    model: hf.co/mradermacher/XiYanSQL-QwenCoder-7B-2504-GGUF:Q4_K_M
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  xiyan-14b-q4:
+    model: hf.co/mradermacher/XiYanSQL-QwenCoder-14B-2504-GGUF:Q4_K_M
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  qwen25-coder-7b:
+    model: qwen2.5-coder:7b
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024
+  qwen25-coder-14b:
+    model: qwen2.5-coder:14b
+    base_url: http://localhost:11434/v1
+    api_key: ollama
+    max_tokens: 1024

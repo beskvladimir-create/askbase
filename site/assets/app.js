@@ -222,3 +222,112 @@
     box.hidden = true;
   });
 })();
+
+/* Таблица рейтинга. Числа приходят из data-атрибутов строк, которые сборщик
+   подставил из results/, а здесь из них рисуются ячейки. Все пять метрик
+   меряются на каждом языке отдельно, поэтому переключатель языка меняет
+   таблицу целиком, а не один столбец. Строки в разметке пустые: если
+   JavaScript выключен, таблицы просто нет, и это лучше, чем половина
+   таблицы, по которой непонятно, какой язык показан. */
+(function () {
+  var table = document.getElementById("lb");
+  if (!table) return;
+  var rows = Array.prototype.slice.call(table.tBodies[0].rows);
+  if (!rows.length) return;
+  /* Страница задаёт, какой язык открывается первым: ru на русской версии,
+     en на английской. Посетитель может переключить в любую сторону. */
+  var lang = table.dataset.lang === "en" ? "en" : "ru";
+  var sortKey = "ex";
+  var dir = -1;
+  var ru = document.documentElement.lang === "ru";
+
+  function val(row, key) {
+    return parseFloat(row.dataset[key + (lang === "ru" ? "Ru" : "En")]);
+  }
+
+  function cell(text) { return "<td>" + text + "</td>"; }
+
+  /* Русское склонение по числу. Наивное «1 модель, меньше пяти модели,
+     иначе моделей» даёт «0 модели» и «11 модели», а ноль здесь обычное
+     значение: когда лидер отрывается, в его полосе никого нет. */
+  function plural(n) {
+    var ten = n % 10;
+    var hundred = n % 100;
+    if (ten === 1 && hundred !== 11) return "модель";
+    if (ten >= 2 && ten <= 4 && (hundred < 12 || hundred > 14)) return "модели";
+    return "моделей";
+  }
+
+  function render() {
+    /* Номер в первом столбце это всегда место по точности, чтобы сортировка
+       по задержке не перенумеровывала рейтинг. */
+    var byScore = rows.slice().sort(function (a, b) { return val(b, "ex") - val(a, "ex"); });
+    var leader = byScore[0];
+    var lo = lang === "ru" ? "loRu" : "loEn";
+    var hi = lang === "ru" ? "hiRu" : "hiEn";
+    byScore.forEach(function (r, i) {
+      r._place = i + 1;
+      /* Целые интервалы, пересекающиеся с интервалом лидера, при таком n
+         друг от друга не отличимы. */
+      r._tie = i > 0 &&
+        parseFloat(r.dataset[lo]) <= parseFloat(leader.dataset[hi]) &&
+        parseFloat(r.dataset[hi]) >= parseFloat(leader.dataset[lo]);
+    });
+
+    var order = rows.slice().sort(function (a, b) {
+      var d = (val(a, sortKey) - val(b, sortKey)) * dir;
+      return d !== 0 ? d : val(b, "ex") - val(a, "ex");
+    });
+
+    var note = document.getElementById("tiecount");
+    if (note) {
+      var n = rows.filter(function (r) { return r._tie; }).length;
+      note.textContent = ru
+        ? n + " " + plural(n) + " из " + rows.length
+        : n + " of " + rows.length + " models";
+    }
+
+    var body = table.tBodies[0];
+    order.forEach(function (r) {
+      var d = r.dataset;
+      r.className = (r._place === 1 ? "top " : "") + (r._tie ? "tie" : "");
+      r.innerHTML =
+        '<td class="pos">' + r._place + "</td>" +
+        '<td class="name">' + d.model + "<small>" + d.sub + "</small></td>" +
+        '<td class="main"><span class="score">' + val(r, "ex").toFixed(1) + "%</span>" +
+        '<span class="track"><span class="fill" style="transform:scaleX(' +
+          (val(r, "ex") / 100).toFixed(3) + ')"></span></span>' +
+        '<span class="ci">' + parseFloat(d[lo]).toFixed(1) + " – " +
+          parseFloat(d[hi]).toFixed(1) + "</span></td>" +
+        cell(val(r, "ns").toFixed(1) + "%") +
+        cell(val(r, "agr").toFixed(1) + "%") +
+        cell(val(r, "p95").toFixed(2) + (ru ? " с" : " s")) +
+        cell(val(r, "fa").toFixed(1) + "%");
+      body.appendChild(r);
+    });
+  }
+
+  table.tHead.addEventListener("click", function (e) {
+    var th = e.target.closest("th.sortable");
+    if (!th) return;
+    var key = th.dataset.key;
+    if (key === sortKey) { dir = -dir; } else { sortKey = key; dir = key === "p95" ? 1 : -1; }
+    Array.prototype.forEach.call(table.tHead.rows[0].cells, function (c) {
+      c.removeAttribute("aria-sort");
+    });
+    th.setAttribute("aria-sort", dir === -1 ? "descending" : "ascending");
+    render();
+  });
+
+  document.querySelectorAll(".seg button[data-lang]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      lang = b.dataset.lang;
+      document.querySelectorAll(".seg button[data-lang]").forEach(function (x) {
+        x.setAttribute("aria-pressed", String(x === b));
+      });
+      render();
+    });
+  });
+
+  render();
+})();

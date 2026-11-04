@@ -1,0 +1,154 @@
+{
+  "review_file": "results/qwen25-coder-14b.set2-app-en.review.md",
+  "reviewed": 20,
+  "counts": {
+    "model": 17,
+    "evaluator": 3,
+    "unsure": 0
+  },
+  "false_alarm_share": 0.15,
+  "unsure_share": 0.0,
+  "meets_protocol_minimum": true,
+  "items": [
+    {
+      "task": "banking/bank2-034",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "берёт только пары, где оба кредита не закрыты, и теряет перекрытия с закрытым"
+    },
+    {
+      "task": "hr/hr2-037",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "ссылка на несуществующую колонку sub_dept.title, запрос не выполнился"
+    },
+    {
+      "task": "hr/hr2-046",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает максимум суммы с минимумом вместо последней с первой, всегда ложь"
+    },
+    {
+      "task": "logistics/log2-018",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "evaluator",
+      "note": "то же среднее без округления до одного знака, 19.956 против 20.0"
+    },
+    {
+      "task": "logistics/log2-038",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "HAVING внутри группы по стране, distinct всегда 1, ответ 0"
+    },
+    {
+      "task": "logistics/log2-045",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "ссылка на shp.id без присоединения shp, запрос не выполнился"
+    },
+    {
+      "task": "manufacturing/mfg2-001",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "переводит в базовые единицы там, где вопрос просил как записано"
+    },
+    {
+      "task": "manufacturing/mfg2-004",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "та же разность по каждой детали, но добавлены код и два промежуточных столбца"
+    },
+    {
+      "task": "manufacturing/mfg2-017",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "evaluator",
+      "note": "доля посчитана верно, но без округления различается в пятнадцатом знаке"
+    },
+    {
+      "task": "manufacturing/mfg2-018",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "нет отбора по весовым единицам, в выдачу попали штуки, и добавлен столбец с датой"
+    },
+    {
+      "task": "manufacturing/mfg2-024",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "вернул построчную детализацию вместо одной суммы"
+    },
+    {
+      "task": "manufacturing/mfg2-037",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "сравнивает дату операции со средним количеством"
+    },
+    {
+      "task": "medicine/med2-042",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "потерян COALESCE на дату поступления и отбор по выписанным"
+    },
+    {
+      "task": "medicine/med2-047",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "целочисленное деление, все доли обнулились"
+    },
+    {
+      "task": "public_services/gov2-016",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "GROUP BY после ORDER BY, синтаксическая ошибка"
+    },
+    {
+      "task": "public_services/gov2-026",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает не те пары стадий, 51 против 135"
+    },
+    {
+      "task": "public_services/gov2-033",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "не ограничивает последней стадией, считает все одобренные"
+    },
+    {
+      "task": "public_services/gov2-034",
+      "lang": "en",
+      "wording": 1,
+      "verdict": "model",
+      "note": "берёт дела вовсе без решённых стадий вместо последней без результата"
+    },
+    {
+      "task": "public_services/gov2-037",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "COUNT внутри AVG, misuse of aggregate"
+    },
+    {
+      "task": "public_services/gov2-039",
+      "lang": "en",
+      "wording": 0,
+      "verdict": "model",
+      "note": "считает число дел вместо доли и берёт стадии вместо самих дел"
+    }
+  ]
+}

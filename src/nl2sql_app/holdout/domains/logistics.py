@@ -302,10 +302,23 @@ ORDER BY km DESC, g.shp_id
     ),
 )
 
+
+# Set 2. A separate tuple because set 1's SHA-256 covers its task list, so a
+# task added to TASKS would change the hash of a set already run and
+# published. Schema and data are shared; only the questions differ.
+
+# Набор 2 действующий отложенный набор: формулировки вопросов не публикуются,
+# чтобы модель, которую на нём меряют, его не читала. Хеш заморозки лежит в
+# DIGESTS2.json, а предсказание, эталонный запрос и вердикт по каждой задаче
+# в results/. См. HOLDOUT.md, раздел про закрытые формулировки.
+TASKS_2: tuple = ()
+
+
 DOMAIN = Domain(
     name="logistics",
     tables=TABLES,
     tasks=TASKS,
+    tasks_2=TASKS_2,
     row_counts={"cust": 120, "carr": 45, "shp": 700, "leg": 1800, "inc": 260},
 )
 

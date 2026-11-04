@@ -28,7 +28,7 @@ Specialised text-to-SQL models became good at a size that fits in a laptop's
 memory. Snowflake's Arctic-Text2SQL-R1-7B reports 68.9% execution accuracy on
 BIRD dev at seven billion parameters under Apache-2.0. My own measurement of a
 general-purpose Qwen2.5-Coder-32B with self-correction on the same split was
-51.63% ([arXiv:2606.29733](https://arxiv.org/abs/2606.29733)). A specialised
+56.19% ([arXiv:2606.29733](https://arxiv.org/abs/2606.29733)). A specialised
 model four and a half times smaller changes what a local product can promise.
 
 Every existing desktop tool was built around a cloud model, because a year ago
@@ -56,14 +56,18 @@ originally compared multisets of rows, while the official BIRD evaluator
 compares sets (`set(predicted_res) == set(ground_truth_res)` in
 `bird/llm/src/evaluation.py`). Scoring `SELECT name` differently from
 `SELECT DISTINCT name` understated accuracy by 5.4 points on a 500-question
-sample. The same code produced the numbers in arXiv:2606.29733, so those
-absolute figures are understated by about as much. It was found by a mandatory
-manual review of failures, which is now part of the protocol.
+sample. The same code produced the numbers in the first version of
+arXiv:2606.29733, and those figures have since been withdrawn and replaced:
+the current version reports 54.89 for Qwen2.5-Coder-32B and 56.19 with
+self-correction. It was found by a mandatory manual review of failures, which
+is now part of the protocol.
 
-**Public benchmarks are not as solid as their scores suggest.** A CIDR 2026
-study found annotation errors in 52.8% of BIRD Mini-Dev problems and 66.1% of
-the Spider 2.0-Snow problems with open gold queries; correcting them moved
-leading systems by up to 19 points and three ranking places. That is why this
+**Public benchmarks are not as solid as their scores suggest.** Jin, Choi,
+Zhu and Kang, in [PVLDB 19(5)](https://doi.org/10.14778/3796195.3796206),
+found annotation errors in 52.8% of BIRD Mini-Dev problems and 62.8% of the
+Spider 2.0-Snow problems with open gold queries; correcting them moved leading
+systems by up to 19 points and as much as nine ranking places, five on
+average. That is why this
 project freezes a held-out set of its own with a SHA-256 digest and registers
 the thresholds before the run.
 
@@ -85,7 +89,7 @@ read-only connection with a row limit and a timeout.
 
 ```bash
 uv venv && uv pip install -e '.[dev]'
-./scripts/test_all.sh                  # 764 tests, no model needed
+./scripts/test_all.sh                  # 804 tests, no model needed
 
 # Download BIRD dev from https://bird-bench.github.io/ into data/bird/
 # then serve a model, for example with Ollama:
@@ -124,7 +128,7 @@ bestseller "Enterprise AI: The KATA Way", founder of Besk Tech
 
 Related work: the on-prem text-to-SQL benchmark this grew from
 ([arXiv:2606.29733](https://arxiv.org/abs/2606.29733), code and results at
-[Zenodo](https://doi.org/10.5281/zenodo.20952794)), and
+[Zenodo](https://doi.org/10.5281/zenodo.20952793)), and
 [pii-roundtrip](https://github.com/beskvladimir-create/pii-roundtrip), an open
 benchmark of anonymisation tools using the same evaluation discipline.
 

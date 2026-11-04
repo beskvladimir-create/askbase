@@ -305,10 +305,29 @@ ORDER BY defects DESC, p.title
     ),
 )
 
+# Set 2 for manufacturing. Set 1 used the unit conversion twice and the range
+# join once. These 24 push on both, and add a trap the first set left on the
+# table: `to_base` is 1.0 for pieces and 1.0 for kilograms, so a query that
+# sums pieces together with weights produces a number no error message and no
+# unit column will ever flag. Several tasks here can only be answered by
+# excluding the pieces.
+#
+# The second new vein is the defect date read against the movement date. The
+# two are drawn independently, so some defects carry a found date earlier than
+# the movement they belong to. That is a wart, and rather than hide it two
+# tasks ask about it directly: one counts those rows, one has to exclude them
+# before an average means anything.
+# Набор 2 действующий отложенный набор: формулировки вопросов не публикуются,
+# чтобы модель, которую на нём меряют, его не читала. Хеш заморозки лежит в
+# DIGESTS2.json, а предсказание, эталонный запрос и вердикт по каждой задаче
+# в results/. См. HOLDOUT.md, раздел про закрытые формулировки.
+TASKS_2: tuple = ()
+
 DOMAIN = Domain(
     name="manufacturing",
     tables=TABLES,
     tasks=TASKS,
+    tasks_2=TASKS_2,
     row_counts={"mov": 900, "part_price": 24, "defect": 320},
 )
 

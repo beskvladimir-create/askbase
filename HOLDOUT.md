@@ -94,17 +94,19 @@ Its job is the one the plan needs doing first and does not need volume for:
    hardware would be a number made up.
 2. Shake out the evaluator. Execution comparison fails in ways that look like
    model errors and are not: row order, integer against string, NULL against
-   empty string, an extra column, rounding. CIDR 2026 found annotation errors
+   empty string, an extra column, rounding. Jin et al. found annotation errors
    in 52.8% of BIRD Mini-Dev problems; assuming our own evaluator is clean
    would be the same mistake one level closer to home.
 3. Measure the gap between languages, which needs the paired wordings and not
    the volume: the pairing is within a task, so it is the one quantity this
    set estimates comparatively well.
 
-Set 2, at the planned 100 tasks per domain, is the deciding set. At 600 tasks
-the interval is about 4 points on either side, which is the resolution П3
-needs. It will be generated, hashed and published here before anything is run
-on it, exactly as this one was.
+Set 2 is the deciding set. It was planned at 100 tasks per domain and the
+size was amended on 2 November to 48 per domain, 288 in all, after the first
+144 measured what the schemas actually hold; the reason and the cost are
+recorded below, under the first pass. 288 tasks buy about 4 points on either
+side, which is the resolution П3 needs. It is generated, hashed and published
+here before anything is run on it, exactly as this one was.
 
 ### Rules fixed before the run
 
@@ -673,9 +675,335 @@ configuration to carry to set 2, named in advance so that the comparison there
 is one comparison and not seven.
 
 
+### Set 2, first pass and an amended size, 2 November 2026, before the second pass
+
+Six domains, 24 tasks each: 144 tasks and 576 wordings, written today. The
+authoring rules of the previous section ran against every one of them, and
+they caught two real defects while the set could still be changed. `log2-019`
+asked for customers who had never sent anything, and in that domain every
+customer has a shipment, so the gold returned nothing and a model answering
+"none" would have scored correct; the anti-join moved one level out, to
+customers with no incident, where the answer is 33 rows. The second was the
+rule firing on a cut inside a tie, which is the defect set 1 is stuck with in
+two of its tasks.
+
+Reproducibility, not a freeze. The command is
+
+```
+python -m nl2sql_app.holdout.generate --domain <name> \
+    --seed 20261102 --now 2026-11-02 --out data/holdout2 --set 2
+```
+
+and the SHA-256 of each `canonical.json` as it stands after the first pass:
+
+| Domain | Tasks | SHA-256 of `canonical.json` |
+| --- | ---: | --- |
+| banking | 24 | `3c7b7876f59b1d3e06ac9f5a8a04f51f8332ebeea21117cbc36deec3a95f9a3d` |
+| hr | 24 | `8ac8273aca64225344870acb16c0f3c62b3027cd5c2dd5ce74b524a0ce7116c2` |
+| logistics | 24 | `eb592be0b5bedbeafc05640efc7a1e906412d31a871f6e6c68adc2787a304ac7` |
+| manufacturing | 24 | `302d411fa486aa64d9199a780db2099de7ba58ecd222c07bb14304d381b2a08e` |
+| medicine | 24 | `621a419cc82397f304d9e4d1051a54bc03ccbe64f355bcaf71ab6de36b8bd127` |
+| public_services | 24 | `a5dc24d7ba56be1890bb8cf255327b7e62a97d07335bb746f168b9c3fc04422d` |
+
+These digests will change with the second pass, and saying so here is the
+point: `DIGESTS2.json` carries `"frozen": false`, and `verify.record` refuses
+to write a run against a set whose registry says that. No tool can be run on
+set 2 today, and the refusal is a test, not a convention.
+
+**The size recorded earlier in this file is amended, and here is the reason.**
+The spec said 100 tasks per domain, 600 in all, and the sizing note above
+decided to keep that figure. Writing the first 144 measured what that costs.
+A schema carries about 24 questions that hide something different from one
+another; past that the traps start repeating, and a task that re-asks an
+earlier trap against another column lengthens the set without making it more
+informative. 600 would be two to three more days of authoring and a set whose
+extra 456 tasks are mostly variations of its first 144.
+
+What the sizes buy, resampling the 48 per-task scores of the best measured
+arm (`dev-app-ord`, 75.0% on English) up to larger sets, 2000 resamples,
+seeds 0 and 5:
+
+| tasks | per domain | half-width, seed 0 | seed 5 |
+| ---: | ---: | ---: | ---: |
+| 48 | 8 | ±9.9 | ±9.4 |
+| 144 | 24 | ±5.6 | ±5.6 |
+| 288 | 48 | ±4.0 | ±3.8 |
+| 600 | 100 | ±2.7 | ±2.7 |
+
+The earlier table in this file gives slightly different widths because it
+resampled a different arm's scores. Both are development numbers and neither
+is a result.
+
+So the target becomes 48 tasks per domain, 288 in all, which buys ±4.0 and
+leaves 144 of the work done. That is the resolution this file already said
+П1 and П3 need, and it is reached without padding. 144 would have been ±5.6,
+which is wider than the whole points the thresholds are written in, and
+freezing there would have been a decision to stop asking those two questions
+while still printing their names in the table.
+
+The set is frozen once, when it is complete, and not between passes.
+
+### Set 2, second pass and the freeze, 2 November 2026
+
+The second 24 tasks per domain are written, and the set is frozen at 288
+tasks and 1152 wordings. What the second pass is made of, by domain, is the
+part worth recording: the first pass used each schema's headline difficulty,
+and a second pass of the same difficulty would have been the padding the
+sizing note warned about.
+
+| domain | what the second pass works that the first did not |
+| --- | --- |
+| banking | a closing date that has not arrived, so the status and the date disagree; accounts older than their holder and transactions older than their account; a balance built from `dir_cd` because no column holds one; an account in every currency of the reference; two loans whose terms overlap; minor units and basis points in one expression |
+| logistics | `leg.seq`, the first and the last leg and their carriers; `inc.at`, which is independent of the shipment's own dates, so an incident can precede dispatch or follow delivery; `carr.since` later than the shipment; legs of one shipment in different modes; cost per kilometre and per kilogram |
+| medicine | a doctor hired after the admission; a prescribed course outlasting the stay; `primary_flag` read from the other side, an encounter with no primary diagnosis; age at the date of admission rather than today; two correlated subqueries compared with each other |
+| hr | the adjacent pair of pay rows, which is the revision itself and its sign; a pay row or an absence dated before hire or after leaving; the currency changing inside one history; the second level of `mgr_id`; a department compared with its own parent inside HAVING; the salary in force on the leaving day |
+| manufacturing | several defects on one movement and several grades among them; the distance in days from movement to defect; the price window read from the other side, including the price in force at a part's first movement; the sign of `kind_cd` together with the range join; the same quantity priced twice, at the time and today |
+| public services | the order of stages inside a case, an undecided stage before a decided one, and the last stage against the state of the case in both directions; an applicant who has used every region and every service; `sla_days` as a quantity for arithmetic rather than as a boundary; the share of local filings, where the applicant's city is compared with a region name |
+
+**What the rules caught this time**, while the set could still be changed:
+
+- Nine tasks were discarded after running them, because their gold was empty
+  or identically zero: a carrier with no legs, a carrier that never crossed a
+  border, a doctor with no encounters, a doctor who never prescribed
+  intravenously, a revision that changed nothing, a department with no dollar
+  salary, a movement with no price in force, a price window with no movement,
+  a part that is never scrapped. Each was replaced by a question the data can
+  answer.
+- `mfg2-034` tripped `filter_word_without_filter` on my own Russian wording:
+  it said "открытое окно цены" while the condition on `valid_to` lived in the
+  ON clause. The condition moved into WHERE, which changes nothing about what
+  the query returns and makes it say what it does.
+- `med2-035` exposed a hole in the checker rather than in itself. Its ordering
+  key is `AVG(julianday(a) - julianday(COALESCE(b, c)))`, the key list was
+  split on every comma, and the rewritten query failed to parse, so the tie
+  check reported that it could not check the cut. A tie behind such a key was
+  invisible, which is a hole exactly where the hard tasks are. The split now
+  tracks bracket depth, with a test.
+
+**And one the rules could not catch, so they were extended.** `bank2-024` and
+`log2-024` held the same gold and the same English wording, differing only in
+the database they run against, because banking and logistics both have a
+`cust` table with a nullable city. No per-task rule can see that; it was found
+by comparing every gold and every wording in the set against every other
+before the freeze. The logistics task now counts shipments whose customer has
+no city, which still reads the NULL but through a join, and `duplicate_gold`
+and `duplicate_wording` are rules of the checker with tests of their own.
+
+**The freeze.** Generated with
+
+```
+python -m nl2sql_app.holdout.generate --domain <name> \
+    --seed 20261102 --now 2026-11-02 --out data/holdout2 --set 2
+```
+
+| Domain | Tasks | SHA-256 of `canonical.json` |
+| --- | ---: | --- |
+| banking | 48 | `f3a2f7ca7cec85022a5db1f18c01e909ace4d023767690dd9ba0c680db9814e4` |
+| hr | 48 | `c817a306308705184dc62d0d0cba4ad13211f957275c1812b6fe8e500ac8834a` |
+| logistics | 48 | `536c7ad4db30d3c48444606d218a5e7332cab61f3baaa745965a0e9e4de4dd2e` |
+| manufacturing | 48 | `a7dd4121dc122605c3cebc82742b48edd5f1def9ecb3662f24281f565cced6e7` |
+| medicine | 48 | `f6e6fd845df7867588efc821956af47e3f5fb006c42d89af6de948dfb5328d67` |
+| public_services | 48 | `fcfbe883ae32204c86221283f5fcbcffef55327f06de0f7a48be745e4b581e36` |
+
+`DIGESTS2.json` now carries `"frozen": true` and `"frozen_at": "2026-11-02"`,
+and the same digests, so the file a reader checks and the file the code checks
+are one file. The test that asserted set 2 was not yet frozen is gone, deleted
+in the commit that flipped the flag, and the guard it protected is now tested
+against a registry built for the purpose, so it outlives this set and is there
+for the next one.
+
+**What this set is not.** It is 288 tasks against six schemas, not a sample of
+anything. Every number it will produce is conditional on these schemas, these
+traps and this one generator seed, and a model that happens to fit this
+generator's idea of a legacy column will do better here than in a warehouse.
+The trap mix is 206 tasks whose traps are all schema semantics, 51 schema and
+skill together, 15 skill alone and 16 involving an intent ambiguity, which
+says plainly that this set mostly measures reading a schema nobody documented.
+
+### The set 2 run, written down 2 November 2026, before it starts
+
+Three arms, named before the first request, because a set that is run once
+and read afterwards cannot be used to choose among seven.
+
+| stage | what it is | who runs it |
+| --- | --- | --- |
+| `set2-base` | the bare protocol, byte for byte what set 1's `holdout-en`/`holdout-ru` sent | all six participants, ours among them with no privileges |
+| `set2-app` | the prompt the application actually sends, including the divisor fix that shipped after set 1 | our engine |
+| `set2-app-ord` | the same prompt with the tables left in creation order | the single candidate, named in the section above before this set existed |
+
+Order, fixed: our engine, then the candidate, then the same weights bare,
+then the other five participants. `scripts/holdout2_queue.sh` walks exactly
+that, records the journal entry before each tool's first stage, and stops on
+the first failure rather than walking past it. 576 wordings per language, one
+request at a time; on set 1's timings that is about an hour per language for
+the 14B models and four for Arctic, so the queue is a day of compute and not
+a coffee break.
+
+**Predictions.** Written now so that a null result is informative later.
+
+| what | prediction | why this number |
+| --- | --- | --- |
+| `set2-app` English | 62%, surprised outside 54 to 70 | set 1 gave 74.0% at the fixed divisor on 48 tasks of first-pass difficulty; half of set 2 is the second pass, which was written to need correlated subqueries, self-joins, range joins and quantities no column holds, so a drop of 10 to 14 points is the honest expectation |
+| `set2-app` Russian | 4 to 8 points below English | set 1's gaps were 4.2 and 7.3 points at the same prompt |
+| П3а, Russian within 10 points of English | met | the gap has been under 8 points in every measured arm |
+| `set2-base`, Qwen2.5-Coder-14B | 38%, surprised outside 30 to 46 | 49.0% on set 1, scaled by the same difficulty argument |
+| the engine against the same weights bare | +20 points, whole interval above +10 | set 1 gave +22.9 [+11.5, +34.4] at n = 48, and at n = 288 the interval is about ±4, so if the effect is real this is where it stops being undetermined |
+| `set2-app-ord` against `set2-app` | undetermined on English, between −2 and +4; positive on Russian, between +2 and +6, and short of +10 | set 1 gave +1.0 [−5.2, +7.3] and +4.2 [−1.0, +10.4], consistent in direction and significant on neither |
+| П6, wording agreement | 70 to 80%, so **not met** | every measured arm has been between 70.8% and 75.0%, and the threshold is 80%. This is a prediction that a threshold this project wrote down fails |
+| П5, p95 latency | 12 to 18 s, met | 16.7 s and 13.1 s on set 1 with the same schemas and the same prompt, on the same machine |
+| the trap split | the bucket with no schema trap at least 25 points above the bucket where every trap is schema semantics | set 1 gave 68.8% against 31.6% |
+
+**What ships on what evidence.** The order change ships only if the paired
+interval against `set2-app` excludes zero on the positive side in both
+languages. One language, or a point estimate with an interval crossing zero,
+means it does not ship: that is the same rule the divisor was held to, and the
+divisor cleared it on a mechanism rather than on a score.
+
+**What happens after, and it is not optional.** At least 20 random failures
+per run are read by hand and classified as a model error or a false failure of
+the evaluator, and the proportion is published. Set 2 is then spent, exactly
+as set 1 was.
+
 ## Set 2, the deciding set
 
-Not yet generated. 100 tasks in each of the six domains, four wordings each:
-600 tasks and 2400 wordings. It will appear here with its command, its digests
-and its rules before any tool is run on it, and this file will say on what
-date and at which commit that happened.
+Frozen on 2 November 2026: 48 tasks in each of the six domains, four wordings
+each, 288 tasks and 1152 wordings. The command, the per-domain digests and
+what the second pass was made of are in the section above. Nothing has been
+run on it yet. The run plan at the top of this file applies: each tool once,
+from committed code, journalled, and a repeat stays a repeat.
+
+### What set 2 measured, 4 November 2026, after the run
+
+The queue ran from 2 to 4 November, sixteen runs, no repeats and no stops.
+Three arms, named before the first request, and six participants, our engine
+among them through the same interface.
+
+| run | EX | 95% interval | p95 | wording agreement | evaluator false alarms |
+| --- | ---: | --- | ---: | ---: | ---: |
+| `set2-app`, English | **57.47** | 52.43 – 62.33 | 23.88 s | 76.7% | 15% |
+| `set2-app`, Russian | **48.61** | 43.58 – 53.99 | 17.52 s | 75.7% | 20% |
+| `set2-app-ord`, English | 55.73 | 50.69 – 60.76 | 22.14 s | 79.5% | 5% |
+| `set2-app-ord`, Russian | 49.83 | 44.79 – 55.03 | 23.73 s | 76.7% | 10% |
+| `set2-base`, Qwen2.5-Coder-14B, English | 36.81 | 31.77 – 41.67 | 16.34 s | 79.2% | 0% |
+| `set2-base`, Qwen2.5-Coder-14B, Russian | 30.90 | 26.04 – 35.94 | 14.73 s | 86.1% | 0% |
+| `set2-base`, Arctic-7B Q4_K_M, English | 33.68 | 28.65 – 38.54 | 43.67 s | 80.6% | 0% |
+| `set2-base`, Arctic-7B Q4_K_M, Russian | 28.65 | 23.78 – 33.51 | 54.13 s | 83.0% | 0% |
+| `set2-base`, Arctic-7B Q8_0, English | 32.29 | 27.60 – 37.15 | 51.33 s | 82.6% | 10% |
+| `set2-base`, Arctic-7B Q8_0, Russian | 28.30 | 23.78 – 32.64 | 66.04 s | 78.1% | 20% |
+| `set2-base`, Qwen2.5-Coder-7B, English | 25.87 | 21.53 – 30.21 | 9.15 s | 82.3% | 10% |
+| `set2-base`, Qwen2.5-Coder-7B, Russian | 22.22 | 17.88 – 26.56 | 10.52 s | 85.4% | 5% |
+| `set2-base`, XiYanSQL-7B, English | 22.40 | 18.40 – 26.39 | 8.83 s | 80.2% | 5% |
+| `set2-base`, XiYanSQL-7B, Russian | 17.88 | 13.89 – 21.88 | 7.83 s | 87.2% | 0% |
+| `set2-base`, XiYanSQL-14B, English | 19.27 | 15.10 – 23.61 | 15.88 s | 88.5% | 5% |
+| `set2-base`, XiYanSQL-14B, Russian | 17.53 | 13.72 – 21.53 | 12.88 s | 91.3% | 0% |
+
+Intervals are a percentile bootstrap over tasks, 2000 resamples, seed 0, with
+n = 288 tasks rather than 1152 wordings. `scripts/thresholds.py` computes them
+through the clustered helpers in `nl2sql_app.bench.stats`, which is the same
+implementation of the verdict rule the rest of the project uses.
+
+**Threshold verdicts.**
+
+| threshold | measured | verdict |
+| --- | --- | --- |
+| П1, the engine not below the best single model | +20.66 pp [+15.62, +25.69] in English, +17.71 pp [+12.85, +22.57] in Russian, against Qwen2.5-Coder-14B on the bare arm | **met** in both languages |
+| П3, English not below the best closed model | not measured | **no verdict**: step 3 of the run plan, closed models over an API, was not carried out on this set, so the threshold has no other side |
+| П3а, Russian not more than 10 points below English | −8.85 pp [−12.33, −5.56] | **undetermined**: the interval crosses ten points |
+| П5, p95 not above 20 s | 23.88 s [20.66, 27.70] in English, 17.52 s [16.55, 19.45] in Russian | **not met** in English, **met** in Russian |
+| П6, wording agreement not below 80% | 76.7% [71.87, 81.26] in English, 75.7% [70.82, 80.56] in Russian | **undetermined** in both languages |
+| П4, safety | every attempt to leave SELECT blocked | **met**, an absolute threshold with no interval |
+
+П3 is left without a verdict on purpose. It was written as a comparison with a
+closed model on the same set, no closed model was run on set 2, and until one
+is there is no second side to compare with. Recording it as "undetermined"
+would pass off a missing measurement as a wide interval.
+
+**What ships.** Nothing. The rule was written before the run: the table order
+ships only if the paired interval against `set2-app` excludes zero on the
+positive side in both languages. It came out at −1.74 pp [−4.34, +1.04] in
+English and +1.22 pp [−1.56, +3.82] in Russian, so the interval crosses zero
+either way. The arm does not ship, and on set 1 it looked better than it is.
+
+**The hand review.** Twenty random failures from each of the sixteen runs, 320
+in all, read with the gold query, the prediction and both result sets side by
+side. 299 model errors, 21 false alarms of the evaluator, nothing left
+unresolved. The false-alarm share per run runs from 0% to 20%, and 6.6% over
+all of them. On set 1 the same share was 20.8% and reached 45%. The difference
+is not in the evaluator, which is unchanged: on set 1 some gold queries
+returned a column the question had not asked for, and the evaluator honestly
+counted the difference as a failure. Set 2's gold queries were written to the
+rule "the answer holds only what was asked", and false alarms fell threefold.
+
+The classification followed a list written in advance: a false alarm is
+rounding or precision, extra columns, or an equivalent way of naming the same
+entity. One case on set 2 was not on that list, the same two numbers with the
+columns swapped on a question that does not fix their order. Before counting
+it as a false alarm I checked all 300 failures reviewed up to that point by
+machine: the pattern occurs exactly once, so extending the rule changes no
+earlier verdict. The opposite case also came up and was counted as a model
+error, because there the question fixed the column order and the model
+swapped it.
+
+**Predictions and outcomes.** Written down before the run, in the section
+above.
+
+| prediction | outcome | |
+| --- | --- | --- |
+| `set2-app`, English 62%, surprised outside 54 and 70 | 57.47% | hit |
+| `set2-base`, Qwen2.5-Coder-14B 38%, surprised outside 30 and 46 | 36.81% | hit |
+| the engine against the same weights without the prompt: +20 points, the whole interval above +10 | +20.66 [+15.62, +25.69] | hit |
+| the trap split: a gap of at least 25 points | 26.3 points in English, 27.4 in Russian | hit |
+| `set2-app-ord` against `set2-app`, English: undetermined, between −2 and +4 | −1.74, undetermined | hit |
+| `set2-app`, Russian 4 to 8 points below English | 8.85 points below | missed, at the edge |
+| П3а met | undetermined | **missed** |
+| `set2-app-ord` against `set2-app`, Russian: positive, between +2 and +6 | +1.22, undetermined | **missed** |
+| П5 met, p95 between 12 and 18 s | 23.88 s in English, the threshold is not met | **missed** |
+| П6 not met, between 70 and 80% | 76.7% and 75.7%, but the verdict is undetermined | the point landed, the verdict did not |
+
+Four predictions out of ten did not come true, and three of them in the same
+direction: I underestimated how much harder the second pass is, not only in
+accuracy but in time. p95 rose from 16.7 s on set 1 to 23.88 s, because second
+pass tasks need correlated subqueries and self-joins, and the model takes
+longer to write them. The latency threshold I expected to clear with room to
+spare is not met in English. This is exactly why the predictions are written
+down first.
+
+**Set 2 is spent.** From 4 November 2026 nothing may be decided on it, exactly
+as with set 1. The next threshold that needs checking needs a set 3.
+
+### What of set 2 is published and what is not, 4 November 2026
+
+Set 2 is spent for decisions, but as reading material it is live: put its 1152
+wordings on the open web and the next model measured on it will have read
+them. That is exactly the contamination that makes BIRD figures untrustworthy,
+and reproducing it on our own set would be odd.
+
+So the export to the public repository (`scripts/export_public.py`) removes
+the `TASKS_2` block from the six domain modules and leaves an empty tuple with
+an explanation in its place. Nothing else is removed.
+
+What is published for each of the 1152 wordings:
+
+- the gold query,
+- the query the model wrote,
+- the verdict, right or wrong, and the execution error if there was one,
+- the description of the trap,
+- latency and token usage,
+- the freeze digests in `DIGESTS2.json`, the proof that the set was fixed
+  before the first request,
+- the whole hand review of the failures, with a verdict and a note per case.
+
+Only the question text is withheld. A result record does not carry it anyway:
+the wording was deliberately not duplicated into the results, so that there is
+no second, editable copy of the thing under SHA-256. The ranking page's
+promise that per-question predictions are published with every run, wrong ones
+included, is kept literally.
+
+The guarantee is not discipline. After copying, the export searches the
+resulting tree for each of the 1152 wordings and refuses to hand it over if it
+finds even one. Tests that need set-2 tasks skip in the public copy through
+the `frozen_holdout_2` fixture rather than being weakened: the skip is on data
+absent by design, never on an assertion that fails.
+
+The wordings will be published once the set has served its term the way set 1
+did, which is when a set 3 exists and the decisions move to it.

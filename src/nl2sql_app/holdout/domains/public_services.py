@@ -277,10 +277,29 @@ ORDER BY cases DESC, a.full_name
     ),
 )
 
+# Set 2 for public services. Set 1 asked about the inclusive deadline once and
+# about reapplication twice, both from the counting side. These 24 take the
+# deadline apart (closed on it, closed within it, closed past it, still open
+# past it, past twice the service's own SLA) and go after the duplicate
+# applications themselves rather than their effect on a count.
+#
+# Two things this schema holds that set 1 never touches. `applicant.city` is
+# filled with region names, so "did this person file in their own region" is a
+# comparison between a plain text column and a lookup title reached through the
+# office. And the legacy pair here is not symmetric: every row from the last
+# year sits in `submitted_at` and nothing else, so a question about recent
+# cases answered from `dt_sub` returns zero and reads as "there were none".
+# Набор 2 действующий отложенный набор: формулировки вопросов не публикуются,
+# чтобы модель, которую на нём меряют, его не читала. Хеш заморозки лежит в
+# DIGESTS2.json, а предсказание, эталонный запрос и вердикт по каждой задаче
+# в results/. См. HOLDOUT.md, раздел про закрытые формулировки.
+TASKS_2: tuple = ()
+
 DOMAIN = Domain(
     name="public_services",
     tables=TABLES,
     tasks=TASKS,
+    tasks_2=TASKS_2,
     row_counts={"applicant": 300, "case_rec": 760, "stage": 1500},
 )
 

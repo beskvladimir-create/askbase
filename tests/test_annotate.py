@@ -9,6 +9,7 @@ checks.
 from __future__ import annotations
 
 import sqlite3
+from pathlib import Path
 
 import pytest
 
@@ -18,7 +19,15 @@ from nl2sql_app.bench.annotate import (
     schema_notes,
 )
 
+ROOT = Path(__file__).resolve().parent.parent
 HOLDOUT = "data/holdout"
+# Three tests below read the generated set off disk, and `data/` is not
+# published. Skipped in the public copy rather than failing there: a check
+# that is red for everyone stops being read at all.
+needs_holdout = pytest.mark.skipif(
+    not (ROOT / HOLDOUT).is_dir(),
+    reason="data/holdout не сгенерирован, читать нечего",
+)
 
 
 @pytest.fixture()
@@ -126,6 +135,7 @@ def test_history_tables_get_the_right_one_of_the_two_shapes(tmp_path):
     assert "once:" not in notes
 
 
+@needs_holdout
 def test_keys_are_printed_because_serialize_schema_drops_them():
     fk = foreign_keys(f"{HOLDOUT}/logistics/logistics.sqlite")
     # Both ends of the route point at the same lookup, which is exactly what
@@ -134,12 +144,14 @@ def test_keys_are_printed_because_serialize_schema_drops_them():
     assert "shp.dst_cd -> loc_ref.cd" in fk
 
 
+@needs_holdout
 def test_the_declared_key_catches_what_the_name_cannot():
     notes = " | ".join(schema_notes(f"{HOLDOUT}/logistics/logistics.sqlite"))
     for col in ("shp.org_cd", "shp.dst_cd"):
         assert f"{col}: a code (loc_ref)" in notes
 
 
+@needs_holdout
 def test_the_notes_never_mention_a_question_or_a_gold_query():
     """The property that makes this a feature and not a benchmark hack.
 
@@ -149,7 +161,6 @@ def test_the_notes_never_mention_a_question_or_a_gold_query():
     set rather than argued in a comment.
     """
     import json
-    from pathlib import Path
 
     wordings: set[str] = set()
     golds: set[str] = set()

@@ -74,8 +74,14 @@ def load_bird_dev(root: str) -> list[Example]:
     return out
 
 
-def load_holdout(root: str, lang: str) -> list[Example]:
+def load_holdout(root: str, lang: str, set_no: int = 1) -> list[Example]:
     """Read the frozen held-out set, one Example per wording in `lang`.
+
+    `set_no` says which freeze the directory has to match. It defaults to 1
+    because that is what every caller meant before set 2 existed, and it is
+    passed explicitly by the runner from the config: a set-2 directory that
+    matched set 1's digests would be a different experiment under the same
+    name, and the mismatch is what the check is for.
 
     The digests are checked here, not only in the verifier CLI. HOLDOUT.md puts
     `verify` first in the run plan, but a step that can be skipped is a step
@@ -90,11 +96,11 @@ def load_holdout(root: str, lang: str) -> list[Example]:
     from nl2sql_app.holdout.verify import check_set, expected
 
     base = Path(root)
-    check_set(base)                      # raises NotFrozen on any difference
+    check_set(base, set_no)              # raises NotFrozen on any difference
 
     out: list[Example] = []
     empty: list[str] = []
-    for domain in sorted(expected()["domains"]):
+    for domain in sorted(expected(set_no)["domains"]):
         db_path = base / domain / f"{domain}.sqlite"
         if not db_path.is_file():
             raise FileNotFoundError(
