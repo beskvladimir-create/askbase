@@ -9,10 +9,15 @@ Release 0.1.0 is still listed and should not be used: it does not answer
 questions at all, because the answer never reached the window from the thread
 computing it. That is fixed in 0.1.1. The build is not signed with an Apple
 developer certificate, so macOS asks to allow it once and the SHA-256 in the
-release notes is worth checking. No accuracy figure of our own is published
-yet: the screening runs are still going. Set 1 of the held-out set was frozen
-on 27 October 2026 with a SHA-256 per domain and its rules written down before
-any run; see [HOLDOUT.md](HOLDOUT.md).
+release notes is worth checking. The application's own figure is published:
+57.5% execution accuracy on English questions and 48.6% on Russian, each with
+a 95% interval over tasks, on held-out set 2
+([ranking](https://askbase.besk.tech/model-ranking/)). Set 2 is 288 tasks over
+six schemas, frozen with a SHA-256 per domain on 2 November 2026 and run once
+between 2 and 4 November. Its question wordings stay closed while the set is
+live, and the gold query, the prediction and the verdict for every task are in
+`results/`. Set 1 was frozen on 27 October 2026 and is published in full. The
+rules of both were written down before any run; see [HOLDOUT.md](HOLDOUT.md).
 
 [SECURITY.md](SECURITY.md) says what the application protects and what it does
 not, and where to report a vulnerability. [NOTICE](NOTICE) lists every
