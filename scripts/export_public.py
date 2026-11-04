@@ -71,6 +71,8 @@ INCLUDE: tuple[str, ...] = (
     "SECURITY.ru.md",
     "CONTRIBUTING.md",
     "CONTRIBUTING.ru.md",
+    "CODE_OF_CONDUCT.md",
+    "CODE_OF_CONDUCT.ru.md",
     "HOLDOUT.md",
     "HOLDOUT.ru.md",
     # Every prediction of every published run, including the subdirectories

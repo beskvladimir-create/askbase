@@ -3,7 +3,8 @@
 [Русская версия](CONTRIBUTING.ru.md)
 
 Issues and pull requests are welcome. Write in Russian or English, whichever
-is easier for you.
+is easier for you. Taking part means keeping to the
+[code of conduct](CODE_OF_CONDUCT.md), Contributor Covenant 2.1.
 
 One thing to know before you start: this repository is exported from a working
 tree rather than developed in place, so a pull request is applied by hand and
