@@ -4,9 +4,17 @@
 
 ## Reporting a vulnerability
 
-Write to **admin@besk.tech** with "Askbase" in the subject. Do not open a
-public issue for a vulnerability, and do not attach a real database or real
-data from one. You will get an answer within 7 days.
+Use the repository: **Security** then **Report a vulnerability**, at
+[github.com/beskvladimir-create/askbase/security/advisories/new](https://github.com/beskvladimir-create/askbase/security/advisories/new).
+The thread is visible to you and to me and to nobody else, and the advisory
+that comes out of it is published from the same place once the fix is out. That
+is the path I prefer, because it keeps the report, the fix and the advisory
+together.
+
+Email **admin@besk.tech** with "Askbase" in the subject if you would rather not
+use GitHub. Either way, do not open a public issue for a vulnerability, and do
+not attach a real database or real data from one. You will get an answer within
+7 days.
 
 Only the latest release is supported. Today that is 0.1.1.
 
